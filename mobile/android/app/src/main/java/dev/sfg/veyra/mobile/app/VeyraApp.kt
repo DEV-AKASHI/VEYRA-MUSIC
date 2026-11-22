@@ -25,6 +25,7 @@ package dev.sfg.veyra.mobile.app
 
 import android.content.Context
 import androidx.compose.foundation.LocalOverscrollFactory
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -35,11 +36,18 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -63,12 +71,15 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import dev.sfg.veyra.mobile.VeyraGraph
+import dev.sfg.veyra.mobile.auth.AuthState
 import dev.sfg.veyra.mobile.model.CatalogKind
 import dev.sfg.veyra.mobile.model.LoadState
 import dev.sfg.veyra.mobile.model.LibraryFilter
 import dev.sfg.veyra.mobile.model.PlaybackTarget
 import dev.sfg.veyra.mobile.model.MobilePlayerMode
 import androidx.compose.ui.graphics.Color
+import dev.sfg.veyra.mobile.ui.components.LocalCyberpunkTheme
+import dev.sfg.veyra.mobile.ui.components.LocalLiquidAuroraTheme
 import dev.sfg.veyra.mobile.ui.components.ArtworkBackdrop
 import dev.sfg.veyra.mobile.ui.components.CanopyReadout
 import dev.sfg.veyra.mobile.ui.components.ObsidianHeaderHUD
@@ -86,6 +97,7 @@ import dev.sfg.veyra.mobile.ui.glass.rememberGlassStyle
 import dev.sfg.veyra.mobile.ui.navigation.Routes
 import dev.sfg.veyra.mobile.ui.scroll.VeyraScrollPhysics
 import dev.sfg.veyra.mobile.ui.theme.LocalAccent
+import dev.sfg.veyra.mobile.ui.theme.LocalReducedMotion
 import dev.sfg.veyra.mobile.ui.screens.DetailScreen
 import dev.sfg.veyra.mobile.ui.screens.DevicesScreen
 import dev.sfg.veyra.mobile.ui.screens.HomeScreen
@@ -172,6 +184,9 @@ fun VeyraApp(viewModel: VeyraViewModel) {
     val effectiveAccent = if (settings.frostedGlass) glassTint.value else currentAccent
 
     val isTv = dev.sfg.veyra.mobile.ui.tv.isTvMode()
+    val reduceMotion = LocalReducedMotion.current
+    val isCyberpunk = settings.playerMode == MobilePlayerMode.OBSIDIAN
+    val isLiquidAurora = !isCyberpunk
 
     LaunchedEffect(viewModel, isTv) {
         if (isTv) {
@@ -183,6 +198,8 @@ fun VeyraApp(viewModel: VeyraViewModel) {
         LocalGlass provides glass,
         LocalGlassScene provides glassScene,
         LocalAccent provides effectiveAccent,
+        LocalCyberpunkTheme provides isCyberpunk,
+        LocalLiquidAuroraTheme provides isLiquidAurora,
         LocalOverscrollFactory provides VeyraScrollPhysics.overscrollFactory,
         dev.sfg.veyra.mobile.ui.tv.LocalIsTv provides isTv,
     ) {
@@ -215,7 +232,7 @@ fun VeyraApp(viewModel: VeyraViewModel) {
                 val targetHudTopInset = if (isObsidianHud) 124.dp else 0.dp
                 val hudTopInset by animateDpAsState(
                     targetValue = targetHudTopInset,
-                    animationSpec = tween(durationMillis = 280, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+                    animationSpec = if (reduceMotion) snap() else tween(durationMillis = 280, easing = androidx.compose.animation.core.FastOutSlowInEasing),
                     label = "HudTopInset",
                 )
                 val safeHudTopInset = hudTopInset.coerceAtLeast(0.dp)
@@ -305,11 +322,34 @@ fun VeyraApp(viewModel: VeyraViewModel) {
                                         .onGloballyPositioned { readoutBounds = it.boundsInRoot() }
                                         .zIndex(20f),
                                 )
-                                Column(modifier = Modifier.align(Alignment.BottomCenter).windowInsetsPadding(WindowInsets.navigationBars)) {
+                                val bottomScrim = remember(isCyberpunk) {
+                                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                                        0f to Color.Transparent,
+                                        0.30f to if (isCyberpunk) Color(0xE805070E) else Color.Black.copy(alpha = 0.18f),
+                                        1f to if (isCyberpunk) Color(0xFA05070E) else Color.Black.copy(alpha = 0.28f),
+                                    )
+                                }
+                                Column(
+                                    modifier = Modifier
+                                        .align(Alignment.BottomCenter)
+                                        .background(bottomScrim)
+                                        .windowInsetsPadding(WindowInsets.navigationBars),
+                                ) {
                                     OrchardBottomBar(route) { navController.openTopLevel(it) }
                                 }
                             } else {
-                                Column(modifier = Modifier.align(Alignment.BottomCenter).windowInsetsPadding(WindowInsets.navigationBars)) {
+                                val bottomScrim = remember {
+                                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                                        0f to Color.Transparent,
+                                        1f to Color.Black.copy(alpha = 0.16f),
+                                    )
+                                }
+                                Column(
+                                    modifier = Modifier
+                                        .align(Alignment.BottomCenter)
+                                        .background(bottomScrim)
+                                        .windowInsetsPadding(WindowInsets.navigationBars),
+                                ) {
                                     CanopyReadout(
                                         playback = playerPlayback,
                                         transition = playerMarker,
@@ -351,6 +391,16 @@ fun VeyraApp(viewModel: VeyraViewModel) {
                     library = library,
                     settings = settings,
                     modifier = Modifier.zIndex(50f),
+                )
+
+                dev.sfg.veyra.mobile.ui.components.AuraSyncEdgeOverlay(
+                    enabled = settings.auraSyncEnabled,
+                    isPlaying = playerPlayback.isPlaying,
+                    accentColor = backdropPalette.accent,
+                    secondaryColor = backdropPalette.bottom,
+                    reduceMotion = reduceMotion,
+                    cyberpunk = isCyberpunk,
+                    modifier = Modifier.zIndex(90f),
                 )
 
                 dev.sfg.veyra.mobile.ui.components.WarningBanner(
@@ -445,7 +495,31 @@ private fun OrchardNavigation(
         }
     }
 
-    NavHost(navController = nav, startDestination = startDestination) {
+    val reduceMotion = LocalReducedMotion.current
+    NavHost(
+        navController = nav,
+        startDestination = startDestination,
+        enterTransition = {
+            if (reduceMotion) EnterTransition.None
+            else if (Routes.isTopLevel(targetState.destination.route)) fadeIn(tween(180))
+            else fadeIn(tween(220)) + slideInHorizontally(tween(220)) { it / 12 }
+        },
+        exitTransition = {
+            if (reduceMotion) ExitTransition.None
+            else if (Routes.isTopLevel(targetState.destination.route)) fadeOut(tween(150))
+            else fadeOut(tween(180)) + slideOutHorizontally(tween(180)) { -it / 16 }
+        },
+        popEnterTransition = {
+            if (reduceMotion) EnterTransition.None
+            else if (Routes.isTopLevel(targetState.destination.route)) fadeIn(tween(180))
+            else fadeIn(tween(220)) + slideInHorizontally(tween(220)) { -it / 12 }
+        },
+        popExitTransition = {
+            if (reduceMotion) ExitTransition.None
+            else if (Routes.isTopLevel(initialState.destination.route)) fadeOut(tween(150))
+            else fadeOut(tween(180)) + slideOutHorizontally(tween(180)) { it / 10 }
+        },
+    ) {
         composable(Routes.WELCOME) {
             WelcomeScreen(
                 settings = settings,
@@ -474,6 +548,9 @@ private fun OrchardNavigation(
                 downloads = downloadsList,
                 downloadedTrackIds = downloadedTrackIds,
                 isOffline = !isOnline,
+                activeTrackId = playback.currentTrack?.id,
+                activeArtistName = playback.currentTrack?.artist,
+                isPlaying = playback.isPlaying,
                 onRefresh = viewModel::refreshHome,
                 onSearch = { nav.openTopLevel(Routes.SEARCH) },
                 onLibrary = { filter ->
@@ -535,6 +612,10 @@ private fun OrchardNavigation(
                 onDownloadTrack = viewModel::downloadTrack,
                 onRemoveDownloadTrack = viewModel::removeDownload,
                 onShare = viewModel::shareTrack,
+                isSignedIn = auth is AuthState.SignedIn,
+                onCreatePlaylist = { title, onDone ->
+                    viewModel.createPlaylist(title, onCreated = onDone)
+                },
             )
         }
         composable(Routes.DOWNLOADS) {
@@ -715,6 +796,10 @@ private fun OrchardNavigation(
                 onPlayBestMix = viewModel::playBestMix,
                 isRefreshing = detailRefreshing,
                 onRefresh = viewModel::refreshDetail,
+                onDeletePlaylist = { playlistId ->
+                    viewModel.deletePlaylist(playlistId)
+                    nav.popBackStack()
+                },
             )
         }
         composable(Routes.DEVICES) {
@@ -749,6 +834,11 @@ private fun OrchardNavigation(
             onSelect = { playlist ->
                 playlistPickerTrack = null
                 viewModel.addTrackToPlaylist(playlist.id, track)
+            },
+            isSignedIn = auth is AuthState.SignedIn,
+            onCreatePlaylist = { title ->
+                playlistPickerTrack = null
+                viewModel.createPlaylist(title, track)
             },
         )
     }

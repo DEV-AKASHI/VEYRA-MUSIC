@@ -21,7 +21,7 @@
  * along with Veyra Music. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { chmod, mkdir, rm } from "node:fs/promises";
+import { chmod, cp, mkdir, rm } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import path from "node:path";
 import { detectTarget, isTarget, TARGETS, type Target } from "../src/backend/target.ts";
@@ -81,11 +81,13 @@ for (const target of selectedTargets()) {
   const outputDirectory = extensionMode
     ? path.join(projectRoot, "extensions")
     : path.join(projectRoot, "dist", "backend", target);
-  const outputPath = path.join(outputDirectory, `orchard-packages-backend${windows ? ".exe" : ""}`);
+  const veyraOutputPath = path.join(outputDirectory, `veyra-packages-backend${windows ? ".exe" : ""}`);
   await mkdir(outputDirectory, { recursive: true });
-  await rm(outputPath, { force: true });
+  await rm(veyraOutputPath, { force: true });
 
-  await runGo(target, outputPath);
-  if (!windows) await chmod(outputPath, 0o755);
-  console.log(`${target}: ${outputPath}`);
+  await runGo(target, veyraOutputPath);
+  if (!windows) {
+    await chmod(veyraOutputPath, 0o755);
+  }
+  console.log(`${target}: ${veyraOutputPath}`);
 }

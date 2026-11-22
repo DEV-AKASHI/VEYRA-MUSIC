@@ -58,8 +58,11 @@ class ChromecastPlayback(
     private val mainHandler = Handler(Looper.getMainLooper())
     private val sessionLossCheck = Runnable {
         // SessionAvailabilityListener can report a brief gap while Cast reconnects. Keep
-        // ownership on the receiver while the Cast framework still has a session to resume.
-        if (!player.isCastSessionAvailable && !hasCastSession()) transferToPhone()
+        // ownership on the receiver while the Cast framework restores its saved session.
+        if (!player.isCastSessionAvailable && !hasCastSession()) {
+            Log.i(TAG, "Cast session stayed unavailable; returning playback to phone")
+            transferToPhone()
+        }
     }
 
     private val remoteListener =
@@ -73,11 +76,13 @@ class ChromecastPlayback(
         object : SessionAvailabilityListener {
             override fun onCastSessionAvailable() {
                 mainHandler.removeCallbacks(sessionLossCheck)
+                Log.d(TAG, "Cast session available")
                 transferToReceiver()
             }
 
             override fun onCastSessionUnavailable() {
                 mainHandler.removeCallbacks(sessionLossCheck)
+                Log.w(TAG, "Cast session unavailable; waiting for reconnection")
                 mainHandler.postDelayed(sessionLossCheck, SESSION_LOSS_GRACE_MS)
             }
         }
@@ -232,6 +237,8 @@ class ChromecastPlayback(
 
     private companion object {
         const val TAG = "OrchardCast"
-        const val SESSION_LOSS_GRACE_MS = 2_500L
+        // The Cast SDK can briefly report an unavailable RemoteCastPlayer while its
+        // reconnection service resumes a saved session after a transient LAN loss.
+        const val SESSION_LOSS_GRACE_MS = 15_000L
     }
 }

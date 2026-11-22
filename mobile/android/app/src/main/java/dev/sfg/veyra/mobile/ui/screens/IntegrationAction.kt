@@ -36,6 +36,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -75,22 +76,25 @@ internal fun IntegrationAction(
     enabled: Boolean = true,
     onClick: () -> Unit,
 ) {
-    val actionShape = RoundedCornerShape(12.dp)
+    val isCyberpunk = dev.sfg.veyra.mobile.ui.components.LocalCyberpunkTheme.current
+    val actionShape = if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.shape else RoundedCornerShape(22.dp)
     val effectiveAccent = accentColor ?: LocalAccent.current
     val surfaceColor = when {
-        !enabled -> Color(0xFF131B2B).copy(alpha = 0.35f)
-        destructive -> Color(0xFFFF5252).copy(alpha = 0.08f)
-        else -> Color(0xFF131B2B).copy(alpha = 0.65f)
+        !enabled -> Color.White.copy(alpha = 0.04f)
+        destructive -> if (isCyberpunk) Color(0xFF280B18) else Color(0xFFEF4444).copy(alpha = 0.16f)
+        isCyberpunk -> dev.sfg.veyra.mobile.ui.theme.VeyraCyber.surfaceAlt
+        else -> Color.White.copy(alpha = 0.10f)
     }
     val borderColor = when {
-        !enabled -> Color.White.copy(alpha = 0.04f)
-        destructive -> Color(0xFFFF5252).copy(alpha = 0.22f)
-        else -> Color.White.copy(alpha = 0.08f)
+        !enabled -> Color.White.copy(alpha = 0.08f)
+        destructive -> if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.magenta else Color(0xFFF87171).copy(alpha = 0.42f)
+        isCyberpunk -> dev.sfg.veyra.mobile.ui.theme.VeyraCyber.cyan
+        else -> Color.White.copy(alpha = 0.28f)
     }
     val contentColor = when {
         !enabled -> CanopyColors.Muted
         destructive -> Color(0xFFFF6B6B)
-        else -> CanopyColors.Text
+        else -> Color.White
     }
     val iconTint = if (destructive) Color(0xFFFF6B6B) else effectiveAccent
 
@@ -99,35 +103,46 @@ internal fun IntegrationAction(
     val haptic = LocalHapticFeedback.current
 
     val animatedScale by animateFloatAsState(
-        targetValue = if (isPressed && enabled) 0.982f else 1f,
+        targetValue = if (isPressed && enabled && !isCyberpunk) 0.97f else 1f,
         animationSpec = spring(dampingRatio = 0.75f, stiffness = 550f),
         label = "IntegrationActionScale",
     )
-    val animatedElevation by animateFloatAsState(
-        targetValue = if (isPressed && enabled) 1f else 3f,
-        animationSpec = spring(dampingRatio = 0.8f, stiffness = 500f),
-        label = "IntegrationActionElevation",
-    )
 
-    Surface(
-        onClick = {
-            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-            onClick()
-        },
-        enabled = enabled,
-        interactionSource = interactionSource,
-        shape = actionShape,
-        color = surfaceColor,
-        border = BorderStroke(1.dp, borderColor),
-        shadowElevation = animatedElevation.dp,
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 3.dp)
-            .graphicsLayer {
-                scaleX = animatedScale
-                scaleY = animatedScale
-            },
+            .padding(vertical = 3.dp),
     ) {
+        if (isCyberpunk && enabled) {
+            val shadowColor = if (destructive) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.magenta else dev.sfg.veyra.mobile.ui.theme.VeyraCyber.cyan
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .offset(
+                        x = if (isPressed) 0.dp else 3.dp,
+                        y = if (isPressed) 0.dp else 3.dp,
+                    )
+                    .background(shadowColor.copy(alpha = 0.45f), actionShape),
+            )
+        }
+        Surface(
+            onClick = {
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                onClick()
+            },
+            enabled = enabled,
+            interactionSource = interactionSource,
+            shape = actionShape,
+            color = surfaceColor,
+            border = BorderStroke(if (isCyberpunk) 1.5.dp else 1.dp, borderColor),
+            shadowElevation = 0.dp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .graphicsLayer {
+                    scaleX = animatedScale
+                    scaleY = animatedScale
+                },
+        ) {
         Row(
             modifier = Modifier
                 .defaultMinSize(minHeight = 48.dp)
@@ -184,6 +199,7 @@ internal fun IntegrationAction(
                 },
                 modifier = Modifier.size(18.dp),
             )
+        }
         }
     }
 }

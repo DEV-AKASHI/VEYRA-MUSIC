@@ -55,6 +55,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import dev.sfg.veyra.connect.R
 import dev.sfg.veyra.mobile.audio.rememberSystemVolume
+import dev.sfg.veyra.mobile.ui.components.LocalCyberpunkTheme
+import dev.sfg.veyra.mobile.ui.theme.VeyraCyber
+import dev.sfg.veyra.mobile.ui.theme.VeyraSize
 import kotlin.math.roundToInt
 
 /** Thickness of the volume track line. */
@@ -74,10 +77,15 @@ fun DeviceVolumeSlider(
     onRemoteVolumeChange: (Float) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
+    val isCyberpunk = LocalCyberpunkTheme.current
     val systemVolume = rememberSystemVolume()
     var draggingVolume by remember { mutableStateOf<Float?>(null) }
     val displayVolume = draggingVolume ?: if (isRemote) remoteVolume else systemVolume.volume.toFloat()
-    val tint = Color.White.copy(alpha = if (enabled) 0.70f else 0.25f)
+    val tint = if (isCyberpunk) {
+        VeyraCyber.cyan.copy(alpha = if (enabled) 0.90f else 0.30f)
+    } else {
+        Color.White.copy(alpha = if (enabled) 0.70f else 0.25f)
+    }
     val minVal = if (isRemote) 0f else systemVolume.minVolume.toFloat()
     val maxVal = if (isRemote) 1f else systemVolume.maxVolume.toFloat()
 
@@ -89,7 +97,7 @@ fun DeviceVolumeSlider(
     ) {
         Box(
             modifier = Modifier
-                .size(24.dp)
+                .size(VeyraSize.touchTarget)
                 .clip(CircleShape)
                 .clickable(enabled = enabled) {
                     if (isRemote) onRemoteVolumeChange(0f) else systemVolume.mute()
@@ -125,18 +133,24 @@ fun DeviceVolumeSlider(
                 val rangeSpan = (sliderState.valueRange.endInclusive - sliderState.valueRange.start).coerceAtLeast(1f)
                 val fraction = ((sliderState.value - sliderState.valueRange.start) / rangeSpan).coerceIn(0f, 1f)
                 // Canal empotrado neumórfico con degradado interior
-                val grooveShape = RoundedCornerShape(percent = 50)
+                val grooveShape = if (isCyberpunk) VeyraCyber.shape else RoundedCornerShape(percent = 50)
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(8.dp)
                         .clip(grooveShape)
-                        .background(Color(0xFF090D18))
+                        .background(if (isCyberpunk) VeyraCyber.ink else Color(0xFF090D18))
                         .border(
-                            1.dp,
-                            androidx.compose.ui.graphics.Brush.verticalGradient(
-                                listOf(Color.Black.copy(alpha = 0.75f), Color.White.copy(alpha = 0.08f)),
-                            ),
+                            if (isCyberpunk) 1.5.dp else 1.dp,
+                            if (isCyberpunk) {
+                                androidx.compose.ui.graphics.Brush.verticalGradient(
+                                    listOf(VeyraCyber.cyan.copy(alpha = 0.55f), VeyraCyber.cyan.copy(alpha = 0.55f)),
+                                )
+                            } else {
+                                androidx.compose.ui.graphics.Brush.verticalGradient(
+                                    listOf(Color.Black.copy(alpha = 0.75f), Color.White.copy(alpha = 0.08f)),
+                                )
+                            },
                             grooveShape,
                         ),
                     contentAlignment = Alignment.CenterStart,
@@ -149,10 +163,17 @@ fun DeviceVolumeSlider(
                                 .clip(grooveShape)
                                 .background(
                                     androidx.compose.ui.graphics.Brush.horizontalGradient(
-                                        listOf(
-                                            Color(0xFF1E6CEB).copy(alpha = if (enabled) 0.90f else 0.40f),
-                                            Color(0xFF38BDF8).copy(alpha = if (enabled) 1.0f else 0.45f),
-                                        ),
+                                        if (isCyberpunk) {
+                                            listOf(
+                                                VeyraCyber.cyan.copy(alpha = if (enabled) 0.95f else 0.40f),
+                                                VeyraCyber.cyan.copy(alpha = if (enabled) 1.0f else 0.45f),
+                                            )
+                                        } else {
+                                            listOf(
+                                                Color(0xFF1E6CEB).copy(alpha = if (enabled) 0.90f else 0.40f),
+                                                Color(0xFF38BDF8).copy(alpha = if (enabled) 1.0f else 0.45f),
+                                            )
+                                        },
                                     ),
                                 ),
                         )
@@ -171,7 +192,7 @@ fun DeviceVolumeSlider(
         )
         Box(
             modifier = Modifier
-                .size(24.dp)
+                .size(VeyraSize.touchTarget)
                 .clip(CircleShape)
                 .clickable(enabled = enabled) {
                     if (isRemote) onRemoteVolumeChange((remoteVolume + 0.1f).coerceAtMost(1f))

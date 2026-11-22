@@ -124,10 +124,11 @@ fun EqualizerModalSheet(
     onConfigChange: (EqualizerConfig) -> Unit,
 ) {
     if (!open) return
+    val isCyberpunk = dev.sfg.veyra.mobile.ui.components.LocalCyberpunkTheme.current
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = Color(0xFF131B2B),
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        containerColor = if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.surface else Color(0xFF131B2B),
+        shape = if (isCyberpunk) RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp) else RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ) {
         EqualizerContent(
@@ -143,9 +144,14 @@ private fun EqualizerResponseMonitor(
     config: EqualizerConfig,
     modifier: Modifier = Modifier,
 ) {
-    val monitorShape = RoundedCornerShape(16.dp)
-    val cardBrush = remember {
-        Brush.verticalGradient(listOf(Color(0xFF0F1624), Color(0xFF090D15)))
+    val isCyberpunk = dev.sfg.veyra.mobile.ui.components.LocalCyberpunkTheme.current
+    val monitorShape = if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.shape else RoundedCornerShape(16.dp)
+    val cardBrush = remember(isCyberpunk) {
+        if (isCyberpunk) {
+            Brush.verticalGradient(listOf(dev.sfg.veyra.mobile.ui.theme.VeyraCyber.canvas, dev.sfg.veyra.mobile.ui.theme.VeyraCyber.ink))
+        } else {
+            Brush.verticalGradient(listOf(Color(0xFF0F1624), Color(0xFF090D15)))
+        }
     }
 
     Column(
@@ -153,7 +159,13 @@ private fun EqualizerResponseMonitor(
             .fillMaxWidth()
             .clip(monitorShape)
             .background(cardBrush, monitorShape)
-            .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)), monitorShape)
+            .border(
+                BorderStroke(
+                    if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.borderWidth else 1.dp,
+                    if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.cyan.copy(alpha = 0.65f) else Color.White.copy(alpha = 0.08f),
+                ),
+                monitorShape,
+            )
             .padding(top = 10.dp, bottom = 8.dp)
     ) {
         Row(
@@ -364,6 +376,7 @@ internal fun EqualizerContent(config: EqualizerConfig, onConfigChange: (Equalize
             items(EQ_PRESETS.size) { index ->
                 val preset = EQ_PRESETS[index]
                 val isSelected = config.presetId == preset.id
+                val isCyberEq = dev.sfg.veyra.mobile.ui.components.LocalCyberpunkTheme.current
                 Surface(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -374,11 +387,19 @@ internal fun EqualizerContent(config: EqualizerConfig, onConfigChange: (Equalize
                             )
                         )
                     },
-                    shape = RoundedCornerShape(10.dp),
-                    color = if (isSelected) Color(0xFF1E6CEB).copy(alpha = 0.22f) else Color(0xFF0F1624),
+                    shape = if (isCyberEq) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.shape else CircleShape,
+                    color = if (isCyberEq) {
+                        if (isSelected) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.acidYellow else dev.sfg.veyra.mobile.ui.theme.VeyraCyber.surface
+                    } else {
+                        if (isSelected) Color(0xFF7C3AED).copy(alpha = 0.36f) else Color.White.copy(alpha = 0.08f)
+                    },
                     border = BorderStroke(
-                        1.dp,
-                        if (isSelected) Color(0xFF38BDF8).copy(alpha = 0.60f) else Color.White.copy(alpha = 0.08f)
+                        if (isCyberEq) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.borderWidth else 1.dp,
+                        if (isCyberEq) {
+                            if (isSelected) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.ink else dev.sfg.veyra.mobile.ui.theme.VeyraCyber.cyan.copy(alpha = 0.55f)
+                        } else {
+                            if (isSelected) Color(0xFF38BDF8).copy(alpha = 0.72f) else Color.White.copy(alpha = 0.18f)
+                        },
                     ),
                     modifier = Modifier.height(34.dp)
                 ) {
@@ -388,7 +409,11 @@ internal fun EqualizerContent(config: EqualizerConfig, onConfigChange: (Equalize
                             style = MaterialTheme.typography.labelMedium.copy(
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                             ),
-                            color = if (isSelected) Color(0xFF38BDF8) else Color(0xFF94A3B8),
+                            color = if (isCyberEq) {
+                                if (isSelected) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.ink else dev.sfg.veyra.mobile.ui.theme.VeyraCyber.text
+                            } else {
+                                if (isSelected) Color.White else Color(0xFF94A3B8)
+                            },
                         )
                     }
                 }
@@ -406,8 +431,8 @@ internal fun EqualizerContent(config: EqualizerConfig, onConfigChange: (Equalize
             Text(stringResource(R.string.eq_preamp, config.preampDb.roundToInt()), color = CanopyColors.Text)
             Surface(
                 shape = RoundedCornerShape(6.dp),
-                color = Color(0xFF131B2B),
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)),
+                color = Color.White.copy(alpha = 0.08f),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.16f)),
             ) {
                 Text(
                     text = "${if (config.preampDb > 0) "+" else ""}${config.preampDb.roundToInt()} dB",
@@ -444,8 +469,8 @@ internal fun EqualizerContent(config: EqualizerConfig, onConfigChange: (Equalize
             Text(stringResource(R.string.eq_bass_boost, (config.bassBoost * 100).roundToInt()), color = CanopyColors.Text)
             Surface(
                 shape = RoundedCornerShape(6.dp),
-                color = Color(0xFF131B2B),
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)),
+                color = Color.White.copy(alpha = 0.08f),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.16f)),
             ) {
                 Text(
                     text = "${(config.bassBoost * 100).roundToInt()}%",
@@ -523,8 +548,8 @@ internal fun EqualizerContent(config: EqualizerConfig, onConfigChange: (Equalize
                 Spacer(Modifier.width(12.dp))
                 Surface(
                     shape = RoundedCornerShape(6.dp),
-                    color = Color(0xFF0F1624),
-                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.06f)),
+                    color = Color.White.copy(alpha = 0.08f),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.16f)),
                     modifier = Modifier.width(54.dp)
                 ) {
                     Text(

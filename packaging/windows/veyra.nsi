@@ -25,7 +25,7 @@ Unicode True
 ManifestSupportedOS win10
 RequestExecutionLevel user
 SetCompressor /SOLID lzma
-BrandingText "Veyra Packages"
+BrandingText "Veyra Music • AKASHI DEV"
 Icon "${ICON}"
 UninstallIcon "${ICON}"
 
@@ -48,7 +48,7 @@ VIAddVersionKey "LegalCopyright" "Copyright (C) 2026 AKASHI DEV"
 !define MUI_ICON "${ICON}"
 !define MUI_UNICON "${ICON}"
 !define MUI_FINISHPAGE_RUN "$INSTDIR\veyra-packages.exe"
-!define MUI_FINISHPAGE_RUN_TEXT "Launch Veyra Packages"
+!define MUI_FINISHPAGE_RUN_TEXT "Launch Veyra Music"
 
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_LICENSE "${LICENSE}"
@@ -67,7 +67,6 @@ Section "Veyra Packages" VeyraPackages
   SetOutPath "$INSTDIR"
   File /r "${BUNDLE}\*"
   File /oname=veyra.cmd "${LAUNCHER}"
-  File /oname=orchard.cmd "${LAUNCHER}"
   WriteUninstaller "$INSTDIR\Uninstall Veyra Music.exe"
 
   ; Clean up legacy shortcuts and registry keys

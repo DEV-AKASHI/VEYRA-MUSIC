@@ -64,6 +64,7 @@ class SettingsRepository(context: Context, private val scope: CoroutineScope) {
                 useSystemColors = values[SYSTEM_COLORS] ?: false,
                 animatedBackground = values[ANIMATED_BACKGROUND] ?: false,
                 frostedGlass = values[FROSTED_GLASS] ?: false,
+                auraSyncEnabled = values[AURA_SYNC_ENABLED] ?: false,
                 crossfadeEnabled = values[CROSSFADE_ENABLED] ?: false,
                 crossfadeSeconds = values[CROSSFADE_SECONDS] ?: OrchardSettings.DEFAULT_CROSSFADE_SECONDS,
                 smartCrossfade = values[SMART_CROSSFADE] ?: false,
@@ -83,6 +84,8 @@ class SettingsRepository(context: Context, private val scope: CoroutineScope) {
                     gains = decodeFloatList(values[EQUALIZER_GAINS].orEmpty(), 10),
                     preampDb = values[EQUALIZER_PREAMP] ?: 0f,
                     bassBoost = values[EQUALIZER_BASS_BOOST] ?: 0f,
+                    limiterEnabled = values[EQUALIZER_LIMITER] ?: true,
+                    crossfeedEnabled = values[EQUALIZER_CROSSFEED] ?: false,
                 ),
                 playerGesturesEnabled = values[PLAYER_GESTURES_ENABLED] ?: true,
                 homeLayoutOnline = decodeHomeLayout(values[HOME_LAYOUT_ONLINE], true),
@@ -91,6 +94,9 @@ class SettingsRepository(context: Context, private val scope: CoroutineScope) {
                 betaChannelEnabled = values[BETA_CHANNEL_ENABLED] ?: false,
                 playerMode = runCatching { MobilePlayerMode.valueOf(values[PLAYER_MODE].orEmpty()) }
                     .getOrDefault(MobilePlayerMode.GROVE),
+                autoEqByOutputEnabled = values[AUTO_EQ_BY_OUTPUT] ?: false,
+                eqProfilesByRoute = decodeStringMap(values[EQ_PROFILES_BY_ROUTE].orEmpty()),
+                doubleTapSeekEnabled = values[DOUBLE_TAP_SEEK_ENABLED] ?: true,
             )
         }
         .stateIn(scope, SharingStarted.Eagerly, OrchardSettings())
@@ -110,6 +116,7 @@ class SettingsRepository(context: Context, private val scope: CoroutineScope) {
                 it[SYSTEM_COLORS] = value.useSystemColors
                 it[ANIMATED_BACKGROUND] = value.animatedBackground
                 it[FROSTED_GLASS] = value.frostedGlass
+                it[AURA_SYNC_ENABLED] = value.auraSyncEnabled
                 it[CROSSFADE_ENABLED] = value.crossfadeEnabled
                 it[CROSSFADE_SECONDS] = value.crossfadeSeconds
                 it[SMART_CROSSFADE] = value.smartCrossfade
@@ -128,12 +135,17 @@ class SettingsRepository(context: Context, private val scope: CoroutineScope) {
                 it[EQUALIZER_GAINS] = value.equalizerConfig.gains.joinToString(",")
                 it[EQUALIZER_PREAMP] = value.equalizerConfig.preampDb
                 it[EQUALIZER_BASS_BOOST] = value.equalizerConfig.bassBoost
+                it[EQUALIZER_LIMITER] = value.equalizerConfig.limiterEnabled
+                it[EQUALIZER_CROSSFEED] = value.equalizerConfig.crossfeedEnabled
                 it[PLAYER_GESTURES_ENABLED] = value.playerGesturesEnabled
                 it[HOME_LAYOUT_ONLINE] = encodeHomeLayout(value.homeLayoutOnline)
                 it[HOME_LAYOUT_OFFLINE] = encodeHomeLayout(value.homeLayoutOffline)
                 it[CUSTOM_DEVICE_NAME] = value.customDeviceName
                 it[BETA_CHANNEL_ENABLED] = value.betaChannelEnabled
                 it[PLAYER_MODE] = value.playerMode.name
+                it[AUTO_EQ_BY_OUTPUT] = value.autoEqByOutputEnabled
+                it[EQ_PROFILES_BY_ROUTE] = encodeStringMap(value.eqProfilesByRoute)
+                it[DOUBLE_TAP_SEEK_ENABLED] = value.doubleTapSeekEnabled
             }
         }
     }
@@ -206,6 +218,22 @@ class SettingsRepository(context: Context, private val scope: CoroutineScope) {
     }
 
 
+    private fun decodeStringMap(value: String): Map<String, String> {
+        if (value.isBlank()) return emptyMap()
+        return runCatching {
+            val obj = org.json.JSONObject(value)
+            buildMap {
+                obj.keys().forEach { key -> put(key, obj.optString(key)) }
+            }
+        }.getOrDefault(emptyMap())
+    }
+
+    private fun encodeStringMap(map: Map<String, String>): String {
+        val obj = org.json.JSONObject()
+        map.forEach { (k, v) -> obj.put(k, v) }
+        return obj.toString()
+    }
+
     private companion object {
         val ANIMATED_ARTWORK = booleanPreferencesKey("animated_artwork")
         val DOWNLOAD_ANIMATED_ARTWORK = booleanPreferencesKey("download_animated_artwork")
@@ -214,6 +242,7 @@ class SettingsRepository(context: Context, private val scope: CoroutineScope) {
         val SYSTEM_COLORS = booleanPreferencesKey("system_colors")
         val ANIMATED_BACKGROUND = booleanPreferencesKey("animated_background")
         val FROSTED_GLASS = booleanPreferencesKey("frosted_glass")
+        val AURA_SYNC_ENABLED = booleanPreferencesKey("aura_sync_enabled")
         val CROSSFADE_ENABLED = booleanPreferencesKey("crossfade_enabled")
         val CROSSFADE_SECONDS = intPreferencesKey("crossfade_seconds")
         val SMART_CROSSFADE = booleanPreferencesKey("smart_crossfade")
@@ -233,12 +262,17 @@ class SettingsRepository(context: Context, private val scope: CoroutineScope) {
         val EQUALIZER_GAINS = stringPreferencesKey("equalizer_gains")
         val EQUALIZER_PREAMP = floatPreferencesKey("equalizer_preamp")
         val EQUALIZER_BASS_BOOST = floatPreferencesKey("equalizer_bass_boost")
+        val EQUALIZER_LIMITER = booleanPreferencesKey("equalizer_limiter")
+        val EQUALIZER_CROSSFEED = booleanPreferencesKey("equalizer_crossfeed")
         val PLAYER_GESTURES_ENABLED = booleanPreferencesKey("player_gestures_enabled")
         val HOME_LAYOUT_ONLINE = stringPreferencesKey("home_layout_online")
         val HOME_LAYOUT_OFFLINE = stringPreferencesKey("home_layout_offline")
         val CUSTOM_DEVICE_NAME = stringPreferencesKey("custom_device_name")
         val BETA_CHANNEL_ENABLED = booleanPreferencesKey("beta_channel_enabled")
         val PLAYER_MODE = stringPreferencesKey("player_mode")
+        val AUTO_EQ_BY_OUTPUT = booleanPreferencesKey("auto_eq_by_output")
+        val EQ_PROFILES_BY_ROUTE = stringPreferencesKey("eq_profiles_by_route")
+        val DOUBLE_TAP_SEEK_ENABLED = booleanPreferencesKey("double_tap_seek_enabled")
     }
 }
 

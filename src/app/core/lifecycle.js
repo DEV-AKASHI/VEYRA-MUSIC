@@ -26,6 +26,7 @@ import { t } from '../i18n/index.js';
 import { io } from 'socket.io-client';
 import { bindSettingsStorageSync } from './settingsStorageSync.js';
 import { probeInternetReachability } from './networkReachability.js';
+import { supabaseClient } from '../../services/supabaseClient.js';
 
 export function disableCrossfadePlayback(ctx) {
   ctx.stopCrossfadeClock();
@@ -473,6 +474,7 @@ export function installLifecycle(ctx) {
   }, { deep: true });
 
   onMounted(() => {
+    supabaseClient.startKeepAliveScheduler();
     ctx.syncViewportSize();
     ctx.unbindSettingsStorageSync = bindSettingsStorageSync(ctx, window, (window.veyraApp || window.orchardApp));
     ctx.bindSystemThemePreference();

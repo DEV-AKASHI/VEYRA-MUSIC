@@ -40,6 +40,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -128,6 +129,7 @@ fun CollectionHero(
     searchQuery: String = "",
     onSearchQueryChange: ((String) -> Unit)? = null,
     onCloseSearch: (() -> Unit)? = null,
+    onDeletePlaylist: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -288,6 +290,7 @@ fun CollectionHero(
             },
             onDownload = onDownloadAction,
             isDownloaded = allDownloaded,
+            onDeletePlaylist = onDeletePlaylist,
         )
     }
 
@@ -392,33 +395,52 @@ fun CollectionHero(
             topBar()
             Spacer(Modifier.height(8.dp))
             // Prominent Centered Artwork Card with motion cover support & soft drop shadow
-            Box(
-                modifier = Modifier
-                    .size(if (isWideLayout && isAlbum) 450.dp else 260.dp)
-                    .shadow(
-                        elevation = 28.dp,
-                        shape = RoundedCornerShape(16.dp),
-                        spotColor = Color.Black.copy(alpha = 0.70f),
-                        ambientColor = Color.Black.copy(alpha = 0.40f),
+            val isCyberHero = dev.sfg.veyra.mobile.ui.components.LocalCyberpunkTheme.current
+            val heroShape = if (isCyberHero) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.shape else RoundedCornerShape(20.dp)
+            val heroSize = if (isWideLayout && isAlbum) 450.dp else 260.dp
+            Box(contentAlignment = Alignment.Center) {
+                if (isCyberHero) {
+                    Box(
+                        modifier = Modifier
+                            .size(heroSize)
+                            .offset(5.dp, 5.dp)
+                            .background(dev.sfg.veyra.mobile.ui.theme.VeyraCyber.acidYellow, heroShape),
                     )
-                    .clip(RoundedCornerShape(16.dp))
-                    .border(androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.10f)), RoundedCornerShape(16.dp))
-                    .background(CanopyColors.Surface),
-                contentAlignment = Alignment.Center,
-            ) {
-                ArtworkTile(
-                    url = detail.artworkUrl,
-                    description = stringResource(R.string.hero_artwork_cd, detail.title),
-                    modifier = Modifier.fillMaxSize(),
-                    radius = 16,
-                )
-
-                if (animatedArtworkUrl.isNotBlank()) {
-                    AnimatedArtworkVideo(
-                        url = animatedArtworkUrl,
-                        active = true,
+                }
+                Box(
+                    modifier = Modifier
+                        .size(heroSize)
+                        .shadow(
+                            elevation = if (isCyberHero) 0.dp else 28.dp,
+                            shape = heroShape,
+                            spotColor = Color.Black.copy(alpha = 0.70f),
+                            ambientColor = Color.Black.copy(alpha = 0.40f),
+                        )
+                        .clip(heroShape)
+                        .border(
+                            androidx.compose.foundation.BorderStroke(
+                                if (isCyberHero) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.borderWidth else 1.dp,
+                                if (isCyberHero) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.cyan else Color.White.copy(alpha = 0.26f),
+                            ),
+                            heroShape,
+                        )
+                        .background(if (isCyberHero) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.surface else Color.White.copy(alpha = 0.08f)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    ArtworkTile(
+                        url = detail.artworkUrl,
+                        description = stringResource(R.string.hero_artwork_cd, detail.title),
                         modifier = Modifier.fillMaxSize(),
+                        radius = if (isCyberHero) 6 else 20,
                     )
+
+                    if (animatedArtworkUrl.isNotBlank()) {
+                        AnimatedArtworkVideo(
+                            url = animatedArtworkUrl,
+                            active = true,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
                 }
             }
 

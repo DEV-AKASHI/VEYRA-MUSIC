@@ -838,6 +838,15 @@
     <string name="quality_normal_desc">Balanced quality and usage</string>
     <string name="quality_high_desc">Better audio fidelity</string>
     <string name="quality_max_desc">Maximum bitrate without extra compression</string>
+    <string name="act_new_playlist">New playlist</string>
+    <string name="act_create">Create</string>
+    <string name="act_create_and_add">Create &amp; add</string>
+    <string name="act_delete_playlist">Delete playlist</string>
+    <string name="playlist_name_hint">Playlist name</string>
+    <string name="playlist_delete_confirm_title">Delete this playlist?</string>
+    <string name="playlist_delete_confirm_body">This removes the playlist permanently from your YouTube Music library.</string>
+    <string name="msg_sign_in_playlists">Sign in to YouTube Music to manage playlists</string>
+    <string name="msg_playlist_created">Playlist "%1$s" created on YouTube Music</string>
     <plurals name="msg_downloaded_songs_count">
         <item quantity="one">%d downloaded song</item>
         <item quantity="other">%d downloaded songs</item>

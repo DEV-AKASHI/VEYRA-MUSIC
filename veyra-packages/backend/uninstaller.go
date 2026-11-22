@@ -26,7 +26,7 @@ func (i *installer) uninstallRelease(ctx context.Context, version string) error 
 		return err
 	}
 	if !versionPattern.MatchString(version) {
-		return fmt.Errorf("invalid Orchard version: %s", version)
+		return fmt.Errorf("invalid Veyra Music version: %s", version)
 	}
 	target, err := detectTarget()
 	if err != nil {
@@ -37,10 +37,10 @@ func (i *installer) uninstallRelease(ctx context.Context, version string) error 
 		return err
 	}
 	if err := validateInstallation(installDirectory, version, target); err != nil {
-		return fmt.Errorf("Orchard %s is not installed: %w", version, err)
+		return fmt.Errorf("Veyra Music %s is not installed: %w", version, err)
 	}
 	if err := os.RemoveAll(installDirectory); err != nil {
-		return fmt.Errorf("could not uninstall Orchard %s: %w", version, err)
+		return fmt.Errorf("could not uninstall Veyra Music %s: %w", version, err)
 	}
 	return nil
 }

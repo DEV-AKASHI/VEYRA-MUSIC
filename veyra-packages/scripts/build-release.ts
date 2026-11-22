@@ -28,15 +28,15 @@ import { detectTarget, isTarget, TARGETS, type Target } from "../src/backend/tar
 
 const projectRoot = path.resolve(import.meta.dir, "..");
 const supportedShellTargets: Target[] = [...TARGETS];
-const shellNames: Record<Target, string> = {
-  "linux-x64": "orchard-packages-linux_x64",
-  "linux-arm64": "orchard-packages-linux_arm64",
-  "win32-x64": "orchard-packages-win_x64.exe",
+const shellSuffixes: Record<Target, string> = {
+  "linux-x64": "linux_x64",
+  "linux-arm64": "linux_arm64",
+  "win32-x64": "win_x64.exe",
   // Neutralino no tiene shell para Windows ARM64. Windows ejecuta su shell x64 bajo
   // emulación mientras el backend nativo Go de ARM64 selecciona los assets de Veyra Music para ARM64.
-  "win32-arm64": "orchard-packages-win_x64.exe",
-  "darwin-x64": "orchard-packages-mac_x64",
-  "darwin-arm64": "orchard-packages-mac_arm64"
+  "win32-arm64": "win_x64.exe",
+  "darwin-x64": "mac_x64",
+  "darwin-arm64": "mac_arm64"
 };
 
 function run(command: string, args: string[]): Promise<void> {
@@ -62,39 +62,61 @@ await run("bunx", ["neu", "update"]);
 await run("bunx", ["neu", "build"]);
 
 const packageJson = JSON.parse(await readFile(path.join(projectRoot, "package.json"), "utf8")) as { version: string };
-const neutralinoOutput = path.join(projectRoot, "dist", "neutralino", "orchard-packages");
 const releasesRoot = path.join(projectRoot, "dist", "releases");
+
+async function resolveNeutralinoOutput(): Promise<string> {
+  const primary = path.join(projectRoot, "dist", "neutralino", "veyra-packages");
+  try {
+    await readFile(path.join(primary, "resources.neu"));
+    return primary;
+  } catch {
+    return path.join(projectRoot, "dist", "neutralino", "orchard-packages");
+  }
+}
+
+async function resolveShellBinary(neutralinoDir: string, target: Target): Promise<string> {
+  const suffix = shellSuffixes[target];
+  const candidates = [
+    path.join(neutralinoDir, `veyra-packages-${suffix}`),
+    path.join(neutralinoDir, `orchard-packages-${suffix}`)
+  ];
+  for (const candidate of candidates) {
+    try {
+      await readFile(candidate);
+      return candidate;
+    } catch {}
+  }
+  return candidates[0];
+}
+
+const neutralinoOutput = await resolveNeutralinoOutput();
 
 for (const target of targets) {
   await run("bun", ["run", "scripts/build-backend.ts", target]);
   const windows = target.startsWith("win32-");
-  const bundleRoot = path.join(releasesRoot, `orchard-packages-${packageJson.version}-${target}`);
+  const shellBinary = await resolveShellBinary(neutralinoOutput, target);
+
+  const bundleRoot = path.join(releasesRoot, `veyra-packages-${packageJson.version}-${target}`);
+  const veyraAppName = windows ? "veyra-packages.exe" : "veyra-packages";
+  const veyraBackendName = windows ? "veyra-packages-backend.exe" : "veyra-packages-backend";
+
   const extensionRoot = path.join(bundleRoot, "extensions");
   await rm(bundleRoot, { recursive: true, force: true });
   await mkdir(extensionRoot, { recursive: true });
 
-  const appName = windows ? "orchard-packages.exe" : "orchard-packages";
-  const backendName = windows ? "orchard-packages-backend.exe" : "orchard-packages-backend";
-  const veyraAppName = windows ? "veyra-packages.exe" : "veyra-packages";
-  const veyraBackendName = windows ? "veyra-packages-backend.exe" : "veyra-packages-backend";
   await Promise.all([
-    cp(path.join(neutralinoOutput, shellNames[target]), path.join(bundleRoot, appName)),
-    cp(path.join(neutralinoOutput, shellNames[target]), path.join(bundleRoot, veyraAppName)),
+    cp(shellBinary, path.join(bundleRoot, veyraAppName)),
     cp(path.join(neutralinoOutput, "resources.neu"), path.join(bundleRoot, "resources.neu")),
     cp(
-      path.join(projectRoot, "dist", "backend", target, backendName),
-      path.join(extensionRoot, backendName)
-    ),
-    cp(
-      path.join(projectRoot, "dist", "backend", target, backendName),
+      path.join(projectRoot, "dist", "backend", target, veyraBackendName),
       path.join(extensionRoot, veyraBackendName)
     )
   ]);
+
   if (!windows) {
-    await chmod(path.join(bundleRoot, appName), 0o755);
     await chmod(path.join(bundleRoot, veyraAppName), 0o755);
-    await chmod(path.join(extensionRoot, backendName), 0o755);
     await chmod(path.join(extensionRoot, veyraBackendName), 0o755);
   }
   console.log(`${target}: ${bundleRoot}`);
 }
+

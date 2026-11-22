@@ -6,20 +6,23 @@
 
 ---
 
-## 📦 Formatos de Distribución (v1.0.0 Oficial)
+## 📦 Formatos de Distribución (v1.0.3 Oficial)
 
 | Sistema Operativo | Formato | Arquitectura | Tamaño | Estado |
 | :--- | :--- | :--- | :--- | :--- |
-| **Linux** | Standalone Tar.gz (`veyra-v1.0.0-linux-x64.tar.gz`) | `x86_64` | 394 MB | ✅ Compilado y verificado |
-| **Windows** | Portable Zip (`veyra-v1.0.0-windows-x64.zip`) | `x64` | 343 MB | ✅ Compilado y verificado |
+| **Windows** | Instalador Setup (`Veyra-Setup-1.0.3.exe` / `veyramusic.exe`) | `x64` | 248 MB | ✅ Compilado y verificado |
+| **Windows** | Portable Zip (`veyra-v1.0.3-windows-x64.zip`) | `x64` | 404 MB | ✅ Compilado y verificado |
+| **Linux** | Standalone Tar.gz (`veyra-v1.0.3-linux-x64.tar.gz`) | `x86_64` | 377 MB | ✅ Compilado y verificado |
 
 ---
 
 ## 🔐 Sumas de Verificación (SHA-256)
 
 ```text
-380e01b4bcb502bf499145b30d78d0dbc75509245f630aade38aa21ded0d3aac  veyra-v1.0.0-linux-x64.tar.gz
-b5116718574bd13e3eff4415658251b2d0ff60d5a91655e5c1bbd253f6c35b29  veyra-v1.0.0-windows-x64.zip
+31a5049f0aefdb1ceff0f1b3dbce29beee54f8c77f3c1096943ee2479ac183d0  Veyra-Setup-1.0.3.exe
+31a5049f0aefdb1ceff0f1b3dbce29beee54f8c77f3c1096943ee2479ac183d0  veyramusic.exe
+b15e24831887be2d9ab062085224c0a5023c6d2ef114b0907ee1ffaf0593c69f  veyra-v1.0.3-windows-x64.zip
+61adfc6b23f444352d84229edd1146904e372dc6c40404772b46f2bd24993644  veyra-v1.0.3-linux-x64.tar.gz
 ```
 
 ---

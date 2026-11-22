@@ -1,9 +1,9 @@
 {
-  "version": "1.0.3",
-  "codename": "AKASHI DEV",
-  "versionCode": 4,
-  "apkUrl": "https://github.com/SCARLXRD-1/VEYRA-MUSIC/releases/download/v1.0.3/veyramusic.apk",
-  "sha256": "69129b4c295508b7869444365fe70f5f9c573e3a55db76a05725644524d91da5",
-  "publishedAt": "2026-10-19T20:00:00Z",
-  "releaseNotes": "Rediseño industrial Obsidian Slate en Ajustes, micro-interacciones táctiles elásticas, persistencia de cola, Chromecast de alta estabilidad y mejoras de rendimiento."
+  "version": "1.0.4",
+  "codename": "Liquid Aurora",
+  "versionCode": 5,
+  "apkUrl": "https://github.com/SCARLXRD-1/VEYRA-MUSIC/releases/download/v1.0.4-mobile/veyramusic.apk",
+  "sha256": "",
+  "publishedAt": "2026-11-22T03:55:00Z",
+  "releaseNotes": "Estreno de Liquid Aurora y Cyberpunk UI, espectro PCM de 12 bandas en tiempo real, Aura Sync RGB al ritmo y gestión completa de listas de reproducción conectadas a YouTube Music."
 }

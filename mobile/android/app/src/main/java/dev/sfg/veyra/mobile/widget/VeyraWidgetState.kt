@@ -36,6 +36,7 @@ internal data class VeyraWidgetState(
     val isPlaying: Boolean = false,
     val positionMs: Long = 0,
     val durationMs: Long = 0,
+    val isCyberpunk: Boolean = false,
 )
 
 /** Small durable projection so widgets remain useful when Android has stopped the player process. */
@@ -47,6 +48,7 @@ internal object OrchardWidgetStateCodec {
         .put("isPlaying", state.isPlaying)
         .put("positionMs", state.positionMs.coerceAtLeast(0))
         .put("durationMs", state.durationMs.coerceAtLeast(0))
+        .put("isCyberpunk", state.isCyberpunk)
 
     fun decode(root: JSONObject): VeyraWidgetState = VeyraWidgetState(
         currentTrack = root.optJSONObject("currentTrack")?.let(CatalogJson::track),
@@ -54,6 +56,7 @@ internal object OrchardWidgetStateCodec {
         isPlaying = root.optBoolean("isPlaying"),
         positionMs = root.optLong("positionMs").coerceAtLeast(0),
         durationMs = root.optLong("durationMs").coerceAtLeast(0),
+        isCyberpunk = root.optBoolean("isCyberpunk", false),
     )
 }
 

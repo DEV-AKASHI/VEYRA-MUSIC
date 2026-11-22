@@ -23,6 +23,7 @@
 
 package dev.sfg.veyra.mobile.app
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,8 +31,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.semantics.isTraversalGroup
+import androidx.compose.ui.semantics.semantics
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import dev.sfg.veyra.mobile.auth.AuthState
 import dev.sfg.veyra.mobile.model.LibrarySnapshot
 import dev.sfg.veyra.mobile.model.OrchardSettings
 import dev.sfg.veyra.mobile.model.PlaybackSnapshot
@@ -85,13 +89,15 @@ fun NowPlayingOverlay(
     val sleepTimerEndOfTrack by viewModel.sleepTimerEndOfTrack.collectAsStateWithLifecycle()
     val musicVideo by viewModel.musicVideo.collectAsStateWithLifecycle()
     val videoPlayer by viewModel.videoPlayer.collectAsStateWithLifecycle()
+    val auth by viewModel.auth.collectAsStateWithLifecycle()
     var playlistPickerTrack by remember { mutableStateOf<Track?>(null) }
 
     val liked = library.likedTracks.any { it.id == currentTrack.id }
 
-    NowPlayingScreen(
-        modifier = modifier,
-        collapseBounds = collapseBounds,
+    Box(modifier = modifier.semantics { isTraversalGroup = true }) {
+        NowPlayingScreen(
+            modifier = Modifier,
+            collapseBounds = collapseBounds,
         collapseArtworkBounds = collapseArtworkBounds,
         restingCoverBounds = restingCoverBounds,
         onRestingCoverBounds = onRestingCoverBounds,
@@ -164,6 +170,7 @@ fun NowPlayingOverlay(
             nav.navigate(Routes.detail(id))
         },
     )
+    }
 
     playlistPickerTrack?.let { track ->
         PlaylistPickerSheet(
@@ -173,6 +180,11 @@ fun NowPlayingOverlay(
             onSelect = { playlist ->
                 playlistPickerTrack = null
                 viewModel.addTrackToPlaylist(playlist.id, track)
+            },
+            isSignedIn = auth is AuthState.SignedIn,
+            onCreatePlaylist = { title ->
+                playlistPickerTrack = null
+                viewModel.createPlaylist(title, track)
             },
         )
     }

@@ -43,13 +43,23 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -73,7 +83,10 @@ import dev.sfg.veyra.mobile.model.LibraryFilter
 import dev.sfg.veyra.mobile.model.LibrarySnapshot
 import dev.sfg.veyra.mobile.model.Track
 import dev.sfg.veyra.mobile.ui.components.CatalogCard
+import dev.sfg.veyra.mobile.ui.components.LocalCyberpunkTheme
 import dev.sfg.veyra.mobile.ui.components.MessagePanel
+import dev.sfg.veyra.mobile.ui.theme.VeyraCyber
+import dev.sfg.veyra.mobile.ui.theme.VeyraRadius
 import dev.sfg.veyra.mobile.ui.components.OrchardChromeHeight
 import dev.sfg.veyra.mobile.ui.components.OrchardFilterChips
 import dev.sfg.veyra.mobile.ui.components.OrchardSectionHeader
@@ -115,9 +128,26 @@ fun LibraryScreen(
     onDownloadTrack: ((Track) -> Unit)? = null,
     onRemoveDownloadTrack: ((String) -> Unit)? = null,
     onShare: ((Track) -> Unit)? = null,
+    isSignedIn: Boolean = true,
+    onCreatePlaylist: ((String, (String) -> Unit) -> Unit)? = null,
 ) {
     val context = LocalContext.current
+    val isCyberpunk = LocalCyberpunkTheme.current
+    val accent = LocalAccent.current
     var searchQuery by remember { mutableStateOf("") }
+    var showCreatePlaylistDialog by remember { mutableStateOf(false) }
+
+    if (showCreatePlaylistDialog && onCreatePlaylist != null) {
+        CreatePlaylistDialog(
+            onDismiss = { showCreatePlaylistDialog = false },
+            onCreate = { title ->
+                showCreatePlaylistDialog = false
+                onCreatePlaylist(title) { createdId ->
+                    onOpenDetail(createdId)
+                }
+            },
+        )
+    }
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = OrchardChromeHeight)) {
             item {
@@ -131,6 +161,27 @@ fun LibraryScreen(
                             dev.sfg.veyra.mobile.ui.components.StatusPillBadge(
                                 label = context.getString(filter.labelRes).uppercase(),
                                 status = dev.sfg.veyra.mobile.ui.components.StatusPillTone.ACTIVE,
+                                size = dev.sfg.veyra.mobile.ui.components.StatusPillSize.SM,
+                            )
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            dev.sfg.veyra.mobile.ui.components.StatusPillBadge(
+                                label = "${library.savedPlaylists.size} LISTAS",
+                                status = dev.sfg.veyra.mobile.ui.components.StatusPillTone.INFO,
+                                dot = false,
+                                size = dev.sfg.veyra.mobile.ui.components.StatusPillSize.SM,
+                            )
+                            dev.sfg.veyra.mobile.ui.components.StatusPillBadge(
+                                label = "${library.likedTracks.size} FAVORITAS",
+                                status = dev.sfg.veyra.mobile.ui.components.StatusPillTone.PRIMARY,
+                                dot = false,
+                                size = dev.sfg.veyra.mobile.ui.components.StatusPillSize.SM,
+                            )
+                            dev.sfg.veyra.mobile.ui.components.StatusPillBadge(
+                                label = "${downloadedTrackIds.size} OFFLINE",
+                                status = dev.sfg.veyra.mobile.ui.components.StatusPillTone.SYNC,
+                                dot = false,
                                 size = dev.sfg.veyra.mobile.ui.components.StatusPillSize.SM,
                             )
                         }
@@ -150,14 +201,19 @@ fun LibraryScreen(
                             .padding(horizontal = 16.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
+                        val isCyberpunk = LocalCyberpunkTheme.current
+                        val searchShape = if (isCyberpunk) VeyraCyber.shape else CircleShape
                         Surface(
-                            shape = RoundedCornerShape(14.dp),
-                            color = Color(0xFF0A0F1A),
-                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)),
+                            shape = searchShape,
+                            color = if (isCyberpunk) VeyraCyber.surface else Color.White.copy(alpha = 0.08f),
+                            border = BorderStroke(
+                                if (isCyberpunk) VeyraCyber.borderWidth else 1.dp,
+                                if (isCyberpunk) VeyraCyber.cyan else Color.White.copy(alpha = 0.24f),
+                            ),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(42.dp)
-                                .shadow(4.dp, RoundedCornerShape(14.dp), spotColor = Color.Black.copy(alpha = 0.50f)),
+                                .height(48.dp)
+                                .shadow(if (isCyberpunk) 0.dp else 6.dp, searchShape, spotColor = Color.Black.copy(alpha = 0.45f)),
                         ) {
                             Row(
                                 modifier = Modifier
@@ -225,6 +281,65 @@ fun LibraryScreen(
             }
             when (filter) {
                 LibraryFilter.PLAYLISTS -> {
+                    if (onCreatePlaylist != null) {
+                        item {
+                            Surface(
+                                onClick = {
+                                    if (isSignedIn) {
+                                        showCreatePlaylistDialog = true
+                                    } else {
+                                        onCreatePlaylist("", {})
+                                    }
+                                },
+                                shape = if (isCyberpunk) VeyraCyber.shape else RoundedCornerShape(18.dp),
+                                color = if (isCyberpunk) VeyraCyber.surface else Color.White.copy(alpha = 0.08f),
+                                border = BorderStroke(
+                                    if (isCyberpunk) VeyraCyber.borderWidth else 1.dp,
+                                    if (isCyberpunk) VeyraCyber.cyan else Color.White.copy(alpha = 0.22f),
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp)
+                                    .padding(bottom = 12.dp),
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                                        Surface(
+                                            shape = if (isCyberpunk) VeyraCyber.shape else CircleShape,
+                                            color = if (isCyberpunk) VeyraCyber.acidYellow else accent.copy(alpha = 0.22f),
+                                            modifier = Modifier.size(34.dp),
+                                        ) {
+                                            Icon(
+                                                Icons.Rounded.Add,
+                                                contentDescription = null,
+                                                tint = if (isCyberpunk) VeyraCyber.canvas else accent,
+                                                modifier = Modifier.padding(7.dp),
+                                            )
+                                        }
+                                        Spacer(Modifier.width(12.dp))
+                                        Column {
+                                            Text(
+                                                text = stringResource(R.string.act_new_playlist),
+                                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                                                color = Color.White,
+                                            )
+                                            if (!isSignedIn) {
+                                                Text(
+                                                    text = stringResource(R.string.msg_sign_in_playlists),
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = CanopyColors.Muted,
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                     val playlists = library.savedPlaylists.map { CatalogItem.Collection(it) }
                     val filtered = filterCatalogItems(playlists, searchQuery)
                     collections(
@@ -526,5 +641,72 @@ private fun LazyListScope.tracks(
             onViewArtist = onOpen?.takeIf { track.artistId.isNotBlank() }?.let { nav -> { nav(track.artistId) } },
         )
     }
+}
+
+@Composable
+private fun CreatePlaylistDialog(
+    onDismiss: () -> Unit,
+    onCreate: (String) -> Unit,
+) {
+    val isCyberpunk = LocalCyberpunkTheme.current
+    val accent = LocalAccent.current
+    var title by remember { mutableStateOf("") }
+
+    fun submit() {
+        val clean = title.trim()
+        if (clean.isNotEmpty()) onCreate(clean)
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = if (isCyberpunk) VeyraCyber.surface else Color(0xFF13102A),
+        shape = if (isCyberpunk) VeyraCyber.shape else RoundedCornerShape(22.dp),
+        title = {
+            Text(
+                text = stringResource(R.string.act_new_playlist),
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+            )
+        },
+        text = {
+            OutlinedTextField(
+                value = title,
+                onValueChange = { title = it },
+                singleLine = true,
+                placeholder = {
+                    Text(stringResource(R.string.playlist_name_hint), color = CanopyColors.Muted)
+                },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { submit() }),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = if (isCyberpunk) VeyraCyber.cyan else accent,
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.24f),
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    cursorColor = if (isCyberpunk) VeyraCyber.acidYellow else accent,
+                ),
+                shape = if (isCyberpunk) VeyraCyber.shape else RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth(),
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = ::submit,
+                enabled = title.trim().isNotEmpty(),
+                shape = if (isCyberpunk) VeyraCyber.shape else CircleShape,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isCyberpunk) VeyraCyber.acidYellow else accent,
+                    contentColor = if (isCyberpunk) VeyraCyber.canvas else Color.White,
+                ),
+            ) {
+                Text(stringResource(R.string.act_create), fontWeight = FontWeight.SemiBold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.action_cancel), color = CanopyColors.Muted)
+            }
+        },
+    )
 }
 

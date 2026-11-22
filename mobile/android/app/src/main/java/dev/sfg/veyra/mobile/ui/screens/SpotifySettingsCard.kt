@@ -209,15 +209,9 @@ private fun SpotifyToggleRow(
                 color = CanopyColors.Muted,
             )
         }
-        Switch(
+        dev.sfg.veyra.mobile.ui.components.NeumorphicSwitch(
             checked = checked,
             onCheckedChange = onChecked,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = Color.White,
-                checkedTrackColor = SpotifyGreen,
-                uncheckedThumbColor = CanopyColors.Muted,
-                uncheckedTrackColor = CanopyColors.Canvas,
-            ),
         )
     }
 }

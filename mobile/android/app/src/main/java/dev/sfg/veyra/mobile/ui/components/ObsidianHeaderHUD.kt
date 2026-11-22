@@ -90,8 +90,14 @@ import dev.sfg.veyra.connect.R
 import dev.sfg.veyra.mobile.model.PlaybackSnapshot
 import dev.sfg.veyra.mobile.ui.modifiers.tactilePress
 import dev.sfg.veyra.mobile.ui.theme.CanopyColors
+import dev.sfg.veyra.mobile.ui.theme.LocalReducedMotion
+import dev.sfg.veyra.mobile.ui.theme.VeyraCyber
+import androidx.compose.animation.core.snap
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import kotlin.math.PI
-import kotlin.math.cos
 import kotlin.math.sin
 
 private val ObsidianRackShape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
@@ -99,7 +105,7 @@ private val OledScreenShape = RoundedCornerShape(8.dp)
 
 /** Micro vúmetro LED estéreo (L / R) con calibración de nivel en tiempo real. */
 @Composable
-private fun MiniVuMeter(isPlaying: Boolean) {
+private fun MiniVuMeter(isPlaying: Boolean, reduceMotion: Boolean = false) {
     val transition = rememberInfiniteTransition(label = "ObsidianVuMeterAnim")
     val l1 by transition.animateFloat(
         initialValue = 2.5f,
@@ -156,7 +162,7 @@ private fun MiniVuMeter(isPlaying: Boolean) {
             horizontalArrangement = Arrangement.spacedBy(1.dp),
             modifier = Modifier.height(11.dp),
         ) {
-            val heightsL = if (isPlaying) listOf(l1, l2, l3) else listOf(2f, 2f, 1.5f)
+            val heightsL = if (isPlaying && !reduceMotion) listOf(l1, l2, l3) else if (isPlaying) listOf(6f, 7f, 4.5f) else listOf(2f, 2f, 1.5f)
             val colorsL = listOf(Color(0xFF22C55E), Color(0xFF38BDF8), Color(0xFFF59E0B))
             heightsL.forEachIndexed { idx, heightVal ->
                 Box(
@@ -185,7 +191,7 @@ private fun MiniVuMeter(isPlaying: Boolean) {
             horizontalArrangement = Arrangement.spacedBy(1.dp),
             modifier = Modifier.height(11.dp),
         ) {
-            val heightsR = if (isPlaying) listOf(r1, r2, r3) else listOf(2f, 2f, 1.5f)
+            val heightsR = if (isPlaying && !reduceMotion) listOf(r1, r2, r3) else if (isPlaying) listOf(6.5f, 5.5f, 5f) else listOf(2f, 2f, 1.5f)
             val colorsR = listOf(Color(0xFF22C55E), Color(0xFF06B6D4), Color(0xFFF59E0B))
             heightsR.forEachIndexed { idx, heightVal ->
                 Box(
@@ -215,9 +221,14 @@ fun ObsidianHeaderHUD(
     onArtworkBounds: ((Rect) -> Unit)? = null,
 ) {
     val track = playback.currentTrack ?: return
+    val reduceMotion = LocalReducedMotion.current
     val effectiveDuration = playback.durationMs.coerceAtLeast(1)
     val progress = (playback.positionMs.toFloat() / effectiveDuration.toFloat()).coerceIn(0f, 1f)
-    val animatedProgress by animateFloatAsState(targetValue = progress, label = "ObsidianHUDProgress")
+    val animatedProgress by animateFloatAsState(
+        targetValue = progress,
+        animationSpec = if (reduceMotion) snap() else spring(),
+        label = "ObsidianHUDProgress",
+    )
 
     val infiniteTransition = rememberInfiniteTransition(label = "ObsidianHUDAnim")
     val wavePhase by infiniteTransition.animateFloat(
@@ -239,28 +250,33 @@ fun ObsidianHeaderHUD(
         label = "ObsidianDspPulse",
     )
     val waveAmplitude by animateFloatAsState(
-        targetValue = if (playback.isPlaying) 2.2f else 0f,
-        animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
+        targetValue = if (playback.isPlaying && !reduceMotion) 2.2f else 0f,
+        animationSpec = if (reduceMotion) snap() else spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
         label = "ObsidianWaveAmplitude",
     )
     val haptics = LocalHapticFeedback.current
 
     val chassisGradient = Brush.verticalGradient(
-        listOf(Color(0xFF141C2E), Color(0xFF0C101A)),
+        listOf(VeyraCyber.surface, VeyraCyber.canvas),
     )
     val chassisBorder = Brush.verticalGradient(
-        listOf(Color.White.copy(alpha = 0.14f), Color.White.copy(alpha = 0.04f), Color.Black.copy(alpha = 0.45f)),
+        listOf(VeyraCyber.cyan, VeyraCyber.cyan.copy(alpha = 0.55f)),
     )
 
+    val hudDescription = "${track.title}, ${dev.sfg.veyra.mobile.ui.components.localizedArtistName(track.artist)}"
     Surface(
-        shape = ObsidianRackShape,
+        shape = VeyraCyber.shape,
         color = Color.Transparent,
-        shadowElevation = 10.dp,
+        shadowElevation = 0.dp,
         modifier = modifier
             .fillMaxWidth()
-            .clip(ObsidianRackShape)
+            .clip(VeyraCyber.shape)
             .background(chassisGradient)
-            .border(1.2.dp, chassisBorder, ObsidianRackShape)
+            .border(VeyraCyber.borderWidth, chassisBorder, VeyraCyber.shape)
+            .semantics {
+                role = Role.Button
+                contentDescription = hudDescription
+            }
             .clickable(onClick = {
                 haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 onClick()
@@ -291,6 +307,43 @@ fun ObsidianHeaderHUD(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
+                    // Etiqueta lateral Neo-Brutalista PLAYING / PAUSE
+                    Box(
+                        modifier = Modifier
+                            .clip(VeyraCyber.shape)
+                            .background(if (playback.isPlaying) VeyraCyber.acidYellow else VeyraCyber.surfaceAlt)
+                            .padding(horizontal = 6.dp, vertical = 4.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = if (playback.isPlaying) "PLAY" else "IDLE",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 9.sp,
+                            ),
+                            color = if (playback.isPlaying) VeyraCyber.ink else VeyraCyber.textMuted,
+                        )
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    if (playback.isPlaying && !reduceMotion) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(2.dp),
+                            verticalAlignment = Alignment.Bottom,
+                            modifier = Modifier.height(14.dp).padding(end = 6.dp),
+                        ) {
+                            val heights = listOf(0.45f, 0.95f, 0.65f, 0.85f)
+                            heights.forEachIndexed { idx, base ->
+                                val barScale = 0.45f + 0.55f * kotlin.math.abs(kotlin.math.sin(wavePhase * 1.8f + idx * 1.1f))
+                                Box(
+                                    modifier = Modifier
+                                        .width(2.5.dp)
+                                        .height((14 * base * barScale).dp)
+                                        .background(if (idx % 2 == 0) VeyraCyber.cyan else VeyraCyber.acidYellow),
+                                )
+                            }
+                        }
+                    }
                     // Título y telemetría en vivo
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
@@ -333,7 +386,7 @@ fun ObsidianHeaderHUD(
                             )
                             Spacer(Modifier.width(6.dp))
                             // Micro vúmetro LED en vivo
-                            MiniVuMeter(isPlaying = playback.isPlaying)
+                            MiniVuMeter(isPlaying = playback.isPlaying, reduceMotion = reduceMotion)
                         }
                     }
 
@@ -342,9 +395,9 @@ fun ObsidianHeaderHUD(
                     // Badge de estado DSP (WSOLA / Bit-Perfect)
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(999.dp))
-                            .background(CanopyColors.Accent.copy(alpha = if (playback.isPlaying) dspPulse else 0.15f))
-                            .border(1.dp, CanopyColors.Accent.copy(alpha = 0.30f), RoundedCornerShape(999.dp))
+                            .clip(VeyraCyber.shape)
+                            .background(VeyraCyber.surfaceAlt)
+                            .border(1.5.dp, VeyraCyber.cyan.copy(alpha = 0.65f), VeyraCyber.shape)
                             .padding(horizontal = 8.dp, vertical = 3.dp),
                         contentAlignment = Alignment.Center,
                     ) {
@@ -482,79 +535,95 @@ fun ObsidianHeaderHUD(
 
                 // Controles de transporte completos de rack analógico
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Botón Anterior
+                    // Botón Anterior (48dp touch target, estilo Cyber)
                     Box(
                         modifier = Modifier
-                            .size(30.dp)
-                            .clip(CircleShape)
-                            .background(CanopyColors.Surface)
-                            .border(1.dp, Color.White.copy(alpha = 0.08f), CircleShape)
+                            .size(48.dp)
+                            .clip(VeyraCyber.shape)
+                            .semantics { role = Role.Button }
                             .tactilePress(onClick = {
                                 haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 onPrevious()
                             }),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(
-                            imageVector = Icons.Rounded.SkipPrevious,
-                            contentDescription = stringResource(R.string.action_previous),
-                            tint = CanopyColors.Muted,
-                            modifier = Modifier.size(15.dp),
-                        )
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(VeyraCyber.shape)
+                                .background(VeyraCyber.surfaceAlt)
+                                .border(1.5.dp, VeyraCyber.cyan.copy(alpha = 0.55f), VeyraCyber.shape),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.SkipPrevious,
+                                contentDescription = stringResource(R.string.action_previous),
+                                tint = VeyraCyber.cyan,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
                     }
 
-                    Spacer(Modifier.width(4.dp))
-
-                    // Botón Play / Pause Hero
+                    // Botón Play / Pause Hero (48dp touch target, bloque Cyber sólido)
                     Box(
                         modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(
-                                Brush.verticalGradient(
-                                    listOf(Color(0xFF2E84FE), Color(0xFF1E6CEB), Color(0xFF104CA8)),
-                                ),
-                            )
-                            .border(1.2.dp, Color.White.copy(alpha = 0.25f), CircleShape)
+                            .size(48.dp)
+                            .clip(VeyraCyber.shape)
+                            .semantics { role = Role.Button }
                             .tactilePress(onClick = {
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                 onTogglePlay()
                             }),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(
-                            imageVector = if (playback.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                            contentDescription = if (playback.isPlaying) {
-                                stringResource(R.string.action_pause)
-                            } else {
-                                stringResource(R.string.action_play)
-                            },
-                            tint = Color.White,
-                            modifier = Modifier.size(18.dp),
-                        )
+                        Box(
+                            modifier = Modifier
+                                .size(38.dp)
+                                .clip(VeyraCyber.shape)
+                                .background(VeyraCyber.cyan)
+                                .border(VeyraCyber.borderWidth, VeyraCyber.ink, VeyraCyber.shape),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = if (playback.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                                contentDescription = if (playback.isPlaying) {
+                                    stringResource(R.string.action_pause)
+                                } else {
+                                    stringResource(R.string.action_play)
+                                },
+                                tint = VeyraCyber.ink,
+                                modifier = Modifier.size(20.dp),
+                            )
+                        }
                     }
 
-                    Spacer(Modifier.width(4.dp))
-
-                    // Botón Siguiente
+                    // Botón Siguiente (48dp touch target, estilo Cyber)
                     Box(
                         modifier = Modifier
-                            .size(30.dp)
-                            .clip(CircleShape)
-                            .background(CanopyColors.Surface)
-                            .border(1.dp, Color.White.copy(alpha = 0.08f), CircleShape)
+                            .size(48.dp)
+                            .clip(VeyraCyber.shape)
+                            .semantics { role = Role.Button }
                             .tactilePress(onClick = {
                                 haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 onNext()
                             }),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(
-                            imageVector = Icons.Rounded.SkipNext,
-                            contentDescription = stringResource(R.string.action_next),
-                            tint = CanopyColors.Muted,
-                            modifier = Modifier.size(15.dp),
-                        )
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(VeyraCyber.shape)
+                                .background(VeyraCyber.surfaceAlt)
+                                .border(1.5.dp, VeyraCyber.cyan.copy(alpha = 0.55f), VeyraCyber.shape),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.SkipNext,
+                                contentDescription = stringResource(R.string.action_next),
+                                tint = VeyraCyber.cyan,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
                     }
                 }
             }

@@ -86,6 +86,13 @@ class LibraryRepository(
         current.copy(savedPlaylists = toggle(current.savedPlaylists, playlist, Playlist::id))
     }
 
+    /** Prepends a newly created YouTube Music playlist immediately so UI stays responsive. */
+    fun addCreatedPlaylist(playlist: Playlist) = update { current ->
+        val normalizedId = playlist.id.removePrefix("VL")
+        val remaining = current.savedPlaylists.filterNot { it.id.removePrefix("VL") == normalizedId }
+        current.copy(savedPlaylists = listOf(playlist) + remaining)
+    }
+
     fun removePlaylist(playlistId: String) = update { current ->
         current.copy(savedPlaylists = current.savedPlaylists.filterNot { it.id == playlistId.removePrefix("VL") })
     }

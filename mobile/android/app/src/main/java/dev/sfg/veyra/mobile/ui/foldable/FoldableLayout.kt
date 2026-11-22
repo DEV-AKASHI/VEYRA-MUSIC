@@ -85,3 +85,10 @@ fun isFoldableActive(): Boolean {
     return (hasFoldableHardware && isWideEnough && aspectRatio <= 1.30f) || isSquareFoldableAspect
 }
 
+/** Returns true on compact-height screens where vertical chrome padding should tighten. */
+@Composable
+fun isCompactHeightLayout(): Boolean {
+    val config = LocalConfiguration.current
+    return config.screenHeightDp < 640
+}
+

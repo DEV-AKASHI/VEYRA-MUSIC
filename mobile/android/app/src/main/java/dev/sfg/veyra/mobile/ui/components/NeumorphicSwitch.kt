@@ -80,16 +80,31 @@ fun NeumorphicSwitch(
         label = "NeumorphicSwitchLedColor",
     )
 
+    val isCyberpunk = LocalCyberpunkTheme.current
+    val switchShape = if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.shape else RoundedCornerShape(999.dp)
     val trackBorderColor by animateColorAsState(
-        targetValue = if (checked) Color(0x3D38BDF8) else Color(0x1AFFFFFF),
+        targetValue = if (isCyberpunk) {
+            if (checked) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.cyan else dev.sfg.veyra.mobile.ui.theme.VeyraCyber.textMuted.copy(alpha = 0.55f)
+        } else {
+            if (checked) Color(0x8838BDF8) else Color(0x38FFFFFF)
+        },
         animationSpec = tween(200),
-        label = "NeumorphicSwitchBorder",
+        label = "SwitchBorder",
+    )
+    val trackFillColor by animateColorAsState(
+        targetValue = if (isCyberpunk) {
+            if (checked) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.surfaceAlt else dev.sfg.veyra.mobile.ui.theme.VeyraCyber.ink
+        } else {
+            if (checked) Color(0xAA7C3AED) else Color.White.copy(alpha = 0.12f)
+        },
+        animationSpec = tween(200),
+        label = "SwitchTrackFill",
     )
 
     Box(
         modifier = modifier
             .size(width = trackWidth, height = trackHeight)
-            .clip(RoundedCornerShape(999.dp))
+            .clip(switchShape)
             .clickable(
                 enabled = enabled && onCheckedChange != null,
                 interactionSource = remember { MutableInteractionSource() },
@@ -98,60 +113,36 @@ fun NeumorphicSwitch(
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 onCheckedChange?.invoke(!checked)
             }
-            .drawBehind {
-                // Canal empotrado cóncavo profundo
-                drawRect(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFF060910),
-                            Color(0xFF0C1322),
-                        )
-                    )
-                )
-                // Sombra interior superior en bajorrelieve
-                drawLine(
-                    color = Color.Black.copy(alpha = 0.85f),
-                    start = Offset(0f, 0f),
-                    end = Offset(size.width, 0f),
-                    strokeWidth = 2.dp.toPx(),
-                )
-            }
-            .border(1.dp, trackBorderColor, RoundedCornerShape(999.dp)),
+            .background(trackFillColor)
+            .border(if (isCyberpunk) 2.dp else 1.dp, trackBorderColor, switchShape),
         contentAlignment = Alignment.CenterStart,
     ) {
-        // Disco físico convexo móvil
+        val thumbShape = if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.shape else CircleShape
         Box(
             modifier = Modifier
                 .offset(x = thumbOffset)
                 .size(thumbSize)
-                .shadow(elevation = 4.dp, shape = CircleShape, spotColor = Color.Black)
-                .clip(CircleShape)
+                .shadow(elevation = if (isCyberpunk) 0.dp else 4.dp, shape = thumbShape, spotColor = Color.Black)
+                .clip(thumbShape)
                 .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFF222F45),
-                            Color(0xFF131B2B),
-                        )
-                    )
+                    if (isCyberpunk) {
+                        if (checked) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.acidYellow else dev.sfg.veyra.mobile.ui.theme.VeyraCyber.surface
+                    } else {
+                        Color.White.copy(alpha = if (checked) 0.96f else 0.78f)
+                    }
                 )
                 .border(
-                    width = 1.dp,
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0x38FFFFFF),
-                            Color(0x0A000000),
-                        )
-                    ),
-                    shape = CircleShape,
+                    width = if (isCyberpunk) 1.5.dp else 1.dp,
+                    color = if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.ink else Color.White.copy(alpha = 0.55f),
+                    shape = thumbShape,
                 ),
             contentAlignment = Alignment.Center,
         ) {
-            // Micro-LED indicador
             Box(
                 modifier = Modifier
                     .size(5.dp)
-                    .clip(CircleShape)
-                    .background(ledColor)
+                    .clip(thumbShape)
+                    .background(if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.ink else ledColor)
                     .then(
                         if (checked) {
                             Modifier.drawBehind {

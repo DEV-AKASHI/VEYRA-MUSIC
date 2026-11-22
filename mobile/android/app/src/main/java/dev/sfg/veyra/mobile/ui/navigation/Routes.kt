@@ -39,5 +39,9 @@ object Routes {
     const val DOWNLOADS = "downloads"
     const val DETAIL = "detail/{id}"
 
+    val topLevelRoutes = setOf(HOME, SEARCH, LIBRARY, DEVICES, SETTINGS)
+
+    fun isTopLevel(route: String?): Boolean = route != null && route in topLevelRoutes
+
     fun detail(id: String) = "detail/${android.net.Uri.encode(id)}"
 }

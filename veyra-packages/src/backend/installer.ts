@@ -73,15 +73,32 @@ function formatBytes(bytes: number): string {
 }
 
 async function validateInstallation(directory: string, version: string, target: Target): Promise<void> {
+  const metadataName = (await exists(path.join(directory, ".veyra-package.json")))
+    ? ".veyra-package.json"
+    : ".orchard-package.json";
+  const nativeMarker = (await exists(path.join(directory, `.veyra-native/${target}.json`)))
+    ? `.veyra-native/${target}.json`
+    : `.orchard-native/${target}.json`;
+  const mediaAddon = (await exists(path.join(directory, `native-media/build/veyra-system-media-${target}.node`)))
+    ? `native-media/build/veyra-system-media-${target}.node`
+    : `native-media/build/orchard-system-media-${target}.node`;
+  const audioAddon = (await exists(path.join(directory, `native-audio-rust/build/veyra-audio-${target}.node`)))
+    ? `native-audio-rust/build/veyra-audio-${target}.node`
+    : `native-audio-rust/build/orchard-audio-${target}.node`;
+  const launcherName = target.startsWith("win32-")
+    ? (await exists(path.join(directory, "veyra.cmd"))) ? "veyra.cmd" : "orchard.cmd"
+    : (await exists(path.join(directory, "veyra"))) ? "veyra" : "orchard";
+
   const required = [
     "package.json",
     "dist/index.html",
     "dist/welcome.html",
     "electron/main/index.js",
-    ".orchard-package.json",
-    `.orchard-native/${target}.json`,
-    `native-media/build/orchard-system-media-${target}.node`,
-    `native-audio-rust/build/orchard-audio-${target}.node`
+    metadataName,
+    nativeMarker,
+    mediaAddon,
+    audioAddon,
+    launcherName
   ];
 
   if (target !== "darwin-x64") {
@@ -95,7 +112,6 @@ async function validateInstallation(directory: string, version: string, target: 
       "node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm"
     );
   }
-  required.push(target.startsWith("win32-") ? "orchard.cmd" : "orchard");
 
   for (const relativePath of required) {
     if (!(await exists(path.join(directory, relativePath)))) {
@@ -103,7 +119,7 @@ async function validateInstallation(directory: string, version: string, target: 
     }
   }
 
-  const packageMetadata = JSON.parse(await readFile(path.join(directory, ".orchard-package.json"), "utf8")) as {
+  const packageMetadata = JSON.parse(await readFile(path.join(directory, metadataName), "utf8")) as {
     schemaVersion?: unknown;
     version?: unknown;
   };

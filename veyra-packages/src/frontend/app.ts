@@ -21,7 +21,7 @@
  * along with Veyra Music. If not, see <https://www.gnu.org/licenses/>.
  */
 
-const EXTENSION_ID = "dev.sfg.orchard.packages.backend";
+const EXTENSION_ID = "dev.akashi.veyra.packages.backend";
 
 type ReleaseSummary = {
   version: string;
@@ -136,7 +136,7 @@ function updateReleaseDetail(): void {
     : release.electronSizeKnown
       ? `ELECTRON · ${formatBytes(release.electronSize)}`
       : "ELECTRON · SIZE UNKNOWN";
-  elements.installButtonLabel.textContent = release.installed ? "Open Orchard" : "Install Orchard";
+  elements.installButtonLabel.textContent = release.installed ? "Open Veyra Music" : "Install Veyra Music";
   elements.uninstallButton.hidden = !release.installed;
 }
 
@@ -164,7 +164,7 @@ function clearResult(): void {
 async function loadManifest(): Promise<void> {
   activeRequestId = requestId();
   clearResult();
-  setProgress(0, "Checking available versions…", "Reading the Orchard package manifest.");
+  setProgress(0, "Checking available versions…", "Reading the Veyra Music package manifest.");
   await Neutralino.extensions.dispatch(EXTENSION_ID, "packages.requestManifest", {
     requestId: activeRequestId
   });
@@ -181,7 +181,7 @@ async function installSelected(): Promise<void> {
   elements.uninstallButton.disabled = true;
   elements.versionSelect.disabled = true;
   elements.installButtonLabel.textContent = "Installing…";
-  setProgress(1, `Preparing Orchard ${release.version}…`, "Resolving packages for this computer.");
+  setProgress(1, `Preparing Veyra Music ${release.version}…`, "Resolving packages for this computer.");
 
   await Neutralino.extensions.dispatch(EXTENSION_ID, "packages.install", {
     requestId: activeRequestId,
@@ -213,7 +213,7 @@ async function runSelectedAction(): Promise<void> {
 async function uninstallSelected(): Promise<void> {
   const release = selectedRelease();
   if (!release?.installed || operationActive) return;
-  if (!window.confirm(`Uninstall Orchard ${release.version}? The reusable Electron runtime will be kept.`)) return;
+  if (!window.confirm(`Uninstall Veyra Music ${release.version}? The reusable Electron runtime will be kept.`)) return;
 
   operationActive = true;
   activeRequestId = requestId();
@@ -221,7 +221,7 @@ async function uninstallSelected(): Promise<void> {
   elements.installButton.disabled = true;
   elements.uninstallButton.disabled = true;
   elements.versionSelect.disabled = true;
-  setProgress(1, `Uninstalling Orchard ${release.version}…`, "The shared Electron runtime will be kept for other versions.");
+  setProgress(1, `Uninstalling Veyra Music ${release.version}…`, "The shared Electron runtime will be kept for other versions.");
   await Neutralino.extensions.dispatch(EXTENSION_ID, "packages.uninstall", {
     requestId: activeRequestId,
     version: release.version
@@ -257,7 +257,7 @@ function onManifest(payload: ManifestResponse): void {
   const release = selectedRelease()!;
   setProgress(
     release.installed ? 100 : 0,
-    release.installed ? `Orchard ${release.version} is installed.` : "Ready to install.",
+    release.installed ? `Veyra Music ${release.version} is installed.` : "Ready to install.",
     release.installed ? "Open the installed version." : "The existing installation stays in place until the new one is verified."
   );
 }
@@ -279,7 +279,7 @@ function onSuccess(payload: SuccessEvent): void {
   elements.uninstallButton.disabled = false;
   elements.versionSelect.disabled = false;
   updateReleaseDetail();
-  setProgress(100, `Orchard ${payload.version} installed.`, `${payload.target} package verified and activated.`);
+  setProgress(100, `Veyra Music ${payload.version} installed.`, `${payload.target} package verified and activated.`);
   setResult(`Installed to ${payload.installPath}`);
 }
 
@@ -292,8 +292,8 @@ function onUninstalled(payload: { requestId: string; version: string }): void {
   elements.uninstallButton.disabled = false;
   elements.versionSelect.disabled = false;
   updateReleaseDetail();
-  setProgress(0, `Orchard ${payload.version} uninstalled.`, "The reusable Electron runtime was kept.");
-  setResult(`Removed Orchard ${payload.version}.`);
+  setProgress(0, `Veyra Music ${payload.version} uninstalled.`, "The reusable Electron runtime was kept.");
+  setResult(`Removed Veyra Music ${payload.version}.`);
 }
 
 async function exitApplication(): Promise<void> {
@@ -318,10 +318,10 @@ function onError(payload: ErrorEvent): void {
   elements.installButton.disabled = releases.length === 0;
   elements.uninstallButton.disabled = releases.length === 0;
   elements.versionSelect.disabled = releases.length === 0;
-  elements.installButtonLabel.textContent = selectedRelease()?.installed ? "Open Orchard" : "Try again";
+  elements.installButtonLabel.textContent = selectedRelease()?.installed ? "Open Veyra Music" : "Try again";
   elements.uninstallButton.hidden = !selectedRelease()?.installed;
   elements.operationText.textContent = "Operation stopped.";
-  elements.operationDetail.textContent = "No existing Orchard installation was changed.";
+  elements.operationDetail.textContent = "No existing Veyra Music installation was changed.";
   setResult(payload.message, true);
 }
 

@@ -51,6 +51,7 @@ import androidx.compose.material.icons.rounded.MoreHoriz
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Shuffle
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -60,6 +61,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import dev.sfg.veyra.connect.R
 import dev.sfg.veyra.mobile.model.Track
 import androidx.compose.runtime.Composable
@@ -83,6 +85,9 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.sfg.veyra.mobile.ui.theme.LocalAccent
+import dev.sfg.veyra.mobile.ui.theme.VeyraCyber
+import dev.sfg.veyra.mobile.ui.theme.VeyraRadius
+import dev.sfg.veyra.mobile.ui.theme.VeyraSize
 
 /**
  * Collection action buttons row: [ Circular Shuffle ] [ Wide White Play Pill ]
@@ -104,24 +109,43 @@ fun CollectionActionRow(
     downloadEnabled: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
-    val dishBrush = remember {
-        Brush.linearGradient(listOf(Color(0xFF151F30), Color(0xFF0E1524)))
+    val isCyberpunk = LocalCyberpunkTheme.current
+    val dishShape = if (isCyberpunk) VeyraCyber.shape else CircleShape
+    val playShape = if (isCyberpunk) VeyraCyber.shape else RoundedCornerShape(24.dp)
+    val dishBrush = remember(isCyberpunk) {
+        if (isCyberpunk) {
+            Brush.linearGradient(listOf(VeyraCyber.surface, VeyraCyber.surface))
+        } else {
+            Brush.linearGradient(listOf(Color(0xFF151F30), Color(0xFF0E1524)))
+        }
     }
-    val dishBorder = remember {
-        BorderStroke(1.dp, Color.White.copy(alpha = 0.08f))
+    val dishBorder = remember(isCyberpunk) {
+        if (isCyberpunk) {
+            BorderStroke(VeyraCyber.borderWidth, VeyraCyber.cyan.copy(alpha = 0.65f))
+        } else {
+            BorderStroke(1.dp, Color.White.copy(alpha = 0.08f))
+        }
     }
     val isDefaultAccent = accent == Color.White || accent == Color.Unspecified
-    val playBrush = remember(accent, isDefaultAccent) {
-        if (isDefaultAccent) {
+    val playBrush = remember(accent, isDefaultAccent, isCyberpunk) {
+        if (isCyberpunk) {
+            Brush.linearGradient(listOf(VeyraCyber.cyan, VeyraCyber.cyan))
+        } else if (isDefaultAccent) {
             Brush.linearGradient(listOf(Color(0xFF2275F8), Color(0xFF104CA8)))
         } else {
             Brush.linearGradient(listOf(accent, accent.copy(alpha = 0.78f)))
         }
     }
-    val playBorder = remember(isDefaultAccent) {
-        BorderStroke(1.dp, if (isDefaultAccent) Color.White.copy(alpha = 0.28f) else Color.White.copy(alpha = 0.32f))
+    val playBorder = remember(isDefaultAccent, isCyberpunk) {
+        if (isCyberpunk) {
+            BorderStroke(VeyraCyber.borderWidth, VeyraCyber.cyan)
+        } else {
+            BorderStroke(1.dp, if (isDefaultAccent) Color.White.copy(alpha = 0.28f) else Color.White.copy(alpha = 0.32f))
+        }
     }
-    val playContentColor = if (isDefaultAccent) {
+    val playContentColor = if (isCyberpunk) {
+        VeyraCyber.ink
+    } else if (isDefaultAccent) {
         Color.White
     } else {
         val luminance = (0.299f * accent.red + 0.587f * accent.green + 0.114f * accent.blue)
@@ -134,32 +158,34 @@ fun CollectionActionRow(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Shuffle button (recessed dish)
+        // Shuffle button
         Surface(
             onClick = {
                 haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 onShuffle()
             },
             enabled = shuffleEnabled,
-            shape = CircleShape,
+            shape = dishShape,
             color = Color.Transparent,
             border = dishBorder,
             modifier = Modifier
-                .size(44.dp)
-                .shadow(4.dp, CircleShape, spotColor = Color.Black.copy(alpha = 0.55f))
-                .background(dishBrush, CircleShape),
+                .size(VeyraSize.touchTarget)
+                .shadow(if (isCyberpunk) 0.dp else 4.dp, dishShape, spotColor = Color.Black.copy(alpha = 0.55f))
+                .background(dishBrush, dishShape),
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     Icons.Rounded.Shuffle,
                     contentDescription = stringResource(R.string.action_shuffle),
-                    tint = if (shuffleEnabled) Color(0xFFCBD5E1) else Color.White.copy(alpha = 0.35f),
+                    tint = if (shuffleEnabled) {
+                        if (isCyberpunk) VeyraCyber.cyan else Color(0xFFCBD5E1)
+                    } else Color.White.copy(alpha = 0.35f),
                     modifier = Modifier.size(20.dp),
                 )
             }
         }
 
-        // Center prominent Play pill button
+        // Center prominent Play button
         Button(
             onClick = {
                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -172,25 +198,25 @@ fun CollectionActionRow(
                 disabledContainerColor = Color.White.copy(alpha = 0.08f),
                 disabledContentColor = Color.White.copy(alpha = 0.35f),
             ),
-            shape = RoundedCornerShape(24.dp),
+            shape = playShape,
             contentPadding = PaddingValues(0.dp),
             modifier = Modifier
                 .weight(1f)
-                .height(44.dp)
+                .height(VeyraSize.buttonMedium)
                 .shadow(
-                    elevation = if (playEnabled) 6.dp else 0.dp,
-                    shape = RoundedCornerShape(24.dp),
+                    elevation = if (isCyberpunk || !playEnabled) 0.dp else 6.dp,
+                    shape = playShape,
                     spotColor = if (isDefaultAccent) Color(0xFF1E6CEB).copy(alpha = 0.50f) else accent.copy(alpha = 0.45f),
                 )
                 .then(
                     if (playEnabled) {
                         Modifier
-                            .background(playBrush, RoundedCornerShape(24.dp))
-                            .border(playBorder, RoundedCornerShape(24.dp))
+                            .background(playBrush, playShape)
+                            .border(playBorder, playShape)
                     } else {
                         Modifier
-                            .background(Color.White.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
-                            .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.06f)), RoundedCornerShape(24.dp))
+                            .background(Color.White.copy(alpha = 0.08f), playShape)
+                            .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.06f)), playShape)
                     }
                 ),
         ) {
@@ -214,21 +240,26 @@ fun CollectionActionRow(
             }
         }
 
-        // Add / Save button (recessed dish)
+        // Add / Save button
         Surface(
             onClick = {
                 haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 onSave()
             },
-            shape = CircleShape,
+            shape = dishShape,
             color = Color.Transparent,
-            border = if (isSaved) BorderStroke(1.dp, Color(0xFF38BDF8).copy(alpha = 0.50f)) else dishBorder,
+            border = if (isSaved) {
+                BorderStroke(if (isCyberpunk) VeyraCyber.borderWidth else 1.dp, if (isCyberpunk) VeyraCyber.cyan else Color(0xFF38BDF8).copy(alpha = 0.50f))
+            } else dishBorder,
             modifier = Modifier
-                .size(44.dp)
-                .shadow(4.dp, CircleShape, spotColor = if (isSaved) Color(0xFF1E6CEB).copy(alpha = 0.40f) else Color.Black.copy(alpha = 0.55f))
+                .size(VeyraSize.touchTarget)
+                .shadow(if (isCyberpunk) 0.dp else 4.dp, dishShape, spotColor = if (isSaved) Color(0xFF1E6CEB).copy(alpha = 0.40f) else Color.Black.copy(alpha = 0.55f))
                 .background(
-                    if (isSaved) Brush.linearGradient(listOf(Color(0xFF182845), Color(0xFF101B2E))) else dishBrush,
-                    CircleShape,
+                    if (isSaved) {
+                        if (isCyberpunk) Brush.linearGradient(listOf(VeyraCyber.surfaceAlt, VeyraCyber.surfaceAlt))
+                        else Brush.linearGradient(listOf(Color(0xFF182845), Color(0xFF101B2E)))
+                    } else dishBrush,
+                    dishShape,
                 ),
         ) {
             Box(contentAlignment = Alignment.Center) {
@@ -365,6 +396,7 @@ fun CollectionTopBar(
     aboutLabel: String? = null,
     onDownload: (() -> Unit)? = null,
     isDownloaded: Boolean = false,
+    onDeletePlaylist: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val findInPlaylistText = searchPlaceholder ?: stringResource(R.string.collect_find_in_playlist)
@@ -385,6 +417,49 @@ fun CollectionTopBar(
     }
 
     var menuOpen by remember { mutableStateOf(false) }
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+    val isCyberpunk = LocalCyberpunkTheme.current
+
+    if (showDeleteConfirm && onDeletePlaylist != null) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            containerColor = if (isCyberpunk) VeyraCyber.surface else Color(0xFF13102A),
+            shape = if (isCyberpunk) VeyraCyber.shape else RoundedCornerShape(22.dp),
+            title = {
+                Text(
+                    stringResource(R.string.playlist_delete_confirm_title),
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                )
+            },
+            text = {
+                Text(
+                    stringResource(R.string.playlist_delete_confirm_body),
+                    color = Color.White.copy(alpha = 0.78f),
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteConfirm = false
+                        onDeletePlaylist()
+                    },
+                    shape = if (isCyberpunk) VeyraCyber.shape else CircleShape,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFEF4444),
+                        contentColor = Color.White,
+                    ),
+                ) {
+                    Text(stringResource(R.string.action_delete), fontWeight = FontWeight.SemiBold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) {
+                    Text(stringResource(R.string.action_cancel), color = Color.White.copy(alpha = 0.72f))
+                }
+            },
+        )
+    }
     val dishBrush = remember {
         Brush.linearGradient(listOf(Color(0xFF151F30), Color(0xFF0E1524)))
     }
@@ -562,6 +637,15 @@ fun CollectionTopBar(
                             onClick = {
                                 menuOpen = false
                                 onBestMix()
+                            },
+                        )
+                    }
+                    if (onDeletePlaylist != null) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.act_delete_playlist), color = Color(0xFFF87171)) },
+                            onClick = {
+                                menuOpen = false
+                                showDeleteConfirm = true
                             },
                         )
                     }

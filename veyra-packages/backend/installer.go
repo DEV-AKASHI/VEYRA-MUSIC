@@ -69,6 +69,9 @@ func newInstaller() *installer {
 	service := &installer{baseURL: packageBaseURL, githubReleasesURL: githubReleasesAPIURL, client: http.DefaultClient}
 	override := strings.TrimSpace(os.Getenv(packageBaseURLEnvironment))
 	if override == "" {
+		override = strings.TrimSpace(os.Getenv(legacyPackageBaseURLEnvironment))
+	}
+	if override == "" {
 		return service
 	}
 	service.baseURL, service.configurationError = normalizePackageBaseURL(override)
@@ -106,11 +109,11 @@ func (i *installer) fetchManifestURL(ctx context.Context, manifestURL string) (p
 	request.Header.Set("Accept", "application/json")
 	response, err := i.client.Do(request)
 	if err != nil {
-		return packageManifest{}, fmt.Errorf("could not reach the Orchard package service: %w", err)
+		return packageManifest{}, fmt.Errorf("could not reach the Veyra Music package service: %w", err)
 	}
 	defer response.Body.Close()
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		return packageManifest{}, fmt.Errorf("the Orchard package service returned HTTP %d", response.StatusCode)
+		return packageManifest{}, fmt.Errorf("the Veyra Music package service returned HTTP %d", response.StatusCode)
 	}
 	data, err := io.ReadAll(io.LimitReader(response.Body, 4*1024*1024))
 	if err != nil {
@@ -126,6 +129,24 @@ type githubRelease struct {
 		Name               string `json:"name"`
 		BrowserDownloadURL string `json:"browser_download_url"`
 	} `json:"assets"`
+}
+
+func latestManifestURL(releases []githubRelease) string {
+	for _, candidate := range releases {
+		if candidate.Draft {
+			continue
+		}
+		for _, asset := range candidate.Assets {
+			if asset.Name != "manifest.json" {
+				continue
+			}
+			parsed, err := url.Parse(asset.BrowserDownloadURL)
+			if err == nil && parsed.Scheme == "https" && parsed.Hostname() == "github.com" {
+				return parsed.String()
+			}
+		}
+	}
+	return ""
 }
 
 func latestBetaManifestURL(releases []githubRelease) string {
@@ -150,49 +171,48 @@ func (i *installer) fetchAvailableManifest(ctx context.Context) (packageManifest
 	if i.configurationError != nil {
 		return packageManifest{}, i.configurationError
 	}
-	stableManifest, err := i.fetchManifest(ctx)
-	if err != nil {
-		return packageManifest{}, err
-	}
 	if i.packageBaseOverride {
-		return stableManifest, nil
+		return i.fetchManifest(ctx)
 	}
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, i.githubReleasesURL, nil)
 	if err != nil {
 		return packageManifest{}, err
 	}
 	request.Header.Set("Accept", "application/vnd.github+json")
-	request.Header.Set("User-Agent", "Orchard-Packages")
+	request.Header.Set("User-Agent", "Veyra-Music-Packages")
 	response, err := i.client.Do(request)
 	if err != nil {
+		// Fallback to fetchManifest directly if GitHub releases API fails or is rate-limited
+		if fallbackManifest, fallbackErr := i.fetchManifest(ctx); fallbackErr == nil {
+			return fallbackManifest, nil
+		}
 		return packageManifest{}, fmt.Errorf("could not reach GitHub releases: %w", err)
 	}
 	defer response.Body.Close()
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		if fallbackManifest, fallbackErr := i.fetchManifest(ctx); fallbackErr == nil {
+			return fallbackManifest, nil
+		}
 		return packageManifest{}, fmt.Errorf("GitHub releases returned HTTP %d", response.StatusCode)
 	}
 	var releases []githubRelease
 	if err := json.NewDecoder(io.LimitReader(response.Body, 4*1024*1024)).Decode(&releases); err != nil {
 		return packageManifest{}, fmt.Errorf("GitHub releases could not be read: %w", err)
 	}
-	manifestURL := latestBetaManifestURL(releases)
+	manifestURL := latestManifestURL(releases)
 	if manifestURL == "" {
-		return packageManifest{}, fmt.Errorf("no Orchard beta package release is available on GitHub")
+		if fallbackManifest, fallbackErr := i.fetchManifest(ctx); fallbackErr == nil {
+			return fallbackManifest, nil
+		}
+		return packageManifest{}, fmt.Errorf("no Veyra Music package release is available on GitHub")
 	}
-	betaManifest, err := i.fetchManifestURL(ctx, manifestURL)
+	gitManifest, err := i.fetchManifestURL(ctx, manifestURL)
 	if err != nil {
-		return packageManifest{}, fmt.Errorf("could not read the latest GitHub beta manifest: %w", err)
+		return packageManifest{}, fmt.Errorf("could not read the latest GitHub package manifest: %w", err)
 	}
 	available := packageManifest{SchemaVersion: 1}
-	for _, candidate := range stableManifest.Releases {
-		if candidate.Channel == "stable" {
-			available.Releases = append(available.Releases, candidate)
-		}
-	}
-	for _, candidate := range betaManifest.Releases {
-		if candidate.Channel == "beta" {
-			available.Releases = append(available.Releases, candidate)
-		}
+	for _, candidate := range gitManifest.Releases {
+		available.Releases = append(available.Releases, candidate)
 	}
 	return available, nil
 }
@@ -211,23 +231,18 @@ func (i *installer) installRelease(ctx context.Context, version string, report p
 		}
 	}
 	if selected == nil {
-		return installResult{}, fmt.Errorf("Orchard %s is not present in the package manifest", version)
+		return installResult{}, fmt.Errorf("Veyra Music %s is not present in the package manifest", version)
 	}
 	assetBaseURL := i.releaseBaseURL(*selected)
-	if selected.Channel == "beta" && !i.packageBaseOverride {
+	if !i.packageBaseOverride {
 		githubManifest, err := i.fetchManifestFrom(ctx, assetBaseURL)
-		if err != nil {
-			return installResult{}, fmt.Errorf("could not read Orchard %s from its GitHub release: %w", version, err)
-		}
-		selected = nil
-		for index := range githubManifest.Releases {
-			if githubManifest.Releases[index].Version == version && githubManifest.Releases[index].Channel == "beta" {
-				selected = &githubManifest.Releases[index]
-				break
+		if err == nil {
+			for index := range githubManifest.Releases {
+				if githubManifest.Releases[index].Version == version {
+					selected = &githubManifest.Releases[index]
+					break
+				}
 			}
-		}
-		if selected == nil {
-			return installResult{}, fmt.Errorf("Orchard %s is not present in its GitHub release manifest", version)
 		}
 	}
 	target, err := detectTarget()
@@ -236,7 +251,7 @@ func (i *installer) installRelease(ctx context.Context, version string, report p
 	}
 	native, ok := selected.Native[target]
 	if !ok {
-		return installResult{}, fmt.Errorf("Orchard %s has no native package for %s", version, target)
+		return installResult{}, fmt.Errorf("Veyra Music %s has no native package for %s", version, target)
 	}
 	installDirectory, runtimeDirectory, cacheDirectory, err := installPaths(target, version, selected.ElectronVersion)
 	if err != nil {
@@ -253,7 +268,7 @@ func (i *installer) installRelease(ctx context.Context, version string, report p
 
 	sessionDirectory := filepath.Join(cacheDirectory, "sessions", randomID())
 	installParent := filepath.Dir(installDirectory)
-	stagingDirectory := filepath.Join(installParent, ".orchard.staging-"+randomID())
+	stagingDirectory := filepath.Join(installParent, ".veyra.staging-"+randomID())
 	runtimeStagingDirectory := filepath.Join(filepath.Dir(runtimeDirectory), ".electron.staging-"+randomID())
 	sharedPath := filepath.Join(sessionDirectory, sharedName)
 	nativePath := filepath.Join(sessionDirectory, nativeName)
@@ -354,7 +369,7 @@ func (i *installer) installRelease(ctx context.Context, version string, report p
 	if err := writeLauncher(stagingDirectory, target, selected.ElectronVersion); err != nil {
 		return installResult{}, err
 	}
-	report(installProgress{Phase: "validate", Message: "Validating Orchard…", Percent: 94})
+	report(installProgress{Phase: "validate", Message: "Validating Veyra Music…", Percent: 94})
 	if err := validateInstallation(stagingDirectory, version, target); err != nil {
 		return installResult{}, err
 	}
@@ -535,25 +550,50 @@ func (reader *contextReader) Read(buffer []byte) (int, error) {
 
 func validateInstallation(directory, version, target string) error {
 	currentAudio := filepath.Join(directory, "native-audio-rust", "build", "orchard-audio-"+target+".node")
+	veyraAudio := filepath.Join(directory, "native-audio-rust", "build", "veyra-audio-"+target+".node")
 	legacyAudio := filepath.Join(directory, "native-audio-rust", "build", "orchard-audio-transition-"+target+".node")
 	legacyAnalysis := filepath.Join(directory, "native", "build", "Release", "orchard_audio_analysis.node")
 	_, legacyAudioErr := os.Stat(legacyAudio)
 	_, legacyAnalysisErr := os.Stat(legacyAnalysis)
 	legacyLayout := legacyAudioErr == nil && legacyAnalysisErr == nil
 
+	metadataFile := ".veyra-package.json"
+	if _, err := os.Stat(filepath.Join(directory, metadataFile)); err != nil {
+		metadataFile = ".orchard-package.json"
+	}
+
+	nativeMarker := filepath.Join(".veyra-native", target+".json")
+	if _, err := os.Stat(filepath.Join(directory, nativeMarker)); err != nil {
+		nativeMarker = filepath.Join(".orchard-native", target+".json")
+	}
+
+	mediaAddon := filepath.Join("native-media", "build", "veyra-system-media-"+target+".node")
+	if _, err := os.Stat(filepath.Join(directory, mediaAddon)); err != nil {
+		mediaAddon = filepath.Join("native-media", "build", "orchard-system-media-"+target+".node")
+	}
+
+	var launcherName string
+	if strings.HasPrefix(target, "win32-") {
+		launcherName = "veyra.cmd"
+		if _, err := os.Stat(filepath.Join(directory, launcherName)); err != nil {
+			launcherName = "orchard.cmd"
+		}
+	} else {
+		launcherName = "veyra"
+		if _, err := os.Stat(filepath.Join(directory, launcherName)); err != nil {
+			launcherName = "orchard"
+		}
+	}
+
 	required := []string{
-		"package.json", "dist/index.html", "dist/welcome.html", "electron/main/index.js", ".orchard-package.json",
-		filepath.Join(".orchard-native", target+".json"),
-		filepath.Join("native-media", "build", "orchard-system-media-"+target+".node"),
+		"package.json", "dist/index.html", "dist/welcome.html", "electron/main/index.js", metadataFile,
+		nativeMarker,
+		mediaAddon,
+		launcherName,
 	}
 	if target != "darwin-x64" {
 		parts := strings.SplitN(target, "-", 2)
 		required = append(required, filepath.Join("node_modules", "onnxruntime-node", "bin", "napi-v6", parts[0], parts[1], "onnxruntime_binding.node"))
-	}
-	if strings.HasPrefix(target, "win32-") {
-		required = append(required, "orchard.cmd")
-	} else {
-		required = append(required, "orchard")
 	}
 	for _, relative := range required {
 		if relative == "dist/welcome.html" && legacyLayout {
@@ -564,11 +604,13 @@ func validateInstallation(directory, version, target string) error {
 		}
 	}
 	if _, err := os.Stat(currentAudio); err != nil {
-		if !legacyLayout {
-			return fmt.Errorf("the staged installation is incomplete: %s is missing", filepath.ToSlash(filepath.Join("native-audio-rust", "build", "orchard-audio-"+target+".node")))
+		if _, err := os.Stat(veyraAudio); err != nil {
+			if !legacyLayout {
+				return fmt.Errorf("the staged installation is incomplete: %s is missing", filepath.ToSlash(veyraAudio))
+			}
 		}
 	}
-	metadataData, err := os.ReadFile(filepath.Join(directory, ".orchard-package.json"))
+	metadataData, err := os.ReadFile(filepath.Join(directory, metadataFile))
 	if err != nil {
 		return err
 	}

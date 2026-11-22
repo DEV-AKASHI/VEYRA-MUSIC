@@ -26,28 +26,60 @@ import { AUDIO_ANALYSIS_VERSION } from '../../shared/audioAnalysis.js';
 const STORAGE_KEYS = {
   SUPABASE_URL: 'veyra_supabase_url',
   SUPABASE_ANON_KEY: 'veyra_supabase_anon_key',
-  AUTH_SESSION: 'veyra_supabase_session'
+  AUTH_SESSION: 'veyra_supabase_session',
+  LAST_PING: 'veyra_supabase_last_ping'
 };
 
 const LEGACY_STORAGE_KEYS = {
   SUPABASE_URL: 'orchard_supabase_url',
   SUPABASE_ANON_KEY: 'orchard_supabase_anon_key',
-  AUTH_SESSION: 'orchard_supabase_session'
+  AUTH_SESSION: 'orchard_supabase_session',
+  LAST_PING: 'orchard_supabase_last_ping'
 };
+
+const OFFICIAL_SUPABASE_URL = 'https://furkfhzvvgxlyxukqomm.supabase.co';
+const OFFICIAL_SUPABASE_KEY = 'sb_publishable_EhOKOAExG8w5rcZIYhaCdw_JcI3Y00f';
 
 const DEFAULT_URL = import.meta.env?.VITE_SUPABASE_URL || '';
 const DEFAULT_ANON_KEY = import.meta.env?.VITE_SUPABASE_ANON_KEY || '';
+const KEEP_ALIVE_INTERVAL_MS = 4 * 24 * 60 * 60 * 1000;
+
+function getStorage(key) {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      return localStorage.getItem(key);
+    }
+  } catch {}
+  return null;
+}
+
+function setStorage(key, val) {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(key, val);
+    }
+  } catch {}
+}
+
+function removeStorage(key) {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem(key);
+    }
+  } catch {}
+}
 
 class SupabaseClient {
   constructor() {
     this.listeners = new Set();
     this.session = this._loadStoredSession();
+    this._keepAliveTimer = null;
   }
 
   _loadStoredSession() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEYS.AUTH_SESSION)
-        || localStorage.getItem(LEGACY_STORAGE_KEYS.AUTH_SESSION);
+      const raw = getStorage(STORAGE_KEYS.AUTH_SESSION)
+        || getStorage(LEGACY_STORAGE_KEYS.AUTH_SESSION);
       return raw ? JSON.parse(raw) : null;
     } catch {
       return null;
@@ -55,15 +87,22 @@ class SupabaseClient {
   }
 
   getUrl() {
-    const raw = localStorage.getItem(STORAGE_KEYS.SUPABASE_URL)
-      || localStorage.getItem(LEGACY_STORAGE_KEYS.SUPABASE_URL)
-      || DEFAULT_URL;
+    const raw = getStorage(STORAGE_KEYS.SUPABASE_URL)
+      || getStorage(LEGACY_STORAGE_KEYS.SUPABASE_URL);
+    if (!raw || raw.includes('hhosnulqxwjbqqjkxuqv')) {
+      return DEFAULT_URL;
+    }
     return String(raw || '').trim().replace(/\/rest\/v1\/?$/, '').replace(/\/+$/, '');
   }
 
   getAnonKey() {
-    return localStorage.getItem(STORAGE_KEYS.SUPABASE_ANON_KEY)
-      || localStorage.getItem(LEGACY_STORAGE_KEYS.SUPABASE_ANON_KEY)
+    const rawUrl = getStorage(STORAGE_KEYS.SUPABASE_URL)
+      || getStorage(LEGACY_STORAGE_KEYS.SUPABASE_URL);
+    if (!rawUrl || rawUrl.includes('hhosnulqxwjbqqjkxuqv')) {
+      return DEFAULT_ANON_KEY;
+    }
+    return getStorage(STORAGE_KEYS.SUPABASE_ANON_KEY)
+      || getStorage(LEGACY_STORAGE_KEYS.SUPABASE_ANON_KEY)
       || DEFAULT_ANON_KEY;
   }
 
@@ -71,20 +110,20 @@ class SupabaseClient {
     if (url !== undefined) {
       if (url) {
         const cleanUrl = url.trim().replace(/\/rest\/v1\/?$/, '').replace(/\/+$/, '');
-        localStorage.setItem(STORAGE_KEYS.SUPABASE_URL, cleanUrl);
-        localStorage.setItem(LEGACY_STORAGE_KEYS.SUPABASE_URL, cleanUrl);
+        setStorage(STORAGE_KEYS.SUPABASE_URL, cleanUrl);
+        setStorage(LEGACY_STORAGE_KEYS.SUPABASE_URL, cleanUrl);
       } else {
-        localStorage.removeItem(STORAGE_KEYS.SUPABASE_URL);
-        localStorage.removeItem(LEGACY_STORAGE_KEYS.SUPABASE_URL);
+        removeStorage(STORAGE_KEYS.SUPABASE_URL);
+        removeStorage(LEGACY_STORAGE_KEYS.SUPABASE_URL);
       }
     }
     if (anonKey !== undefined) {
       if (anonKey) {
-        localStorage.setItem(STORAGE_KEYS.SUPABASE_ANON_KEY, anonKey.trim());
-        localStorage.setItem(LEGACY_STORAGE_KEYS.SUPABASE_ANON_KEY, anonKey.trim());
+        setStorage(STORAGE_KEYS.SUPABASE_ANON_KEY, anonKey.trim());
+        setStorage(LEGACY_STORAGE_KEYS.SUPABASE_ANON_KEY, anonKey.trim());
       } else {
-        localStorage.removeItem(STORAGE_KEYS.SUPABASE_ANON_KEY);
-        localStorage.removeItem(LEGACY_STORAGE_KEYS.SUPABASE_ANON_KEY);
+        removeStorage(STORAGE_KEYS.SUPABASE_ANON_KEY);
+        removeStorage(LEGACY_STORAGE_KEYS.SUPABASE_ANON_KEY);
       }
     }
     this._notify();
@@ -135,11 +174,11 @@ class SupabaseClient {
     this.session = session;
     if (session) {
       const json = JSON.stringify(session);
-      localStorage.setItem(STORAGE_KEYS.AUTH_SESSION, json);
-      localStorage.setItem(LEGACY_STORAGE_KEYS.AUTH_SESSION, json);
+      setStorage(STORAGE_KEYS.AUTH_SESSION, json);
+      setStorage(LEGACY_STORAGE_KEYS.AUTH_SESSION, json);
     } else {
-      localStorage.removeItem(STORAGE_KEYS.AUTH_SESSION);
-      localStorage.removeItem(LEGACY_STORAGE_KEYS.AUTH_SESSION);
+      removeStorage(STORAGE_KEYS.AUTH_SESSION);
+      removeStorage(LEGACY_STORAGE_KEYS.AUTH_SESSION);
     }
     this._notify();
   }
@@ -262,6 +301,66 @@ class SupabaseClient {
 
     return true;
   }
+
+  /**
+   * Pings Supabase to prevent project pausing on free tier (every 4 days).
+   * @param {boolean} force If true, pings immediately regardless of last ping time.
+   * @returns {Promise<boolean>} True if ping was sent successfully, false otherwise.
+   */
+  async keepAlive(force = false) {
+    let lastPing = 0;
+    try {
+      lastPing = Number(getStorage(STORAGE_KEYS.LAST_PING)
+        || getStorage(LEGACY_STORAGE_KEYS.LAST_PING)
+        || 0);
+    } catch {
+      lastPing = 0;
+    }
+
+    const now = Date.now();
+    if (!force && lastPing > 0 && (now - lastPing) < KEEP_ALIVE_INTERVAL_MS) {
+      return false;
+    }
+
+    const targetUrl = this.getUrl() || OFFICIAL_SUPABASE_URL;
+    const targetKey = this.getAnonKey() || OFFICIAL_SUPABASE_KEY;
+
+    try {
+      const url = `${targetUrl}/rest/v1/track_analysis?select=video_id&limit=1`;
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'apikey': targetKey,
+          'Authorization': `Bearer ${this.session?.access_token || targetKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (res.ok) {
+        setStorage(STORAGE_KEYS.LAST_PING, String(now));
+        setStorage(LEGACY_STORAGE_KEYS.LAST_PING, String(now));
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.warn('Supabase keep-alive signal error:', err);
+      return false;
+    }
+  }
+
+  /**
+   * Starts periodic keep-alive checks in background (runs on startup + every 24h).
+   */
+  startKeepAliveScheduler() {
+    void this.keepAlive();
+    if (typeof window !== 'undefined' && !this._keepAliveTimer) {
+      this._keepAliveTimer = setInterval(() => {
+        void this.keepAlive();
+      }, 24 * 60 * 60 * 1000);
+    }
+  }
 }
 
 export const supabaseClient = new SupabaseClient();
+export const keepAliveSupabase = (force) => supabaseClient.keepAlive(force);
+

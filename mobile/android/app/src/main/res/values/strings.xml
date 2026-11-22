@@ -87,12 +87,12 @@
   <string name="settings_clear_cache">Vaciar caché de canciones</string>
 
   <!-- Settings Appearance -->
-  <string name="settings_player_mode">Diseño del reproductor</string>
-  <string name="settings_player_mode_subtitle">Alterna entre Grove Neumórfico y Obsidian Slate</string>
-  <string name="settings_player_mode_grove">Grove (Dock)</string>
-  <string name="settings_player_mode_grove_desc">Isla flotante inferior con controles táctiles, onda sinusoidal fluida y acceso rápido</string>
-  <string name="settings_player_mode_obsidian">Obsidian (HUD)</string>
-  <string name="settings_player_mode_obsidian_desc">Consola HUD superior estilo rack con vúmetro LED en vivo, osciloscopio láser y telemetría DSP</string>
+  <string name="settings_player_mode">Tema visual de interfaz</string>
+  <string name="settings_player_mode_subtitle">Alterna entre Liquid Aurora y Cyberpunk</string>
+  <string name="settings_player_mode_grove">Liquid Aurora</string>
+  <string name="settings_player_mode_grove_desc">Liquid Design + Aurora UI: cápsulas líquidas orgánicas, malla dinámica y onda viva</string>
+  <string name="settings_player_mode_obsidian">Cyberpunk</string>
+  <string name="settings_player_mode_obsidian_desc">Neo-Brutalism + Cyberpunk UI: bloques 2 dp, alto contraste y HUD superior</string>
   <string name="settings_theme_preference">Tema visual</string>
   <string name="settings_theme_dark">Obsidian Slate</string>
   <string name="settings_theme_oled">Negro OLED puro</string>
@@ -108,6 +108,8 @@
   <string name="settings_download_artwork_subtitle">Guarda portadas en movimiento al descargar canciones</string>
   <string name="settings_animated_bg">Fondo inmersivo animado</string>
   <string name="settings_animated_bg_subtitle">Proyecta los colores de la carátula tras la interfaz</string>
+  <string name="settings_aura_sync">Aura Sync (Bordes RGB)</string>
+  <string name="settings_aura_sync_subtitle">Iluminación RGB reactiva al ritmo en los bordes de la pantalla</string>
 
   <!-- Settings Experimental & Devices -->
   <string name="settings_frosted_glass">Efecto cristal esmerilado</string>
@@ -839,6 +841,15 @@
     <string name="quality_normal_desc">Calidad y consumo equilibrados</string>
     <string name="quality_high_desc">Mejor fidelidad de audio</string>
     <string name="quality_max_desc">Tasa de bits máxima sin compresión extra</string>
+    <string name="act_new_playlist">Nueva lista</string>
+    <string name="act_create">Crear</string>
+    <string name="act_create_and_add">Crear y añadir</string>
+    <string name="act_delete_playlist">Eliminar lista</string>
+    <string name="playlist_name_hint">Nombre de la lista</string>
+    <string name="playlist_delete_confirm_title">¿Eliminar esta lista?</string>
+    <string name="playlist_delete_confirm_body">Se quitará permanentemente de tu biblioteca de YouTube Music.</string>
+    <string name="msg_sign_in_playlists">Inicia sesión en YouTube Music para gestionar tus listas</string>
+    <string name="msg_playlist_created">Lista "%1$s" creada en YouTube Music</string>
     <plurals name="msg_downloaded_songs_count">
         <item quantity="one">%d canción descargada</item>
         <item quantity="other">%d canciones descargadas</item>

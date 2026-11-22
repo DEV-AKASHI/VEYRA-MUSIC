@@ -104,7 +104,7 @@ internal object VeyraWidgetRenderer {
         val backgroundHeight = if (expanded) 176 else 88
         views.setImageViewBitmap(
             R.id.widget_background,
-            widgetBackground(accent, BACKGROUND_WIDTH, backgroundHeight),
+            widgetBackground(accent, BACKGROUND_WIDTH, backgroundHeight, state.isCyberpunk),
         )
         if (artwork != null) {
             views.setImageViewBitmap(
@@ -250,12 +250,37 @@ internal object VeyraWidgetRenderer {
     )
 
     /** El característico lavado de artwork de Veyra Music: el color del álbum florece en el dosel oscuro en diagonal. */
-    private fun widgetBackground(accent: Int, width: Int, height: Int): Bitmap {
+    private fun widgetBackground(accent: Int, width: Int, height: Int, cyberpunk: Boolean = false): Bitmap {
         val output = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(output)
         val bounds = RectF(0f, 0f, width.toFloat(), height.toFloat())
-        val radius = height.coerceAtMost(width) * 0.12f
-        val baseAccent = ColorUtils.blendARGB(accent, CANOPY_NIGHT, 0.58f)
+        val radius = if (cyberpunk) 12f else height.coerceAtMost(width) * 0.14f
+        if (cyberpunk) {
+            val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = 0xFF070A12.toInt()
+            }
+            canvas.drawRoundRect(bounds, radius, radius, fillPaint)
+            val glowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                shader = RadialGradient(
+                    width * 0.85f,
+                    height * 0.15f,
+                    width * 0.65f,
+                    ColorUtils.setAlphaComponent(accent, 72),
+                    Color.TRANSPARENT,
+                    Shader.TileMode.CLAMP,
+                )
+            }
+            canvas.drawRoundRect(bounds, radius, radius, glowPaint)
+            val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                style = Paint.Style.STROKE
+                strokeWidth = 4f
+                color = 0xFF22D3EE.toInt()
+            }
+            canvas.drawRoundRect(RectF(2f, 2f, width - 2f, height - 2f), radius, radius, borderPaint)
+            return output
+        }
+
+        val baseAccent = ColorUtils.blendARGB(accent, CANOPY_NIGHT, 0.48f)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             shader = LinearGradient(
                 0f,
@@ -263,20 +288,26 @@ internal object VeyraWidgetRenderer {
                 width.toFloat(),
                 height.toFloat(),
                 intArrayOf(baseAccent, CANOPY_SURFACE, CANOPY_NIGHT),
-                floatArrayOf(0f, 0.48f, 1f),
+                floatArrayOf(0f, 0.50f, 1f),
                 Shader.TileMode.CLAMP,
             )
         }
         canvas.drawRoundRect(bounds, radius, radius, paint)
         paint.shader = RadialGradient(
-            width * 0.12f,
-            height * 0.1f,
-            width * 0.7f,
-            ColorUtils.setAlphaComponent(accent, 118),
+            width * 0.16f,
+            height * 0.12f,
+            width * 0.72f,
+            ColorUtils.setAlphaComponent(accent, 132),
             Color.TRANSPARENT,
             Shader.TileMode.CLAMP,
         )
         canvas.drawRoundRect(bounds, radius, radius, paint)
+        val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.STROKE
+            strokeWidth = 2f
+            color = 0x42FFFFFF
+        }
+        canvas.drawRoundRect(RectF(1f, 1f, width - 1f, height - 1f), radius, radius, borderPaint)
         return output
     }
 
@@ -331,7 +362,7 @@ internal object VeyraWidgetRenderer {
     private const val REQUEST_TOGGLE = 902
     private const val REQUEST_NEXT = 903
     private const val REQUEST_RECENT = 920
-    private const val ORCHARD_MINT = 0xFF2FDF93.toInt()
-    private const val CANOPY_NIGHT = 0xFF0B0E11.toInt()
-    private const val CANOPY_SURFACE = 0xFF1D232D.toInt()
+    private const val ORCHARD_MINT = 0xFF7C3AED.toInt()
+    private const val CANOPY_NIGHT = 0xFF0B0F19.toInt()
+    private const val CANOPY_SURFACE = 0xFF1A1538.toInt()
 }

@@ -75,6 +75,8 @@ data class EqualizerConfig(
     val gains: List<Float> = List(10) { 0f },
     val preampDb: Float = 0f,
     val bassBoost: Float = 0f,
+    val limiterEnabled: Boolean = true,
+    val crossfeedEnabled: Boolean = false,
 ) {
     /** Clamped band gains within -12 dB to +12 dB. */
     val clampedGains: List<Float>

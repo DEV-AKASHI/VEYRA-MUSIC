@@ -23,7 +23,10 @@
 
 import type { Target } from "./target.ts";
 
-export const PACKAGE_BASE_URL = "https://packages.sfg545.dev/";
+export const PACKAGE_BASE_URL =
+  process.env.VEYRA_PACKAGE_BASE_URL ||
+  process.env.ORCHARD_PACKAGE_BASE_URL ||
+  "https://github.com/SCARLXRD-1/VEYRA-MUSIC/releases/download/v1.0.3/";
 export const MANIFEST_URL = new URL("manifest.json", PACKAGE_BASE_URL).toString();
 
 export type PackageAsset = {
@@ -118,11 +121,11 @@ export async function fetchManifest(signal?: AbortSignal): Promise<PackageManife
       signal
     });
   } catch (error) {
-    throw new Error(`Could not reach the Orchard package service: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`Could not reach the Veyra Music package service: ${error instanceof Error ? error.message : String(error)}`);
   }
 
   if (!response.ok) {
-    throw new Error(`The Orchard package service returned HTTP ${response.status}.`);
+    throw new Error(`The Veyra Music package service returned HTTP ${response.status}.`);
   }
 
   try {

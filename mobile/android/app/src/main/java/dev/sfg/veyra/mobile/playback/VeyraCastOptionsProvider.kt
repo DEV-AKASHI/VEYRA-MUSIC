@@ -48,7 +48,11 @@ class VeyraCastOptionsProvider : OptionsProvider {
 
         return CastOptions.Builder()
             .setReceiverApplicationId(appId)
-            .setStopReceiverApplicationWhenEndingSession(true)
+            // Keep the receiver alive while Google Play services restores a dropped sender
+            // session. Stopping it here turns a brief Wi-Fi interruption into a full teardown.
+            .setEnableReconnectionService(true)
+            .setResumeSavedSession(true)
+            .setStopReceiverApplicationWhenEndingSession(false)
             .build()
     }
 

@@ -1,579 +1,568 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es-MX" data-veyra-theme="aurora" class="has-aura-sync">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Veyra Music — Descargas Oficiales | Cliente de Audio Profesional</title>
-  <meta name="description" content="Descarga directa oficial de Veyra Music para Android Móvil, Smart TV (Android TV), Linux x64 y Windows x64. Audio de alta fidelidad, Smart WSOLA Crossfade y diseño Obsidian Slate.">
-  <meta name="keywords" content="Veyra Music, descarga directa, music player, android apk, smart tv apk, linux music player, windows music player, AKASHI DEV, audio dsp, crossfade wsola">
-  <meta name="author" content="AKASHI DEV">
-  <meta name="theme-color" content="#0B0F19">
-  
-  <!-- Open Graph / Metadatos Sociales -->
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="Veyra Music — Centro Oficial de Descargas Directas">
-  <meta property="og:description" content="Reproductor de audio de grado profesional para power-users y audiófilos. Disponible para Android Móvil, Smart TV, Linux y Windows.">
-  <meta property="og:image" content="assets/veyra-logo.png">
-  
+  <meta name="description" content="Portal oficial de descargas de Veyra Music (AKASHI DEV). Nueva versión móvil v1.0.4 con Liquid Aurora, Cyberpunk UI, espectro PCM en tiempo real y Aura Sync RGB.">
+  <meta name="theme-color" content="#090718">
+  <title>Veyra Music — Descargas Oficiales | Audio Profesional por AKASHI DEV</title>
   <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link rel="preload" href="assets/fonts/playfair_display.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="assets/fonts/inter_regular.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <!-- Fondo Ambiental Atmosférico Sutil -->
-  <div class="ambient-glow ambient-glow--top" aria-hidden="true"></div>
-  <div class="ambient-glow ambient-glow--bottom" aria-hidden="true"></div>
+  <a class="skip-link" href="#contenido-principal">Saltar al contenido principal</a>
 
-  <!-- Barra de Navegación Principal -->
+  <!-- Malla atmosférica ambiental de Veyra (Aurora / Cyberpunk) -->
+  <div class="veyra-backdrop" aria-hidden="true">
+    <div class="aurora-orb aurora-orb--violet"></div>
+    <div class="aurora-orb aurora-orb--sky"></div>
+    <div class="aurora-orb aurora-orb--rose"></div>
+  </div>
+
+  <!-- Borde perimetral sutil Aura Sync RGB (desactivable y respetuoso con reduced-motion) -->
+  <div class="page-aura-frame" aria-hidden="true"></div>
+
+  <!-- Barra de navegación superior -->
   <header class="site-header">
-    <div class="container header-container">
-      <a href="#" class="brand-link" aria-label="Inicio Veyra Music">
-        <img src="assets/favicon.png" alt="" class="brand-logo" width="32" height="32" aria-hidden="true">
-        <div class="brand-info">
-          <span class="brand-name">Veyra Music</span>
-          <span class="brand-badge">AKASHI DEV</span>
+    <div class="container header-inner">
+      <a href="#" class="brand-link" aria-label="Veyra Music Inicio">
+        <div class="brand-emblem">
+          <img src="assets/veyra-logo.png" alt="Logotipo de Veyra Music" class="brand-logo" width="36" height="36">
+        </div>
+        <div class="brand-copy">
+          <span class="brand-title">Veyra Music</span>
+          <span class="brand-sub">AKASHI DEV</span>
         </div>
       </a>
 
-      <nav class="nav-menu" aria-label="Navegación del sitio">
+      <nav class="nav-menu" aria-label="Navegación principal">
         <a href="#descargas" class="nav-link">Descargas</a>
-        <a href="#caracteristicas" class="nav-link">Arquitectura</a>
-        <a href="#verificacion" class="nav-link">Integridad SHA-256</a>
-        <a href="https://github.com/SCARLXRD-1/VEYRA-MUSIC" target="_blank" rel="noopener noreferrer" class="nav-link nav-link--github" aria-label="Ver repositorio en GitHub">
-          <svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
-            <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
-          </svg>
+        <a href="#caracteristicas" class="nav-link">Universo</a>
+        <a href="#verificacion" class="nav-link">Verificación</a>
+        <a href="https://github.com/SCARLXRD-1/VEYRA-MUSIC" target="_blank" rel="noopener noreferrer" class="nav-link nav-link--ext">
           <span>GitHub</span>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
         </a>
       </nav>
 
-      <button class="header-status" id="version-history-btn" aria-label="Ver historial de versiones" title="Ver historial de versiones y lanzamientos">
-        <span class="status-dot" aria-hidden="true"></span>
-        <span class="status-text" id="header-version-text">v1.0.3 Oficial</span>
-        <svg class="status-chevron" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <polyline points="6 9 12 15 18 9"></polyline>
-        </svg>
-      </button>
+      <div class="header-actions">
+        <div class="theme-switch" role="group" aria-label="Previsualización de interfaz Veyra">
+          <button type="button" class="theme-switch-btn active" data-theme-choice="aurora">Aurora</button>
+          <button type="button" class="theme-switch-btn" data-theme-choice="cyberpunk">Cyberpunk</button>
+        </div>
+
+        <button type="button" class="version-pill-btn" id="version-history-btn" aria-label="Ver historial de versiones">
+          <span class="pulse-dot" aria-hidden="true"></span>
+          <span id="header-version-text">v1.0.4 Móvil</span>
+        </button>
+      </div>
     </div>
   </header>
 
-  <main>
-    <!-- Hero Section -->
+  <main id="contenido-principal">
+    <!-- Hero Editorial + Escenario Interactivo Veyra Mobile v1.0.4 -->
     <section class="hero-section">
-      <div class="container hero-container">
-        <div class="hero-pill-badge">
-          <span class="pulse-indicator" aria-hidden="true"></span>
-          <span id="hero-pill-version">Versión 1.0.3 Estable &bull; Distribución Oficial</span>
+      <div class="container hero-grid">
+        <div class="hero-copy-col">
+          <h1 class="hero-title">
+            Tu música, con <em class="hero-title-accent">carácter propio</em> y precisión de estudio.
+          </h1>
+
+          <p class="hero-subtitle">
+            Estrenamos la <strong>Nueva Versión Móvil v1.0.4</strong> para Android con diseño <strong>Liquid Aurora</strong>, <strong>Cyberpunk UI</strong>, espectro PCM en tiempo real y <strong>Aura Sync RGB</strong>. Smart TV continúa en etapa experimental; Linux y Windows permanecen pausados temporalmente.
+          </p>
+
+          <div class="hero-meta-row">
+            <span class="status-pill status-pill--live" id="hero-pill-version">
+              <span class="pulse-dot" aria-hidden="true"></span>
+              <span>Nueva Versión Móvil v1.0.4 • Liquid Aurora + Cyberpunk</span>
+            </span>
+
+            <a href="#descargas" class="hero-jump-link">
+              <span>Explorar plataformas</span>
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+            </a>
+          </div>
+
+          <!-- Tarjeta de descarga principal / detección de entorno -->
+          <div class="auto-detect-card" id="auto-detect-card">
+            <div class="auto-detect-head">
+              <div class="auto-detect-icon-wrap" id="detected-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="3"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+              </div>
+              <div class="auto-detect-info">
+                <div class="auto-detect-title-row">
+                  <span id="detected-platform-name" class="detected-name">Android Móvil — Nueva Versión</span>
+                  <span class="arch-badge" id="detected-arch-badge">APK · v1.0.4</span>
+                </div>
+                <div class="auto-detect-meta" id="detected-file-meta">
+                  <span>Android 10+ Universal</span>
+                  <span class="meta-separator">&bull;</span>
+                  <span>Liquid Aurora + Cyberpunk</span>
+                  <span class="meta-separator">&bull;</span>
+                  <span>Sin telemetría</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="auto-detect-actions">
+              <a href="downloads/Veyra-Music-Android-1.0.4-mobile.apk" class="btn btn-primary btn-lg" id="detected-download-btn" download="Veyra-Music-Android-1.0.4-mobile.apk">
+                <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span id="detected-btn-label">Descargar Nueva Versión Móvil</span>
+              </a>
+
+              <button type="button" class="btn btn-secondary show-qr-btn" title="Mostrar QR para celular">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM17 17h4v4h-4zM14 20h2"/></svg>
+                <span>QR</span>
+              </button>
+            </div>
+          </div>
         </div>
 
-        <h1 class="hero-title">
-          Fidelidad Acústica de Estudio.<br>
-          <span class="text-gradient">Control Industrial Absoluto.</span>
-        </h1>
+        <!-- Escenario Interactivo del Reproductor Móvil Veyra v1.0.4 -->
+        <div class="hero-stage-col">
+          <div class="veyra-device-stage" id="veyra-device-stage" aria-label="Demostración interactiva de Veyra Music Móvil v1.0.4">
+            <div class="device-aura-edge" aria-hidden="true"></div>
 
-        <p class="hero-subtitle">
-          Cliente de audio de alto rendimiento para audiófilos y usuarios avanzados.
-          Motor acústico Smart WSOLA Crossfade, ecualizador paramétrico y sincronización nativa en Móvil, Smart TV y Escritorio.
-        </p>
+            <div class="device-surface">
+              <div class="device-topbar">
+                <span class="device-mode-chip" id="stage-mode-chip">LIQUID AURORA</span>
+                <div class="device-topbar-controls">
+                  <button type="button" class="device-mini-pill active" id="aura-sync-toggle" aria-pressed="true">
+                    <span class="aura-dot" aria-hidden="true"></span>
+                    <span>Aura Sync</span>
+                  </button>
+                  <button type="button" class="device-mini-pill" id="visualizer-toggle-btn">
+                    Pausar espectro
+                  </button>
+                </div>
+              </div>
 
-        <!-- Tarjeta de Detección de Sistema Inteligente -->
-        <div class="auto-detect-card" id="auto-detect-card">
-          <div class="auto-detect-header">
-            <div class="auto-detect-icon" id="detected-icon" aria-hidden="true">
-              <!-- SVG dinámico inyectado por JS -->
-              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              <!-- Disco / Carátula con Espectro Radial (Aurora) o Barras Acid Yellow (Cyberpunk) -->
+              <div class="device-artwork-stage">
+                <canvas id="showcase-spectrum-canvas" width="280" height="280" aria-label="Espectro circular y de barras reactivo de Veyra Music"></canvas>
+                <div class="device-cover-frame">
+                  <img src="assets/veyra-logo.png" alt="Carátula activa en Veyra Music" class="device-cover-img" width="144" height="144">
+                  <div class="device-cover-specular" aria-hidden="true"></div>
+                </div>
+              </div>
+
+              <div class="device-track-meta">
+                <div class="device-track-title">Midnight Telemetry</div>
+                <div class="device-track-artist">AKASHI DEV • PCM 24-bit / 96 kHz</div>
+              </div>
+
+              <!-- Onda sinusoidal / barra de 44 segmentos estilo PlayerScrubber -->
+              <div class="device-scrubber-row" aria-hidden="true">
+                <canvas id="showcase-wave-scrubber" width="320" height="40"></canvas>
+                <div class="device-timecodes">
+                  <span>01:18</span>
+                  <span class="device-codec-pill">FLAC · WSOLA READY</span>
+                  <span>-02:24</span>
+                </div>
+              </div>
+
+              <!-- Dock Flotante Líquido -->
+              <div class="device-dock">
+                <button type="button" class="dock-btn" data-theme-choice="aurora" title="Activar Liquid Aurora">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+                  <span>Aurora</span>
+                </button>
+
+                <button type="button" class="dock-hero-play" id="stage-play-btn" aria-label="Alternar animación del espectro">
+                  <svg id="stage-play-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+                </button>
+
+                <button type="button" class="dock-btn" data-theme-choice="cyberpunk" title="Activar Cyberpunk UI">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  <span>Cyber</span>
+                </button>
+              </div>
             </div>
-            <div class="auto-detect-text">
-              <span class="auto-detect-label">Plataforma detectada</span>
-              <strong class="auto-detect-platform" id="detected-platform-name">Identificando sistema...</strong>
-            </div>
-            <span class="auto-detect-badge" id="detected-arch-badge">64-bit</span>
-          </div>
-
-          <div class="auto-detect-actions">
-            <a href="#descargas" id="detected-download-btn" class="btn btn--primary btn--hero" download="veyramusic.apk" target="download_target_frame">
-              <svg class="btn-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-              </svg>
-              <span id="detected-btn-label">Descargar Veyra v1.0.3</span>
-            </a>
-            <a href="#descargas" class="btn btn--secondary">
-              Ver catálogo completo
-            </a>
-          </div>
-
-          <div class="auto-detect-meta" id="detected-file-meta">
-            <span>Paquete verificado</span>
-            <span class="meta-separator">&bull;</span>
-            <span>Firma SHA-256</span>
-            <span class="meta-separator">&bull;</span>
-            <span>Sin telemetría de terceros</span>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Visualizador Interactivo en Tiempo Real -->
-    <section class="visualizer-section" aria-label="Demostración técnica de telemetría de audio">
+    <!-- Banda de Telemetría Acústica en Tiempo Real -->
+    <section class="visualizer-section" aria-label="Telemetría acústica del motor Veyra">
       <div class="container">
         <div class="visualizer-rack">
           <div class="rack-header">
-            <div class="rack-status">
-              <span class="rack-lamp" aria-hidden="true"></span>
-              <span class="rack-title">DSP ACOUSTIC TELEMETRY</span>
+            <div class="rack-title-group">
+              <span class="rack-badge" id="rack-mode-badge">DSP // LIQUID AURORA</span>
+              <span class="rack-text">96.0 kHz &bull; 24-bit PCM Stage</span>
             </div>
-            <div class="rack-spec-chips">
-              <span class="chip">96.0 kHz &bull; 24-bit</span>
-              <span class="chip chip--accent">WSOLA ENGINE</span>
-              <span class="chip">-0.1 dBFS PEAK</span>
-            </div>
-          </div>
-
-          <!-- Lienzo de Onda Sonora Viva -->
-          <div class="wave-canvas-wrapper">
-            <canvas id="live-wave-canvas" width="1000" height="110" aria-label="Visualizador espectral en tiempo real"></canvas>
-            <div class="wave-overlay-labels">
-              <span>0:00</span>
-              <span class="live-tag">REAL-TIME BEAT ALIGNMENT</span>
-              <span>LIVE MIX</span>
+            <div class="rack-telemetry-pills">
+              <span class="telemetry-chip">WSOLA CROSSFADE</span>
+              <span class="telemetry-chip">10-BAND PARAMETRIC EQ</span>
+              <span class="telemetry-chip">-0.1 dBFS LIMITER</span>
             </div>
           </div>
+          <canvas id="live-wave-canvas" width="1080" height="112" aria-label="Visualizador acústico de frecuencias del motor Veyra"></canvas>
         </div>
       </div>
     </section>
 
-    <!-- Catálogo de Descargas Directas Multiplataforma -->
+    <!-- Centro de Distribución por Plataforma -->
     <section class="downloads-section" id="descargas">
       <div class="container">
         <div class="section-header">
-          <span class="section-tag">MATRIZ DE DISTRIBUCIÓN</span>
-          <h2 class="section-title">Paquetes Oficiales</h2>
-          <p class="section-description">
-            Compilaciones optimizadas para producción. Descargas directas de alta velocidad, libres de instaladores empaquetados o publicidad.
+          <h2 class="section-title">Distribución Oficial por Plataforma</h2>
+          <p class="section-subtitle">
+            Prioridad actual enfocada en la nueva experiencia móvil Android v1.0.4. Compilaciones verificadas mediante suma SHA-256 pública.
           </p>
         </div>
 
-        <!-- Barra de Filtros / Tabs -->
-        <div class="platform-tabs" role="tablist" aria-label="Filtro de plataformas soportadas">
-          <button class="tab-btn active" data-filter="all" role="tab" aria-selected="true">
-            <span>Todos los sistemas</span>
-          </button>
-          <button class="tab-btn" data-filter="mobile" role="tab" aria-selected="false">
-            <svg class="tab-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+        <div class="platform-tabs" role="tablist" aria-label="Filtrar descargas por plataforma">
+          <button type="button" class="tab-btn active" role="tab" aria-selected="true" data-filter="all">Todas</button>
+          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-filter="mobile">
             <span>Android Móvil</span>
+            <span class="tab-status-tag tab-status-tag--new">Nueva v1.0.4</span>
           </button>
-          <button class="tab-btn" data-filter="tv" role="tab" aria-selected="false">
-            <svg class="tab-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="13" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>
+          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-filter="tv">
             <span>Smart TV</span>
+            <span class="tab-status-tag tab-status-tag--exp">Experimental</span>
           </button>
-          <button class="tab-btn" data-filter="linux" role="tab" aria-selected="false">
-            <svg class="tab-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-            <span>Linux x64</span>
+          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-filter="linux">
+            <span>Linux</span>
+            <span class="tab-status-tag tab-status-tag--off">Pausado</span>
           </button>
-          <button class="tab-btn" data-filter="windows" role="tab" aria-selected="false">
-            <svg class="tab-icon" viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.949-1.801"/></svg>
-            <span>Windows x64</span>
+          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-filter="windows">
+            <span>Windows</span>
+            <span class="tab-status-tag tab-status-tag--off">Pausado</span>
           </button>
         </div>
 
-        <!-- Rejilla de Tarjetas de Plataforma -->
         <div class="cards-grid">
-          
-          <!-- TARJETA 1: ANDROID MÓVIL -->
-          <article class="release-card" data-category="mobile" id="card-mobile">
-            <div class="card-top-bar">
-              <div class="card-platform-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+          <!-- Android Móvil (Nueva Versión Principal) -->
+          <article class="release-card release-card--featured" data-category="mobile" id="card-mobile">
+            <div class="card-top">
+              <div class="card-platform-badge badge--mobile" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="3"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
               </div>
-              <span class="card-badge">Android Phone & Tablet</span>
+              <div class="card-heading">
+                <div class="card-title-line">
+                  <h3>Android Móvil</h3>
+                  <span class="card-badge card-badge--new">Nueva Versión</span>
+                </div>
+                <span class="card-version" id="mobile-version-text">v1.0.4 &bull; Android 10+ (ARM64 / Universal)</span>
+              </div>
             </div>
 
-            <div class="card-heading">
-              <h3 class="card-title">Veyra Android</h3>
-              <span class="card-version" id="mobile-version-text">v1.0.3 Oficial &bull; 162 MB</span>
+            <div class="platform-status-banner platform-status-banner--featured">
+              <strong>Lanzamiento principal:</strong> Incluye interfaces Liquid Aurora y Cyberpunk UI, espectro PCM reactivo, Aura Sync RGB al ritmo y motor de ecualización completo.
             </div>
 
-            <p class="card-text">
-              Cliente móvil para smartphones y tablets con dock flotante Grove squircle, telemetría HUD en tiempo real y motor DSP nativo a 120 FPS.
-            </p>
-
-            <ul class="feature-bullets">
+            <ul class="card-specs">
               <li>
-                <svg class="bullet-check" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                <span><strong>Grove Mode:</strong> Dock ergonómico con onda sinusoidal viva</span>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Doble interfaz Liquid Aurora + Cyberpunk UI</span>
               </li>
               <li>
-                <svg class="bullet-check" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                <span><strong>Zero GC Allocation:</strong> Rendimiento sostenido a 120 FPS</span>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Espectro PCM radial/onda + Aura Sync RGB rítmico</span>
               </li>
               <li>
-                <svg class="bullet-check" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                <span><strong>Nube Supabase:</strong> Sincronización continua de biblioteca</span>
-              </li>
-              <li>
-                <svg class="bullet-check" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                <span><strong>Arquitecturas:</strong> ARM64, ARMv7, x86_64 (Android 7.0 - 15)</span>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>EQ 10 bandas, Crossfade, ReplayGain y Limiter nativo</span>
               </li>
             </ul>
 
-            <div class="card-footer">
-              <a href="https://github.com/SCARLXRD-1/VEYRA-MUSIC/releases/download/v1.0.3/veyramusic.apk" class="btn btn--primary btn--block download-trigger" id="mobile-download-btn" data-filename="veyramusic.apk" download="veyramusic.apk" target="download_target_frame">
-                <svg class="btn-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                <span id="mobile-btn-label">Descargar APK (162 MB)</span>
+            <div class="card-actions">
+              <a href="downloads/Veyra-Music-Android-1.0.4-mobile.apk" class="btn btn-primary btn-block" id="mobile-download-btn" download="Veyra-Music-Android-1.0.4-mobile.apk">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span id="mobile-btn-label">Descargar Nueva Versión Móvil (.apk)</span>
               </a>
 
-              <div class="checksum-box">
-                <div class="checksum-label">
-                  <span>SHA-256</span>
-                  <button class="copy-btn" id="mobile-copy-btn" data-checksum="69129b4c295508b7869444365fe70f5f9c573e3a55db76a05725644524d91da5" aria-label="Copiar hash SHA-256">
-                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                    <span>Copiar</span>
-                  </button>
-                </div>
-                <code class="checksum-code" id="mobile-checksum-preview">69129b4c2955...24d91da5</code>
+              <div class="card-secondary-row">
+                <button type="button" class="btn btn-ghost btn-sm show-qr-btn">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM17 17h4v4h-4zM14 20h2"/></svg>
+                  <span>Código QR</span>
+                </button>
+                <button type="button" class="btn btn-ghost btn-sm copy-btn" id="mobile-copy-btn" data-checksum="65111cef4dd6fafaea05d36ef9f0980be66a7f9a649fc87fc4646dd53338793a">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  <span>Copiar SHA-256</span>
+                </button>
               </div>
+            </div>
 
-              <button class="btn btn--outline btn--block show-qr-btn" data-target="qr-modal-mobile">
-                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                <span>Código QR para teléfono</span>
-              </button>
+            <div class="card-footer-meta">
+              <span>SHA-256:</span>
+              <code class="hash-short" id="mobile-checksum-preview">65111cef...338793a</code>
             </div>
           </article>
 
-          <!-- TARJETA 2: SMART TV & ANDROID TV -->
-          <article class="release-card" data-category="tv" id="card-tv">
-            <div class="card-top-bar">
-              <div class="card-platform-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="13" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>
+          <!-- Smart TV (Etapa Experimental) -->
+          <article class="release-card release-card--experimental" data-category="tv" id="card-tv">
+            <div class="card-top">
+              <div class="card-platform-badge badge--tv" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="18" x2="12" y2="21"/></svg>
               </div>
-              <span class="card-badge card-badge--tv">10-Foot UI Experience</span>
+              <div class="card-heading">
+                <div class="card-title-line">
+                  <h3>Smart TV</h3>
+                  <span class="card-badge card-badge--experimental">Etapa Experimental</span>
+                </div>
+                <span class="card-version" id="tv-version-text">v1.0.3 &bull; Beta Experimental (10-Foot UI)</span>
+              </div>
             </div>
 
-            <div class="card-heading">
-              <h3 class="card-title">Veyra Smart TV</h3>
-              <span class="card-version" id="tv-version-text">v1.0.3 Oficial &bull; 162 MB</span>
+            <div class="platform-status-banner platform-status-banner--warning">
+              <strong>Compilación experimental:</strong> En pruebas activas para Android TV y Google TV. Algunas pantallas o controles remotos pueden presentar ajustes menores.
             </div>
 
-            <p class="card-text">
-              Diseñado para Google TV, Android TV y Fire TV. Interfaz de 10 pies operada al 100% mediante control remoto con flechas direccionales y botón de selección.
-            </p>
-
-            <ul class="feature-bullets">
+            <ul class="card-specs">
               <li>
-                <svg class="bullet-check" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                <span><strong>Navegación D-Pad:</strong> Foco de alto contraste y disparo por botón OK</span>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Navegación adaptada a control remoto D-Pad</span>
               </li>
               <li>
-                <svg class="bullet-check" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                <span><strong>Barra Lateral:</strong> Menú adaptado para pantalla horizontal 16:9</span>
-              </li>
-              <li>
-                <svg class="bullet-check" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                <span><strong>Mandos Multimedia:</strong> Soporte de botones Play/Pause dedicados</span>
-              </li>
-              <li>
-                <svg class="bullet-check" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                <span><strong>Compatibilidad:</strong> Android TV 7.0+ con Leanback nativo</span>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Modo cine en pantalla grande + salida HDMI</span>
               </li>
             </ul>
 
-            <div class="card-footer">
-              <a href="https://github.com/SCARLXRD-1/VEYRA-MUSIC/releases/download/v1.0.3/veyramusic.apk" class="btn btn--primary btn--block download-trigger" id="tv-download-btn" data-filename="veyramusic.apk" download="veyramusic.apk" target="download_target_frame">
-                <svg class="btn-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                <span id="tv-btn-label">Descargar APK TV (162 MB)</span>
+            <div class="card-actions">
+              <a href="https://github.com/SCARLXRD-1/VEYRA-MUSIC/releases/download/v1.0.3/veyramusic.apk" class="btn btn-experimental btn-block" id="tv-download-btn" data-platform="Smart TV Experimental">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span id="tv-btn-label">Descargar TV Experimental (.apk)</span>
               </a>
 
-              <div class="checksum-box">
-                <div class="checksum-label">
-                  <span>SHA-256</span>
-                  <button class="copy-btn" id="tv-copy-btn" data-checksum="69129b4c295508b7869444365fe70f5f9c573e3a55db76a05725644524d91da5" aria-label="Copiar hash SHA-256">
-                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                    <span>Copiar</span>
-                  </button>
-                </div>
-                <code class="checksum-code" id="tv-checksum-preview">69129b4c2955...24d91da5</code>
+              <div class="card-secondary-row">
+                <button type="button" class="btn btn-ghost btn-sm toggle-instructions-btn" data-target="tv-instructions">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                  <span>Guía de instalación en TV (ADB)</span>
+                </button>
+                <button type="button" class="btn btn-ghost btn-sm copy-btn" id="tv-copy-btn" data-checksum="034b197254d114191e95e1fe55f1d452ee216629ee6bd49556157cf67085f999">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  <span>Copiar SHA-256</span>
+                </button>
               </div>
-
-              <button class="btn btn--outline btn--block toggle-instructions-btn" data-target="tv-instructions">
-                <span>Guía de instalación en TV (ADB)</span>
-              </button>
             </div>
 
-            <div class="inline-code-box is-hidden" id="tv-instructions">
-              <p class="inline-title">Instalación rápida vía ADB:</p>
-              <code>adb connect &lt;ip-del-televisor&gt;:5555<br>adb install -r veyramusic.apk</code>
+            <div class="terminal-box is-hidden" id="tv-instructions">
+              <code>adb connect IP_DE_TU_TV:5555</code>
+              <code>adb install -r Veyra-Music-TV-1.0.3-tv.apk</code>
+            </div>
+
+            <div class="card-footer-meta">
+              <span>SHA-256:</span>
+              <code class="hash-short" id="tv-checksum-preview">034b1972...085f999</code>
             </div>
           </article>
 
-          <!-- TARJETA 3: LINUX DESKTOP -->
-          <article class="release-card" data-category="linux" id="card-linux">
-            <div class="card-top-bar">
-              <div class="card-platform-icon" aria-hidden="true">
+          <!-- Linux x64 (Deshabilitado temporalmente) -->
+          <article class="release-card release-card--disabled" data-category="linux" id="card-linux">
+            <div class="card-top">
+              <div class="card-platform-badge badge--disabled" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
               </div>
-              <span class="card-badge card-badge--linux">Linux Standalone (x64)</span>
+              <div class="card-heading">
+                <div class="card-title-line">
+                  <h3>Linux x64</h3>
+                  <span class="card-badge card-badge--disabled">Deshabilitado</span>
+                </div>
+                <span class="card-version" id="linux-version-text">Pausado temporalmente &bull; AppImage / deb</span>
+              </div>
             </div>
 
-            <div class="card-heading">
-              <h3 class="card-title">Veyra Linux</h3>
-              <span class="card-version" id="linux-version-text">v1.0.3 Oficial &bull; 393 MB</span>
+            <div class="platform-status-banner platform-status-banner--muted">
+              <strong>Distribución pausada:</strong> Deshabilitada temporalmente mientras concentramos esta actualización en la nueva versión Android Móvil v1.0.4.
             </div>
 
-            <p class="card-text">
-              Paquete autónomo para distribuciones Linux de 64 bits. Integra aceleración gráfica por hardware y módulo nativo C++/Rust para análisis de audio local.
-            </p>
-
-            <ul class="feature-bullets">
+            <ul class="card-specs">
               <li>
-                <svg class="bullet-check" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                <span><strong>DSP Nativo:</strong> Motor Web Audio asistido por Rust y WSOLA</span>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <span>Compilaciones AppImage x86_64 en espera de ciclo</span>
               </li>
               <li>
-                <svg class="bullet-check" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                <span><strong>Integración de Sistema:</strong> MPRIS y Discord Rich Presence</span>
-              </li>
-              <li>
-                <svg class="bullet-check" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                <span><strong>Soporte Gráfico:</strong> Wayland y X11 (Ubuntu, Arch, Fedora, Debian)</span>
-              </li>
-              <li>
-                <svg class="bullet-check" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                <span><strong>Sin Instalador:</strong> Descomprimir y lanzar con <code>./veyra.sh</code></span>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <span>Volverá tras alinear el motor de escritorio</span>
               </li>
             </ul>
 
-            <div class="card-footer">
-              <a href="https://github.com/SCARLXRD-1/VEYRA-MUSIC/releases/download/v1.0.3/veyra-v1.0.3-linux-x64.tar.gz" class="btn btn--primary btn--block download-trigger" id="linux-download-btn" data-filename="veyra-v1.0.3-linux-x64.tar.gz" download="veyra-v1.0.3-linux-x64.tar.gz" target="download_target_frame">
-                <svg class="btn-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                <span id="linux-btn-label">Descargar Tar.gz (393 MB)</span>
-              </a>
-
-              <div class="checksum-box">
-                <div class="checksum-label">
-                  <span>SHA-256</span>
-                  <button class="copy-btn" id="linux-copy-btn" data-checksum="0016e72ca6e347d85e97ee50ef52e3bd0c20e8e7ef281dda1ddf8c8ea7ffe73f" aria-label="Copiar hash SHA-256">
-                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                    <span>Copiar</span>
-                  </button>
-                </div>
-                <code class="checksum-code" id="linux-checksum-preview">0016e72ca6e3...a7ffe73f</code>
-              </div>
-
-              <button class="btn btn--outline btn--block toggle-instructions-btn" data-target="linux-instructions">
-                <span>Comando de ejecución</span>
+            <div class="card-actions">
+              <button type="button" class="btn btn-disabled btn-block" id="linux-download-btn" aria-disabled="true" data-disabled-platform="Linux x64">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
+                <span id="linux-btn-label">Descarga deshabilitada</span>
               </button>
             </div>
 
-            <div class="inline-code-box is-hidden" id="linux-instructions">
-              <p class="inline-title">Descomprimir e iniciar:</p>
-              <code>tar -xzf veyra-v1.0.3-linux-x64.tar.gz<br>cd veyra-linux-x64 && ./veyra.sh</code>
+            <div class="card-footer-meta">
+              <span>Estado:</span>
+              <code class="hash-short">Temporalmente no disponible</code>
             </div>
           </article>
 
-          <!-- TARJETA 4: WINDOWS DESKTOP -->
-          <article class="release-card" data-category="windows" id="card-windows">
-            <div class="card-top-bar">
-              <div class="card-platform-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.949-1.801"/></svg>
+          <!-- Windows x64 (Deshabilitado temporalmente) -->
+          <article class="release-card release-card--disabled" data-category="windows" id="card-windows">
+            <div class="card-top">
+              <div class="card-platform-badge badge--disabled" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>
               </div>
-              <span class="card-badge card-badge--win">Windows Portable (x64)</span>
+              <div class="card-heading">
+                <div class="card-title-line">
+                  <h3>Windows x64</h3>
+                  <span class="card-badge card-badge--disabled">Deshabilitado</span>
+                </div>
+                <span class="card-version" id="windows-version-text">Pausado temporalmente &bull; NSIS x64</span>
+              </div>
             </div>
 
-            <div class="card-heading">
-              <h3 class="card-title">Veyra Windows</h3>
-              <span class="card-version" id="windows-version-text">v1.0.3 Oficial &bull; 405 MB</span>
+            <div class="platform-status-banner platform-status-banner--muted">
+              <strong>Distribución pausada:</strong> Deshabilitada temporalmente durante el despliegue principal de Android Móvil v1.0.4 y pruebas en TV.
             </div>
 
-            <p class="card-text">
-              Edición portable optimizada para Windows 10 y 11 de 64 bits. No altera el registro del sistema operativo ni requiere permisos administrativos.
-            </p>
-
-            <ul class="feature-bullets">
+            <ul class="card-specs">
               <li>
-                <svg class="bullet-check" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                <span><strong>SMTC Nativo:</strong> Controles en barra de tareas y teclado multimedia</span>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <span>Instalador Windows 10/11 en pausa temporal</span>
               </li>
               <li>
-                <svg class="bullet-check" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                <span><strong>Portable Puro:</strong> Sin instalador invasivo ni entradas de registro</span>
-              </li>
-              <li>
-                <svg class="bullet-check" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                <span><strong>Aceleración Gráfica:</strong> Visualizador de espectro Direct3D</span>
-              </li>
-              <li>
-                <svg class="bullet-check" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                <span><strong>Arranque Directo:</strong> Ejecución inmediata desde <code>veyra.exe</code></span>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <span>Usa Android Móvil v1.0.4 para acceder hoy</span>
               </li>
             </ul>
 
-            <div class="card-footer">
-              <a href="https://github.com/SCARLXRD-1/VEYRA-MUSIC/releases/download/v1.0.3/veyra-v1.0.3-windows-x64.zip" class="btn btn--primary btn--block download-trigger" id="windows-download-btn" data-filename="veyra-v1.0.3-windows-x64.zip" download="veyra-v1.0.3-windows-x64.zip" target="download_target_frame">
-                <svg class="btn-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                <span id="windows-btn-label">Descargar Zip (405 MB)</span>
-              </a>
-
-              <div class="checksum-box">
-                <div class="checksum-label">
-                  <span>SHA-256</span>
-                  <button class="copy-btn" id="windows-copy-btn" data-checksum="fe3ac1a8361eaa11fb17285c570c34fb8a1dbfb861311fc55531747d7e64ac1c" aria-label="Copiar hash SHA-256">
-                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                    <span>Copiar</span>
-                  </button>
-                </div>
-                <code class="checksum-code" id="windows-checksum-preview">fe3ac1a8361e...7e64ac1c</code>
-              </div>
-
-              <button class="btn btn--outline btn--block toggle-instructions-btn" data-target="windows-instructions">
-                <span>Instrucciones de uso</span>
+            <div class="card-actions">
+              <button type="button" class="btn btn-disabled btn-block" id="windows-download-btn" aria-disabled="true" data-disabled-platform="Windows x64">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
+                <span id="windows-btn-label">Descarga deshabilitada</span>
               </button>
             </div>
 
-            <div class="inline-code-box is-hidden" id="windows-instructions">
-              <p class="inline-title">Ejecución inmediata:</p>
-              <code>1. Extrae el archivo ZIP<br>2. Inicia veyra.exe</code>
+            <div class="card-footer-meta">
+              <span>Estado:</span>
+              <code class="hash-short">Temporalmente no disponible</code>
             </div>
           </article>
-
         </div>
       </div>
     </section>
 
-    <!-- Características de Arquitectura -->
+    <!-- Arquitectura y Universos Visuales de Veyra Music -->
     <section class="features-section" id="caracteristicas">
       <div class="container">
         <div class="section-header">
-          <span class="section-tag">INGENIERÍA ACÚSTICA</span>
-          <h2 class="section-title">Pilares Técnicos</h2>
-          <p class="section-description">
-            Diseñado para exigencias de fidelidad acústica estricta, baja latencia y consumo óptimo de recursos.
+          <h2 class="section-title">Ingeniería Acústica y Dos Almas Visuales</h2>
+          <p class="section-subtitle">
+            Cada capa visual responde al audio real que suena en tu dispositivo, sin ruido decorativo ni rastreadores ocultos.
           </p>
+        </div>
+
+        <div class="universe-showcase-band">
+          <div class="universe-copy">
+            <h3>Liquid Aurora &amp; Cyberpunk UI</h3>
+            <p>
+              Alterna al instante entre superficies cristalinas translúcidas con Playfair Display y espectro radial reactivo (<strong>Liquid Aurora</strong>), o paneles tácticos de alto contraste con telemetría amarilla y cian (<strong>Cyberpunk</strong>). Ambos alimentados por análisis PCM de 12 bandas en tiempo real y el marco perimetral <strong>Aura Sync RGB</strong>.
+            </p>
+            <div class="universe-switch-inline">
+              <button type="button" class="btn btn-secondary btn-sm" data-theme-choice="aurora">Ver Liquid Aurora</button>
+              <button type="button" class="btn btn-secondary btn-sm" data-theme-choice="cyberpunk">Ver Cyberpunk</button>
+            </div>
+          </div>
+
+          <div class="universe-metrics" aria-label="Especificaciones del motor visual">
+            <div class="metric-item">
+              <span class="metric-val">12</span>
+              <span class="metric-label">Bandas Goertzel PCM</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-val">44</span>
+              <span class="metric-label">Barras de onda en vivo</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-val">RGB</span>
+              <span class="metric-label">Aura Sync por energía</span>
+            </div>
+          </div>
         </div>
 
         <div class="features-grid">
           <div class="feature-box">
             <div class="feature-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+              <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 10v4M6 6v12M10 3v18M14 8v8M18 5v14M22 10v4"/></svg>
             </div>
-            <h3 class="feature-heading">Smart WSOLA Crossfade</h3>
-            <p class="feature-text">
-              Transiciones predictivas mediante detección de transitorios de percusión y estiramiento temporal de onda WSOLA. Mezcla continua sin colisión tonal ni caídas de energía.
-            </p>
+            <h4>Smart WSOLA Crossfade</h4>
+            <p>Planificación de transiciones alineada por beats y compensación energética para que cada mezcla mantenga el pulso continuo.</p>
           </div>
 
           <div class="feature-box">
             <div class="feature-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
             </div>
-            <h3 class="feature-heading">EQ Paramétrico de 10 Bandas</h3>
-            <p class="feature-text">
-              Control analógico de frecuencias con ajuste de ganancia Preamp (-12 a +6 dB), ancho de banda Q configurable y balance estéreo bit-perfect.
-            </p>
+            <h4>EQ Paramétrico 10 Bandas</h4>
+            <p>Curvas calibradas de 31 Hz a 16 kHz combinadas con Crossfeed espacial para audífonos y limitador suave sin distorsión.</p>
           </div>
 
           <div class="feature-box">
             <div class="feature-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+              <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
             </div>
-            <h3 class="feature-heading">Enterprise Slate & Obsidian</h3>
-            <p class="feature-text">
-              Arquitectura visual de grado industrial con esquinas squircle, micro-bordes translúcidos de 1px, proyección ambiental de carátula y telemetría OLED.
-            </p>
+            <h4>Caché Local y Nube Supabase</h4>
+            <p>Biblioteca persistente, historial instantáneo y sincronización opcional de análisis DSP entre dispositivos compatibles.</p>
           </div>
 
           <div class="feature-box">
             <div class="feature-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+              <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             </div>
-            <h3 class="feature-heading">Nube Supabase + SQLite Local</h3>
-            <p class="feature-text">
-              Persistencia híbrida. Los metadatos y análisis acústicos se almacenan en una base de datos SQLite local sandboxed y se sincronizan fluidamente con Supabase.
-            </p>
-          </div>
-
-          <div class="feature-box">
-            <div class="feature-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-            </div>
-            <h3 class="feature-heading">Ecosistema Multiplataforma</h3>
-            <p class="feature-text">
-              Experiencia unificada en teléfonos móviles, televisores Smart TV y estaciones de trabajo de escritorio preservando listas, perfiles de audio y estado de reproducción.
-            </p>
-          </div>
-
-          <div class="feature-box">
-            <div class="feature-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            </div>
-            <h3 class="feature-heading">Privacidad y Código Auditable</h3>
-            <p class="feature-text">
-              Código abierto bajo licencia AGPL-3.0. Sin rastreo publicitario, sin recolección de hábitos personales y verificación criptográfica estricta.
-            </p>
+            <h4>Licencia AGPL-3.0 y Cero Rastreo</h4>
+            <p>Código abierto auditable desarrollado por AKASHI DEV. Descargas directas verificables sin telemetría comercial.</p>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Verificación Criptográfica Interactiva -->
+    <!-- Verificador Criptográfico de Integridad -->
     <section class="verify-section" id="verificacion">
       <div class="container">
-        <div class="section-header">
-          <span class="section-tag">SEGURIDAD CRIPTOGRÁFICA</span>
-          <h2 class="section-title">Validador de Integridad SHA-256</h2>
-          <p class="section-description">
-            Comprueba que el paquete descargado coincide exactamente con la compilación oficial de AKASHI DEV.
-          </p>
-        </div>
-
         <div class="verify-card">
-          <div class="verify-input-group">
-            <label for="sha-input" class="verify-label">Ingresa el hash SHA-256 generado en tu sistema:</label>
-            <div class="input-with-button">
-              <input type="text" id="sha-input" class="verify-input" placeholder="Ej: 380e01b4bcb502bf499145b30d78d0dbc75509245f630aade38aa21ded0d3aac" spellcheck="false" autocomplete="off">
-              <button id="verify-btn" class="btn btn--primary">
-                <span>Comprobar Hash</span>
-              </button>
-            </div>
+          <div class="verify-header">
+            <h3>Verificador Oficial SHA-256</h3>
+            <p>Pega la suma generada en tu dispositivo o terminal para validar la autenticidad del APK antes de instalarlo.</p>
           </div>
 
-          <div class="verify-result is-hidden" id="verify-result" role="status"></div>
+          <div class="verify-input-group">
+            <label for="sha-input" class="visually-hidden">Suma SHA-256 a comprobar</label>
+            <input type="text" id="sha-input" class="verify-input" placeholder="Pega aquí la cadena SHA-256 de 64 caracteres..." autocomplete="off" spellcheck="false">
+            <button type="button" class="btn btn-primary" id="verify-btn">Verificar Firma</button>
+          </div>
+
+          <div class="verify-result is-hidden" id="verify-result" aria-live="polite"></div>
 
           <div class="checksum-table-wrapper">
-            <h3 class="table-title" id="checksum-table-title">Firmas Criptográficas Oficiales</h3>
             <table class="checksum-table">
               <thead>
                 <tr>
-                  <th scope="col">Plataforma</th>
-                  <th scope="col">Archivo</th>
-                  <th scope="col">Tamaño</th>
-                  <th scope="col">Firma SHA-256 Oficial</th>
+                  <th>Paquete / Estado</th>
+                  <th>Plataforma</th>
+                  <th>Firma SHA-256</th>
                 </tr>
               </thead>
-              <tbody id="checksum-table-body">
+              <tbody>
                 <tr>
-                  <td>Android Móvil</td>
-                  <td><code>veyramusic.apk (v1.0.3)</code></td>
-                  <td>163 MB</td>
-                  <td><code class="hash-text">69129b4c295508b7869444365fe70f5f9c573e3a55db76a05725644524d91da5</code></td>
+                  <td class="mono-cell">Veyra-Music-Android-1.0.4-mobile.apk</td>
+                  <td>Android Móvil <span class="table-status table-status--new">Nueva v1.0.4</span></td>
+                  <td class="mono-cell">65111cef4dd6fafaea05d36ef9f0980be66a7f9a649fc87fc4646dd53338793a</td>
                 </tr>
                 <tr>
-                  <td>Smart TV</td>
-                  <td><code>veyramusic.apk (v1.0.3)</code></td>
-                  <td>163 MB</td>
-                  <td><code class="hash-text">69129b4c295508b7869444365fe70f5f9c573e3a55db76a05725644524d91da5</code></td>
+                  <td class="mono-cell">Veyra-Music-TV-1.0.3-tv.apk</td>
+                  <td>Smart TV <span class="table-status table-status--exp">Experimental</span></td>
+                  <td class="mono-cell">034b197254d114191e95e1fe55f1d452ee216629ee6bd49556157cf67085f999</td>
                 </tr>
-                <tr>
-                  <td>Linux Desktop</td>
-                  <td><code>veyra-v1.0.3-linux-x64.tar.gz</code></td>
-                  <td>378 MB</td>
-                  <td><code class="hash-text">0016e72ca6e347d85e97ee50ef52e3bd0c20e8e7ef281dda1ddf8c8ea7ffe73f</code></td>
+                <tr class="table-row--disabled">
+                  <td class="mono-cell">Veyra-Music-Linux-x64.AppImage</td>
+                  <td>Linux x64 <span class="table-status table-status--off">Deshabilitado</span></td>
+                  <td class="mono-cell">Distribución temporalmente pausada</td>
                 </tr>
-                <tr>
-                  <td>Windows Desktop</td>
-                  <td><code>veyra-v1.0.3-windows-x64.zip</code></td>
-                  <td>405 MB</td>
-                  <td><code class="hash-text">fe3ac1a8361eaa11fb17285c570c34fb8a1dbfb861311fc55531747d7e64ac1c</code></td>
+                <tr class="table-row--disabled">
+                  <td class="mono-cell">Veyra-Music-Windows-Setup.exe</td>
+                  <td>Windows x64 <span class="table-status table-status--off">Deshabilitado</span></td>
+                  <td class="mono-cell">Distribución temporalmente pausada</td>
                 </tr>
               </tbody>
             </table>
@@ -585,89 +574,63 @@
 
   <!-- Modal de Historial de Versiones -->
   <div class="modal-backdrop is-hidden" id="version-history-modal" role="dialog" aria-modal="true" aria-labelledby="history-modal-title">
-    <div class="modal-card modal-card--history">
-      <button class="modal-close-btn" id="history-modal-close" aria-label="Cerrar modal">&times;</button>
-      
-      <div class="history-modal-header">
-        <div class="history-title-row">
-          <div class="history-icon-badge" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-          </div>
-          <div>
-            <h3 class="modal-title" id="history-modal-title">Historial de Versiones</h3>
-            <p class="modal-subtitle">Registro cronológico de lanzamientos oficiales &bull; AKASHI DEV</p>
-          </div>
+    <div class="modal-card modal-card--lg">
+      <div class="modal-header">
+        <div>
+          <h4 id="history-modal-title">Historial de Lanzamientos y Estado</h4>
+          <p class="modal-subtitle">Compilaciones oficiales y estado actual de distribución por plataforma</p>
         </div>
+        <button type="button" class="modal-close" id="history-modal-close" aria-label="Cerrar historial">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
-
-      <div class="history-list" id="history-list-container">
-        <!-- Renderizado dinámico desde app.js -->
-        <div class="history-loading">
-          <span class="status-dot"></span>
-          <span>Cargando registros oficiales...</span>
-        </div>
-      </div>
-
-      <div class="history-modal-footer">
-        <a href="https://github.com/SCARLXRD-1/VEYRA-MUSIC/releases" target="_blank" rel="noopener noreferrer" class="btn btn--outline btn--block">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
-            <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
-          </svg>
-          <span>Ver todas las releases en GitHub</span>
-        </a>
+      <div class="modal-body" id="history-list-container">
+        <div class="history-loading">Consultando compilaciones de Veyra Music...</div>
       </div>
     </div>
   </div>
 
-  <!-- Modal para Código QR Móvil -->
+  <!-- Modal Código QR Móvil -->
   <div class="modal-backdrop is-hidden" id="qr-modal-mobile" role="dialog" aria-modal="true" aria-labelledby="qr-modal-title">
     <div class="modal-card">
-      <button class="modal-close-btn" id="qr-modal-close" aria-label="Cerrar modal">&times;</button>
-      <h3 class="modal-title" id="qr-modal-title">Descarga Directa en Teléfono</h3>
-      <p class="modal-subtitle">Escanea el código con la cámara de tu smartphone para descargar el paquete de instalación APK directamente.</p>
-      
-      <div class="qr-canvas-box">
-        <canvas id="qr-code-canvas" width="220" height="220" aria-label="Código QR con enlace de descarga"></canvas>
+      <div class="modal-header">
+        <h4 id="qr-modal-title">Instalar Nueva Versión Móvil</h4>
+        <button type="button" class="modal-close" id="qr-modal-close" aria-label="Cerrar ventana QR">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
-
-      <p class="qr-url-text"><code id="qr-url-display">https://github.com/SCARLXRD-1/VEYRA-MUSIC/releases/download/v1.0.3/veyramusic.apk</code></p>
+      <div class="modal-body qr-body">
+        <p class="qr-desc">Escanea el código desde tu teléfono Android para descargar directamente el paquete <strong>v1.0.4</strong>.</p>
+        <div class="qr-frame">
+          <canvas id="qr-code-canvas" width="212" height="212" aria-label="Código QR de descarga para Android Móvil"></canvas>
+        </div>
+        <span class="qr-url-hint" id="qr-url-display">veyra-music.netlify.app/download/android</span>
+      </div>
     </div>
   </div>
 
-  <!-- Notificación Toast Accesible -->
-  <div class="toast is-hidden" id="toast" role="alert" aria-live="polite">
-    <svg class="toast-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-    <span class="toast-message" id="toast-message">Hash copiado al portapapeles</span>
+  <!-- Notificación Toast -->
+  <div class="toast is-hidden" id="toast" role="status" aria-live="polite">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+    <span id="toast-message">Acción completada</span>
   </div>
 
-  <!-- Pie de Página Oficial -->
   <footer class="site-footer">
-    <div class="container footer-container">
+    <div class="container footer-inner">
       <div class="footer-brand">
-        <img src="assets/favicon.png" alt="" width="24" height="24" aria-hidden="true">
-        <span class="footer-name">Veyra Music</span>
-        <span class="footer-badge">AKASHI DEV</span>
+        <img src="assets/veyra-logo.png" alt="Veyra Music" width="26" height="26" class="footer-logo">
+        <span>Veyra Music &copy; 2026 AKASHI DEV</span>
       </div>
-
-      <div class="footer-attribution">
-        <p>Cliente de audio con capacidades DSP avanzadas derivado del proyecto <strong>Orchard</strong> por <strong>SFG5453</strong>.</p>
-        <p>Distribuido bajo licencia <strong>AGPL-3.0-or-later</strong>. Preservación estricta de derechos y código abierto.</p>
-      </div>
-
       <div class="footer-links">
-        <a href="https://github.com/SCARLXRD-1/VEYRA-MUSIC" target="_blank" rel="noopener noreferrer">Repositorio Oficial</a>
-        <a href="https://github.com/SCARLXRD-1/VEYRA-MUSIC/releases" target="_blank" rel="noopener noreferrer">Lanzamientos en GitHub</a>
-        <a href="https://github.com/SFG5453/Orchard" target="_blank" rel="noopener noreferrer">Orchard Upstream</a>
+        <a href="https://github.com/SCARLXRD-1/VEYRA-MUSIC" target="_blank" rel="noopener noreferrer">Código Fuente</a>
+        <a href="https://github.com/SCARLXRD-1/VEYRA-MUSIC/releases" target="_blank" rel="noopener noreferrer">Releases en GitHub</a>
+        <a href="#verificacion">Verificación SHA-256</a>
+        <span>Licencia AGPL-3.0-or-later</span>
       </div>
     </div>
   </footer>
 
-  <!-- Marco activo fuera de pantalla para descargas transparentes sin salir de la web -->
-  <iframe name="download_target_frame" id="download_target_frame" style="position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;border:0;pointer-events:none;" tabindex="-1" aria-hidden="true"></iframe>
-
-  <script src="app.js"></script>
+  <iframe name="download_target_frame" id="download-iframe" style="display:none;" title="Descarga directa"></iframe>
+  <script src="app.js" defer></script>
 </body>
 </html>

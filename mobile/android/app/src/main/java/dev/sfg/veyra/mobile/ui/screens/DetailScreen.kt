@@ -128,6 +128,7 @@ fun DetailScreen(
     onPlayBestMix: ((List<Track>, String, (String) -> Unit, () -> Unit) -> Unit)? = null,
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {},
+    onDeletePlaylist: ((String) -> Unit)? = null,
 ) {
     when (state) {
         LoadState.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -207,6 +208,7 @@ fun DetailScreen(
                     bestMixSupabaseSync = bestMixSupabaseSync,
                     onPlayBestMix = onPlayBestMix,
                     onFetchSectionItems = onFetchSectionItems,
+                    onDeletePlaylist = onDeletePlaylist,
                     )
                 }
             }
@@ -610,6 +612,7 @@ private fun CollectionDetailContent(
     bestMixSupabaseSync: Boolean = false,
     onPlayBestMix: ((List<Track>, String, (String) -> Unit, () -> Unit) -> Unit)? = null,
     onFetchSectionItems: (suspend (String, String) -> List<CatalogItem>)? = null,
+    onDeletePlaylist: ((String) -> Unit)? = null,
 ) {
     var showDescriptionSheet by remember { mutableStateOf(false) }
     var activeSectionSheet by remember { mutableStateOf<SectionSheetState?>(null) }
@@ -684,6 +687,9 @@ private fun CollectionDetailContent(
                         isSearching = false
                         searchQuery = ""
                     },
+                    onDeletePlaylist = if (detail.kind == CatalogKind.PLAYLIST && detail.editable && onDeletePlaylist != null) {
+                        { onDeletePlaylist(detail.id) }
+                    } else null,
                 )
             }
             if (isSearching && searchQuery.isNotBlank()) {

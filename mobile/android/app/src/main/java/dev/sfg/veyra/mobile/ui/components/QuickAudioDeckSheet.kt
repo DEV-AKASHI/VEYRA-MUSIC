@@ -79,6 +79,7 @@ fun QuickAudioDeckSheet(
     settings: OrchardSettings,
     onSettings: (OrchardSettings) -> Unit,
     onOpenEqualizerStudio: () -> Unit,
+    onOpenSignalPath: (() -> Unit)? = null,
 ) {
     if (!open) return
 
@@ -86,9 +87,10 @@ fun QuickAudioDeckSheet(
     val isSmartActive = settings.crossfadeEnabled && settings.smartCrossfade
     val isEqActive = eqConfig.enabled
 
+    val isCyberpunk = LocalCyberpunkTheme.current
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = CanopyColors.Surface,
+        containerColor = if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.surface else Color(0xFF16132E),
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     ) {
         Column(
@@ -298,6 +300,28 @@ fun QuickAudioDeckSheet(
                         text = stringResource(R.string.dsp_deck_open_studio),
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                         color = CanopyColors.Text,
+                    )
+                }
+            }
+            if (onOpenSignalPath != null) {
+                Spacer(Modifier.height(10.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.White.copy(alpha = 0.05f))
+                        .border(1.dp, CanopyColors.Rule, RoundedCornerShape(12.dp))
+                        .clickable {
+                            onDismiss()
+                            onOpenSignalPath()
+                        }
+                        .padding(vertical = 12.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "Ver Ruta de Señal (Audio Path)",
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = Color(0xFF38BDF8),
                     )
                 }
             }

@@ -101,8 +101,12 @@ import dev.sfg.veyra.mobile.model.PlaybackTargetState
 import dev.sfg.veyra.mobile.model.Track
 import dev.sfg.veyra.mobile.model.TransitionMarker
 import dev.sfg.veyra.mobile.model.OrchardSettings
+import androidx.compose.animation.core.snap
+import dev.sfg.veyra.mobile.ui.components.LocalCyberpunkTheme
 import dev.sfg.veyra.mobile.ui.components.MessagePanel
 import dev.sfg.veyra.mobile.ui.components.QuickAudioDeckSheet
+import dev.sfg.veyra.mobile.ui.theme.LocalReducedMotion
+import dev.sfg.veyra.mobile.ui.theme.VeyraCyber
 import dev.sfg.veyra.mobile.ui.components.RemoteArtwork
 import dev.sfg.veyra.mobile.ui.components.SmartCrossfadeBadge
 import dev.sfg.veyra.mobile.ui.foldable.FoldableNowPlayingBody
@@ -184,7 +188,51 @@ fun NowPlayingScreen(
     // DSP deck and audio equalizer states.
     var showQuickAudioDeck by remember { mutableStateOf(false) }
     var showEqualizerStudio by remember { mutableStateOf(false) }
+    var showSignalPath by remember { mutableStateOf(false) }
+    var sharedLyricQuote by remember { mutableStateOf<List<String>>(emptyList()) }
     val dspDeckActive = (settings.crossfadeEnabled && settings.smartCrossfade) || settings.equalizerConfig.enabled
+    val currentOutput by dev.sfg.veyra.mobile.audio.rememberAudioOutput()
+    val outputBucket = when (currentOutput.type) {
+        dev.sfg.veyra.mobile.audio.AudioOutputType.BLUETOOTH_HEADPHONES,
+        dev.sfg.veyra.mobile.audio.AudioOutputType.BLUETOOTH_EARBUDS,
+        dev.sfg.veyra.mobile.audio.AudioOutputType.BLUETOOTH_SPEAKER,
+        dev.sfg.veyra.mobile.audio.AudioOutputType.CAR -> "BLUETOOTH"
+        dev.sfg.veyra.mobile.audio.AudioOutputType.USB,
+        dev.sfg.veyra.mobile.audio.AudioOutputType.WIRED_HEADPHONES -> "WIRED_USB"
+        else -> "SPEAKER"
+    }
+
+    LaunchedEffect(outputBucket, settings.autoEqByOutputEnabled) {
+        if (settings.autoEqByOutputEnabled) {
+            val savedPresetId = settings.eqProfilesByRoute[outputBucket]
+            if (!savedPresetId.isNullOrBlank() && savedPresetId != settings.equalizerConfig.presetId) {
+                val preset = dev.sfg.veyra.mobile.model.EQ_PRESETS.firstOrNull { it.id == savedPresetId }
+                if (preset != null) {
+                    onSettings(
+                        settings.copy(
+                            equalizerConfig = settings.equalizerConfig.copy(
+                                enabled = true,
+                                presetId = preset.id,
+                                gains = preset.gains,
+                            ),
+                        ),
+                    )
+                }
+            }
+        }
+    }
+
+    val preloadContext = LocalContext.current
+    LaunchedEffect(playback.currentIndex, playback.queue) {
+        val nextUrl = playback.queue.getOrNull(playback.currentIndex + 1)?.artworkUrl.orEmpty()
+        if (nextUrl.isNotBlank()) {
+            runCatching {
+                coil3.SingletonImageLoader.get(preloadContext).enqueue(
+                    coil3.request.ImageRequest.Builder(preloadContext).data(nextUrl).build(),
+                )
+            }
+        }
+    }
 
     // Lyrics and the queue are modes of the player, not destinations, so their state lives here.
     // Only one can hold the panel at a time.
@@ -367,7 +415,7 @@ fun NowPlayingScreen(
                     shape = RoundedCornerShape(lerp(0f, 34f, progress).dp)
                     clip = true
                 }
-                .background(CanopyColors.PlayerBackdrop),
+                .background(if (LocalCyberpunkTheme.current) VeyraCyber.canvas else CanopyColors.PlayerBackdrop),
         ) {
             // Full-bleed artwork background. Lyrics push it out of focus rather than
             // replacing it, so the song's colour still carries the screen.
@@ -375,6 +423,7 @@ fun NowPlayingScreen(
             // gradient already protects them, and only blurs when a panel opens.
             // Tablets use a pre-blurred 128px Kawarp source instead of applying a large live
             // RenderEffect over decoded video. Phones still blur only when lyrics need it.
+            val reduceMotion = LocalReducedMotion.current
             val panelObscuresArtwork = panel != PlayerPanel.NONE && !wideLayout && !isFoldable
             val backdropBlur by animateDpAsState(
                 targetValue = when {
@@ -382,7 +431,7 @@ fun NowPlayingScreen(
                     !wideLayout && panel == PlayerPanel.LYRICS -> 44.dp
                     else -> 0.dp
                 },
-                animationSpec = tween(420),
+                animationSpec = if (reduceMotion) snap() else tween(420),
                 label = "LyricsBackdropBlur",
             )
             val artworkAlpha by animateFloatAsState(
@@ -392,7 +441,7 @@ fun NowPlayingScreen(
                     panel == PlayerPanel.LYRICS -> 0.35f
                     else -> 0f
                 },
-                animationSpec = tween(420),
+                animationSpec = if (reduceMotion) snap() else tween(420),
                 label = "ArtworkAlpha",
             )
 
@@ -405,28 +454,30 @@ fun NowPlayingScreen(
             val lyricAccent = palette.accent
 
             val isSplitModeFoldable = isFoldable && panel != PlayerPanel.NONE
-            FullBleedPlayerBackdrop(
-                track = track,
-                isPlaying = playback.isPlaying && (panel == PlayerPanel.LYRICS || !panelObscuresArtwork),
-                // A tablet's real motion cover belongs only in the framed square. Its full-screen
-                // layer is either the tiny Kawarp source or the static palette fallback.
-                animatedArtworkEnabled = animatedArtworkEnabled && !wideLayout,
-                warpedArtworkEnabled = wideLayout && animatedBackgroundEnabled,
-                ambientGlowEnabled = !wideLayout,
-                gesturesEnabled = gesturesEnabled || (isFoldable && hasRichArtwork),
-                onNext = onNext,
-                onPrevious = onPrevious,
-                onLiked = onLiked,
-                palette = palette,
-                onVideoFrame = { videoFrame = it },
-                incomingPalette = incomingPalette,
-                onArtworkBounds = { if ((!wideLayout || isFoldable) && hasRichArtwork && progress == 0f) onRestingCoverBounds(it) },
-                transitionProgress = activeMixProgress,
-                artworkAlpha = artworkAlpha,
-                modifier = Modifier
-                    .blur(backdropBlur)
-                    .then(if (isSplitModeFoldable) Modifier.fillMaxWidth(0.512f) else Modifier.fillMaxWidth()),
-            )
+            if (!LocalCyberpunkTheme.current) {
+                FullBleedPlayerBackdrop(
+                    track = track,
+                    isPlaying = playback.isPlaying && (panel == PlayerPanel.LYRICS || !panelObscuresArtwork),
+                    // A tablet's real motion cover belongs only in the framed square. Its full-screen
+                    // layer is either the tiny Kawarp source or the static palette fallback.
+                    animatedArtworkEnabled = animatedArtworkEnabled && !wideLayout,
+                    warpedArtworkEnabled = wideLayout && animatedBackgroundEnabled,
+                    ambientGlowEnabled = !wideLayout,
+                    gesturesEnabled = gesturesEnabled || (isFoldable && hasRichArtwork),
+                    onNext = onNext,
+                    onPrevious = onPrevious,
+                    onLiked = onLiked,
+                    palette = palette,
+                    onVideoFrame = { videoFrame = it },
+                    incomingPalette = incomingPalette,
+                    onArtworkBounds = { if ((!wideLayout || isFoldable) && hasRichArtwork && progress == 0f) onRestingCoverBounds(it) },
+                    transitionProgress = activeMixProgress,
+                    artworkAlpha = artworkAlpha,
+                    modifier = Modifier
+                        .blur(backdropBlur)
+                        .then(if (isSplitModeFoldable) Modifier.fillMaxWidth(0.512f) else Modifier.fillMaxWidth()),
+                )
+            }
             // Blur is a no-op below API 31, so darken as well to keep lyrics legible everywhere.
             if (wideLayout || isFoldable || panel != PlayerPanel.NONE) {
                 val scrimAlpha = when {
@@ -563,8 +614,13 @@ fun NowPlayingScreen(
                     .padding(bottom = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                // Top drag handle
-                PlayerTopHandle(onDismiss = onBack, modifier = dragHandle)
+                // Top player header
+                PlayerTopHandle(
+                    onDismiss = onBack,
+                    modifier = dragHandle,
+                    liked = liked,
+                    onLiked = onLiked,
+                )
 
                 if (panel != PlayerPanel.NONE) {
                     // Compact header stands in for the big title row, which the panel displaces.
@@ -635,6 +691,7 @@ fun NowPlayingScreen(
                                 onSeek = onSeek,
                                 contentPadding = PaddingValues(horizontal = 24.dp, vertical = 24.dp),
                                 accent = lyricAccent,
+                                onShareQuote = { sharedLyricQuote = it },
                             )
 
                             LoadState.Loading -> LyricsNotice(stringResource(R.string.player_lyrics_finding), isLoading = true)
@@ -651,12 +708,24 @@ fun NowPlayingScreen(
                             .padding(horizontal = 24.dp, vertical = 12.dp),
                         contentAlignment = Alignment.Center,
                     ) {
+                        val prevQueueTrack = playback.queue.getOrNull(playback.currentIndex - 1)
+                        val nextQueueTrack = playback.queue.getOrNull(playback.currentIndex + 1)
+                        val durMs = playback.durationMs.coerceAtLeast(1L)
+                        val progFrac = (playback.positionMs.toFloat() / durMs.toFloat()).coerceIn(0f, 1f)
                         NowPlayingArtworkCard(
                             track = track,
                             incomingTrack = incomingTrack,
                             outgoingTrack = outgoingTrack,
                             transitionProgress = activeMixProgress,
                             transitionStyle = transition?.style.orEmpty(),
+                            isPlaying = playback.isPlaying,
+                            previousTrack = prevQueueTrack,
+                            nextTrack = nextQueueTrack,
+                            progressFraction = progFrac,
+                            onDoubleTapSeek = if (settings.doubleTapSeekEnabled && canControl) { deltaMs ->
+                                val nextPos = (playback.positionMs + deltaMs).coerceIn(0L, durMs)
+                                onSeek(nextPos)
+                            } else null,
                             onArtworkBounds = { if (!wideLayout && progress == 0f) onRestingCoverBounds(it) },
                         )
                     }
@@ -802,6 +871,7 @@ fun NowPlayingScreen(
             settings = settings,
             onSettings = onSettings,
             onOpenEqualizerStudio = { showEqualizerStudio = true },
+            onOpenSignalPath = { showSignalPath = true },
         )
     }
 
@@ -811,8 +881,32 @@ fun NowPlayingScreen(
             onDismiss = { showEqualizerStudio = false },
             config = settings.equalizerConfig,
             onConfigChange = { newConfig ->
-                onSettings(settings.copy(equalizerConfig = newConfig))
+                val updatedProfiles = if (settings.autoEqByOutputEnabled && newConfig.presetId != "custom") {
+                    settings.eqProfilesByRoute + (outputBucket to newConfig.presetId)
+                } else {
+                    settings.eqProfilesByRoute
+                }
+                onSettings(settings.copy(equalizerConfig = newConfig, eqProfilesByRoute = updatedProfiles))
             },
+        )
+    }
+
+    if (showSignalPath) {
+        dev.sfg.veyra.mobile.ui.components.AudioSignalPathSheet(
+            open = showSignalPath,
+            onDismiss = { showSignalPath = false },
+            sourceFormat = if (isQobuz) "Qobuz FLAC" else "YouTube Audio",
+            bitrateKbps = bitrateKbps,
+            output = currentOutput,
+            settings = settings,
+        )
+    }
+
+    if (sharedLyricQuote.isNotEmpty()) {
+        dev.sfg.veyra.mobile.ui.components.LyricsShareCardSheet(
+            track = track,
+            quoteLines = sharedLyricQuote,
+            onDismiss = { sharedLyricQuote = emptyList() },
         )
     }
 }

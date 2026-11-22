@@ -52,10 +52,10 @@ func TestNeutralinoBootstrapAcceptsNumericPort(t *testing.T) {
 
 func TestNeutralinoStartupEventAcceptsStringData(t *testing.T) {
 	var event extensionEvent
-	if err := json.Unmarshal([]byte(`{"event":"extensionReady","data":"dev.sfg.orchard.packages.backend"}`), &event); err != nil {
+	if err := json.Unmarshal([]byte(`{"event":"extensionReady","data":"dev.akashi.veyra.packages.backend"}`), &event); err != nil {
 		t.Fatal(err)
 	}
-	if event.Data != "dev.sfg.orchard.packages.backend" {
+	if event.Data != "dev.akashi.veyra.packages.backend" {
 		t.Fatalf("unexpected startup data: %v", event.Data)
 	}
 }
@@ -81,19 +81,19 @@ func TestManifestValidation(t *testing.T) {
 }
 
 func TestInstallPathsUseMajorVersionSlotAndReusableElectron(t *testing.T) {
-	t.Setenv("XDG_CONFIG_HOME", "/tmp/orchard-config")
-	t.Setenv("XDG_CACHE_HOME", "/tmp/orchard-cache")
+	t.Setenv("XDG_CONFIG_HOME", "/tmp/veyra-config")
+	t.Setenv("XDG_CACHE_HOME", "/tmp/veyra-cache")
 	install, runtime, cache, err := installPaths("linux-x64", "5.8.2", "43.4.1")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if install != "/tmp/orchard-config/orchard/versions/5.0.0" {
+	if install != "/tmp/veyra-config/veyra/versions/5.0.0" {
 		t.Fatalf("unexpected install path: %s", install)
 	}
-	if runtime != "/tmp/orchard-config/orchard/runtimes/electron/43.4.1/linux-x64" {
+	if runtime != "/tmp/veyra-config/veyra/runtimes/electron/43.4.1/linux-x64" {
 		t.Fatalf("unexpected runtime path: %s", runtime)
 	}
-	if cache != "/tmp/orchard-cache/orchard-packages" {
+	if cache != "/tmp/veyra-cache/veyra-packages" {
 		t.Fatalf("unexpected cache path: %s", cache)
 	}
 }
@@ -149,12 +149,12 @@ func TestRemoteFileSizeUsesHeadContentLength(t *testing.T) {
 	}
 }
 
-func TestReleaseBaseURLUsesGitHubForBetaOnly(t *testing.T) {
-	if actual := releaseBaseURL(release{Version: "5.0.0-beta.3", Channel: "beta"}); actual != "https://github.com/sfg5453/orchard/releases/download/v5.0.0-beta.3/" {
-		t.Fatalf("beta base URL = %q", actual)
+func TestReleaseBaseURLUsesGitHubReleases(t *testing.T) {
+	if actual := releaseBaseURL(release{Version: "1.0.3", Channel: "stable"}); actual != "https://github.com/SCARLXRD-1/VEYRA-MUSIC/releases/download/v1.0.3/" {
+		t.Fatalf("release base URL = %q", actual)
 	}
-	if actual := releaseBaseURL(release{Version: "5.0.0", Channel: "stable"}); actual != packageBaseURL {
-		t.Fatalf("stable base URL = %q", actual)
+	if actual := releaseBaseURL(release{Version: "1.1.0-beta.1", Channel: "beta"}); actual != "https://github.com/SCARLXRD-1/VEYRA-MUSIC/releases/download/v1.1.0-beta.1/" {
+		t.Fatalf("beta base URL = %q", actual)
 	}
 }
 
@@ -216,7 +216,7 @@ func TestLatestBetaManifestURLSkipsStableDraftAndUnsafeAssets(t *testing.T) {
 		{Prerelease: false, Assets: []struct {
 			Name               string `json:"name"`
 			BrowserDownloadURL string `json:"browser_download_url"`
-		}{{Name: "manifest.json", BrowserDownloadURL: "https://github.com/sfg5453/orchard/releases/download/v5.0.0/manifest.json"}}},
+		}{{Name: "manifest.json", BrowserDownloadURL: "https://github.com/SCARLXRD-1/VEYRA-MUSIC/releases/download/v1.0.3/manifest.json"}}},
 		{Prerelease: true, Assets: []struct {
 			Name               string `json:"name"`
 			BrowserDownloadURL string `json:"browser_download_url"`
@@ -224,9 +224,9 @@ func TestLatestBetaManifestURLSkipsStableDraftAndUnsafeAssets(t *testing.T) {
 		{Prerelease: true, Assets: []struct {
 			Name               string `json:"name"`
 			BrowserDownloadURL string `json:"browser_download_url"`
-		}{{Name: "manifest.json", BrowserDownloadURL: "https://github.com/sfg5453/orchard/releases/download/v5.0.0-beta.3/manifest.json"}}},
+		}{{Name: "manifest.json", BrowserDownloadURL: "https://github.com/SCARLXRD-1/VEYRA-MUSIC/releases/download/v1.0.3-beta.3/manifest.json"}}},
 	}
-	want := "https://github.com/sfg5453/orchard/releases/download/v5.0.0-beta.3/manifest.json"
+	want := "https://github.com/SCARLXRD-1/VEYRA-MUSIC/releases/download/v1.0.3-beta.3/manifest.json"
 	if actual := latestBetaManifestURL(releases); actual != want {
 		t.Fatalf("beta manifest URL = %q, want %q", actual, want)
 	}
@@ -288,7 +288,10 @@ func TestWindowsLauncherTerminatesAppPathAfterDot(t *testing.T) {
 	if err := writeLauncher(directory, "win32-x64", "43.4.1"); err != nil {
 		t.Fatal(err)
 	}
-	data, err := os.ReadFile(filepath.Join(directory, "orchard.cmd"))
+	data, err := os.ReadFile(filepath.Join(directory, "veyra.cmd"))
+	if err != nil {
+		data, err = os.ReadFile(filepath.Join(directory, "orchard.cmd"))
+	}
 	if err != nil {
 		t.Fatal(err)
 	}

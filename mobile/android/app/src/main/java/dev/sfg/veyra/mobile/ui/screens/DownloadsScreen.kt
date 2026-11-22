@@ -66,10 +66,13 @@ import dev.sfg.veyra.mobile.download.DownloadStatus
 import dev.sfg.veyra.mobile.model.Track
 import dev.sfg.veyra.mobile.ui.components.ArtworkTile
 import dev.sfg.veyra.mobile.ui.components.ExplicitBadge
+import dev.sfg.veyra.mobile.ui.components.LocalCyberpunkTheme
 import dev.sfg.veyra.mobile.ui.components.MessagePanel
 import dev.sfg.veyra.mobile.ui.components.OrchardChromeHeight
 import dev.sfg.veyra.mobile.ui.theme.CanopyColors
 import dev.sfg.veyra.mobile.ui.theme.LocalAccent
+import dev.sfg.veyra.mobile.ui.theme.VeyraCyber
+import dev.sfg.veyra.mobile.ui.theme.VeyraRadius
 
 @Composable
 fun DownloadsScreen(
@@ -119,6 +122,8 @@ fun DownloadsScreen(
                 )
                 if (completed.isNotEmpty()) {
                     Spacer(Modifier.height(14.dp))
+                    val isCyberpunk = LocalCyberpunkTheme.current
+                    val actionShape = if (isCyberpunk) VeyraCyber.shape else VeyraRadius.buttonShape
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -128,21 +133,21 @@ fun DownloadsScreen(
                                 val tracks = completed.map { it.track }
                                 onPlayAll?.invoke(tracks) ?: onPlayTrack(tracks, 0)
                             },
-                            shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-                            color = LocalAccent.current,
-                            modifier = Modifier.weight(1f).height(44.dp),
+                            shape = actionShape,
+                            color = if (isCyberpunk) VeyraCyber.cyan else LocalAccent.current,
+                            modifier = Modifier.weight(1f).height(48.dp),
                         ) {
                             Row(
                                 horizontalArrangement = Arrangement.Center,
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.fillMaxSize(),
                             ) {
-                                Icon(Icons.Rounded.PlayArrow, contentDescription = null, tint = androidx.compose.ui.graphics.Color.White, modifier = Modifier.size(20.dp))
+                                Icon(Icons.Rounded.PlayArrow, contentDescription = null, tint = if (isCyberpunk) VeyraCyber.ink else androidx.compose.ui.graphics.Color.White, modifier = Modifier.size(20.dp))
                                 Spacer(Modifier.width(6.dp))
                                 Text(
                                     stringResource(R.string.dl_play_all),
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = androidx.compose.ui.graphics.Color.White,
+                                    color = if (isCyberpunk) VeyraCyber.ink else androidx.compose.ui.graphics.Color.White,
                                 )
                             }
                         }
@@ -151,10 +156,13 @@ fun DownloadsScreen(
                                 val tracks = completed.map { it.track }
                                 onShuffle?.invoke(tracks) ?: onPlayTrack(tracks.shuffled(), 0)
                             },
-                            shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-                            color = androidx.compose.ui.graphics.Color(0xFF1E293B).copy(alpha = 0.8f),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, androidx.compose.ui.graphics.Color.White.copy(alpha = 0.08f)),
-                            modifier = Modifier.weight(1f).height(44.dp),
+                            shape = actionShape,
+                            color = if (isCyberpunk) VeyraCyber.surface else androidx.compose.ui.graphics.Color(0xFF1E293B).copy(alpha = 0.8f),
+                            border = androidx.compose.foundation.BorderStroke(
+                                if (isCyberpunk) VeyraCyber.borderWidth else 1.dp,
+                                if (isCyberpunk) VeyraCyber.cyan else androidx.compose.ui.graphics.Color.White.copy(alpha = 0.08f),
+                            ),
+                            modifier = Modifier.weight(1f).height(48.dp),
                         ) {
                             Row(
                                 horizontalArrangement = Arrangement.Center,
@@ -242,13 +250,24 @@ internal fun DownloadedTrackRow(
     onPlay: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    val activeBorder = BorderStroke(1.dp, Color(0xFF38BDF8).copy(alpha = 0.55f))
-    val defaultBorder = BorderStroke(1.dp, Color.White.copy(alpha = 0.06f))
+    val isCyberpunk = LocalCyberpunkTheme.current
+    val activeBorder = BorderStroke(
+        if (isCyberpunk) VeyraCyber.borderWidth else 1.dp,
+        if (isCyberpunk) VeyraCyber.cyan else Color(0xFF38BDF8).copy(alpha = 0.55f),
+    )
+    val defaultBorder = BorderStroke(
+        1.dp,
+        if (isCyberpunk) VeyraCyber.cyan.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.06f),
+    )
 
     Surface(
         onClick = onPlay,
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-        color = if (isPlaying) Color(0xFF1E293B).copy(alpha = 0.85f) else Color(0xFF131B2B).copy(alpha = 0.50f),
+        shape = if (isCyberpunk) VeyraCyber.shape else VeyraRadius.mdShape,
+        color = if (isCyberpunk) {
+            if (isPlaying) VeyraCyber.surfaceAlt else VeyraCyber.surface
+        } else {
+            if (isPlaying) Color(0xFF7C3AED).copy(alpha = 0.24f) else Color.White.copy(alpha = 0.08f)
+        },
         border = if (isPlaying) activeBorder else defaultBorder,
         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 2.dp),
     ) {

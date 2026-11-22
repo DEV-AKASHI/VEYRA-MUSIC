@@ -265,24 +265,28 @@ internal fun ChromecastSettingsRow(modifier: Modifier = Modifier) {
                 .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        val iconShape = RoundedCornerShape(12.dp)
+        val isCyberCast = dev.sfg.veyra.mobile.ui.components.LocalCyberpunkTheme.current
+        val iconShape = if (isCyberCast) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.shape else CircleShape
+        val castAccent = if (isCyberCast) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.cyan else Color(0xFF38BDF8)
         Box(
             modifier = Modifier
                 .size(40.dp)
                 .clip(iconShape)
                 .background(
                     when {
-                        isConnected -> LocalAccent.current.copy(alpha = 0.18f)
-                        isConnecting -> LocalAccent.current.copy(alpha = 0.12f * pulseAlpha)
-                        else -> CanopyColors.Canvas
+                        isConnected -> castAccent.copy(alpha = 0.22f)
+                        isConnecting -> castAccent.copy(alpha = 0.16f * pulseAlpha)
+                        isCyberCast -> dev.sfg.veyra.mobile.ui.theme.VeyraCyber.surfaceAlt
+                        else -> Color.White.copy(alpha = 0.10f)
                     }
                 )
                 .border(
-                    1.dp,
+                    if (isCyberCast) 1.5.dp else 1.dp,
                     when {
-                        isConnected -> LocalAccent.current.copy(alpha = 0.40f)
-                        isConnecting -> LocalAccent.current.copy(alpha = 0.55f * pulseAlpha)
-                        else -> CanopyColors.Rule
+                        isConnected -> castAccent
+                        isConnecting -> castAccent.copy(alpha = 0.72f * pulseAlpha)
+                        isCyberCast -> dev.sfg.veyra.mobile.ui.theme.VeyraCyber.cyan.copy(alpha = 0.55f)
+                        else -> Color.White.copy(alpha = 0.26f)
                     },
                     iconShape,
                 ),
@@ -292,7 +296,7 @@ internal fun ChromecastSettingsRow(modifier: Modifier = Modifier) {
                 Icon(
                     painter = painterResource(R.drawable.ic_notification),
                     contentDescription = "Veyra Music",
-                    tint = if (isConnected) LocalAccent.current else LocalAccent.current.copy(alpha = pulseAlpha),
+                    tint = if (isConnected) castAccent else castAccent.copy(alpha = pulseAlpha),
                     modifier = Modifier
                         .size(22.dp)
                         .then(
@@ -304,7 +308,7 @@ internal fun ChromecastSettingsRow(modifier: Modifier = Modifier) {
                 Icon(
                     imageVector = Icons.Rounded.Cast,
                     contentDescription = null,
-                    tint = CanopyColors.MutedStrong,
+                    tint = if (isCyberCast) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.cyan else Color.White.copy(alpha = 0.85f),
                     modifier = Modifier.size(20.dp),
                 )
             }
@@ -313,11 +317,21 @@ internal fun ChromecastSettingsRow(modifier: Modifier = Modifier) {
         Spacer(Modifier.width(14.dp))
 
         Column(Modifier.weight(1f).padding(end = 16.dp)) {
-            Text(
-                if (isConnected || isConnecting) "Chromecast • Veyra Music" else "Chromecast",
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
-                color = CanopyColors.Text,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    if (isConnected || isConnecting) "Chromecast • Veyra Music" else "Chromecast",
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
+                    color = CanopyColors.Text,
+                )
+                if (isCyberCast && isConnected) {
+                    Spacer(Modifier.width(8.dp))
+                    dev.sfg.veyra.mobile.ui.components.StatusPillBadge(
+                        label = "CAST // LIVE",
+                        status = dev.sfg.veyra.mobile.ui.components.StatusPillTone.PRIMARY,
+                        size = dev.sfg.veyra.mobile.ui.components.StatusPillSize.SM,
+                    )
+                }
+            }
             when {
                 isConnecting -> {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -374,7 +388,9 @@ internal fun ChromecastConnectRow(modifier: Modifier = Modifier) {
     val castState = rememberCurrentCastState()
     val isConnected = castState.isConnected
     val isConnecting = castState.isConnecting
-    val shape = RoundedCornerShape(16.dp)
+    val isCyberConnect = dev.sfg.veyra.mobile.ui.components.LocalCyberpunkTheme.current
+    val shape = if (isCyberConnect) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.shape else RoundedCornerShape(18.dp)
+    val connectAccent = if (isCyberConnect) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.cyan else Color(0xFF38BDF8)
 
     val infiniteTransition = rememberInfiniteTransition(label = "CastConnectPulse")
     val pulseAlpha by infiniteTransition.animateFloat(
@@ -405,32 +421,39 @@ internal fun ChromecastConnectRow(modifier: Modifier = Modifier) {
             }
         },
         shape = shape,
-        color = Color.Transparent,
+        color = if (isCyberConnect) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.surface else Color.White.copy(alpha = 0.08f),
+        border = androidx.compose.foundation.BorderStroke(
+            if (isCyberConnect) 1.5.dp else 1.dp,
+            if (isCyberConnect) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.cyan.copy(alpha = 0.65f) else Color.White.copy(alpha = 0.24f),
+        ),
         modifier = modifier.fillMaxWidth(),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            val iconBadgeShape = if (isCyberConnect) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.shape else CircleShape
             Box(
                 modifier =
                     Modifier.size(42.dp)
-                        .clip(CircleShape)
+                        .clip(iconBadgeShape)
                         .background(
                             when {
-                                isConnected -> LocalAccent.current.copy(alpha = 0.20f)
-                                isConnecting -> LocalAccent.current.copy(alpha = 0.15f * pulseAlpha)
-                                else -> CanopyColors.Canvas
+                                isConnected -> connectAccent.copy(alpha = 0.22f)
+                                isConnecting -> connectAccent.copy(alpha = 0.16f * pulseAlpha)
+                                isCyberConnect -> dev.sfg.veyra.mobile.ui.theme.VeyraCyber.surfaceAlt
+                                else -> Color.White.copy(alpha = 0.10f)
                             }
                         )
                         .border(
-                            1.dp,
+                            if (isCyberConnect) 1.5.dp else 1.dp,
                             when {
-                                isConnected -> LocalAccent.current.copy(alpha = 0.45f)
-                                isConnecting -> LocalAccent.current.copy(alpha = 0.6f * pulseAlpha)
-                                else -> CanopyColors.Rule
+                                isConnected -> connectAccent
+                                isConnecting -> connectAccent.copy(alpha = 0.72f * pulseAlpha)
+                                isCyberConnect -> dev.sfg.veyra.mobile.ui.theme.VeyraCyber.cyan.copy(alpha = 0.55f)
+                                else -> Color.White.copy(alpha = 0.26f)
                             },
-                            CircleShape,
+                            iconBadgeShape,
                         ),
                 contentAlignment = Alignment.Center,
             ) {

@@ -24,15 +24,12 @@
 package dev.sfg.veyra.mobile.ui.foldable
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,10 +38,10 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -58,7 +55,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -69,17 +65,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.sfg.veyra.connect.R
+import dev.sfg.veyra.mobile.ui.components.LocalCyberpunkTheme
 import dev.sfg.veyra.mobile.ui.components.OrchardMark
 import dev.sfg.veyra.mobile.ui.glass.GlassTone
 import dev.sfg.veyra.mobile.ui.glass.LocalGlass
@@ -87,6 +90,12 @@ import dev.sfg.veyra.mobile.ui.glass.glassPane
 import dev.sfg.veyra.mobile.ui.navigation.Routes
 import dev.sfg.veyra.mobile.ui.theme.CanopyColors
 import dev.sfg.veyra.mobile.ui.theme.LocalAccent
+import dev.sfg.veyra.mobile.ui.theme.LocalReducedMotion
+import dev.sfg.veyra.mobile.ui.theme.VeyraCyber
+import dev.sfg.veyra.mobile.ui.theme.VeyraRadius
+import dev.sfg.veyra.mobile.ui.theme.VeyraSemantic
+import dev.sfg.veyra.mobile.ui.theme.VeyraSize
+import dev.sfg.veyra.mobile.ui.theme.VeyraSpace
 
 import dev.sfg.veyra.mobile.ui.tv.tvNavRailFocusable
 import dev.sfg.veyra.mobile.ui.tv.LocalIsTv
@@ -116,7 +125,15 @@ fun VeyraNavigationRail(
 ) {
     val glass = LocalGlass.current.enabled
     val glassTint = LocalGlass.current.tint
-    val tintColor = if (glassTint != Color.Unspecified && glassTint.alpha > 0f) glassTint else LocalAccent.current
+    val isCyberpunk = LocalCyberpunkTheme.current
+    val tintColor = if (isCyberpunk) {
+        VeyraCyber.cyan
+    } else if (glassTint != Color.Unspecified && glassTint.alpha > 0f) {
+        glassTint
+    } else {
+        LocalAccent.current
+    }
+    val reduceMotion = LocalReducedMotion.current
 
     val selectedIndex = remember(currentRoute) {
         val idx = foldableDestinations.indexOfFirst { it.route == currentRoute }
@@ -133,7 +150,6 @@ fun VeyraNavigationRail(
             lastKnownIndex = selectedIndex
         }
     }
-    val activeIndex = selectedIndex ?: lastKnownIndex
     val isTv = LocalIsTv.current
     val destinationFocusRequesters = remember { List(foldableDestinations.size) { FocusRequester() } }
     LaunchedEffect(selectedIndex, isTv) {
@@ -142,26 +158,36 @@ fun VeyraNavigationRail(
         }
     }
 
-    val railScrim = remember {
-        Brush.horizontalGradient(
-            0f to CanopyColors.Chrome.copy(alpha = 0.92f),
-            0.75f to CanopyColors.Chrome.copy(alpha = 0.75f),
-            1f to Color.Transparent,
-        )
+    val railBackdrop = remember(glass, tintColor, isCyberpunk) {
+        if (isCyberpunk) {
+            Brush.verticalGradient(listOf(VeyraCyber.canvas, VeyraCyber.ink))
+        } else {
+            Brush.verticalGradient(
+                listOf(
+                    tintColor.copy(alpha = if (glass) 0.22f else 0.12f),
+                    VeyraSemantic.canvasAlt.copy(alpha = if (glass) 0.78f else 0.94f),
+                    VeyraSemantic.canvas.copy(alpha = if (glass) 0.84f else 0.97f),
+                ),
+            )
+        }
     }
+    val itemShape = if (isCyberpunk) VeyraCyber.shape else VeyraRadius.mdShape
 
     Box(
         modifier = modifier
             .fillMaxHeight()
             .width(FoldableNavRailWidth)
-            .background(CanopyColors.Chrome.copy(alpha = 0.95f))
+            .then(
+                if (glass && !isCyberpunk) Modifier.glassPane(RoundedCornerShape(0.dp), GlassTone.CHROME) else Modifier
+            )
+            .background(railBackdrop)
             .drawWithContent {
                 drawContent()
                 drawLine(
-                    color = Color.White.copy(alpha = 0.08f),
-                    start = androidx.compose.ui.geometry.Offset(size.width, 0f),
-                    end = androidx.compose.ui.geometry.Offset(size.width, size.height),
-                    strokeWidth = 1.dp.toPx(),
+                    color = if (isCyberpunk) VeyraCyber.cyan.copy(alpha = 0.45f) else VeyraSemantic.borderStrong,
+                    start = Offset(size.width, 0f),
+                    end = Offset(size.width, size.height),
+                    strokeWidth = if (isCyberpunk) VeyraCyber.borderWidth.toPx() else VeyraSize.hairline.toPx(),
                 )
             },
         contentAlignment = Alignment.TopCenter,
@@ -172,14 +198,18 @@ fun VeyraNavigationRail(
                 .width(FoldableNavRailWidth)
                 .statusBarsPadding()
                 .navigationBarsPadding()
-                .padding(vertical = 16.dp),
+                .padding(vertical = VeyraSpace.lg),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            // Arriba: logo de Veyra Music navegable por D-Pad
+            val homeLabel = stringResource(R.string.nav_home)
             Box(
                 modifier = Modifier
-                    .size(48.dp)
+                    .size(VeyraSize.touchTarget)
                     .clip(CircleShape)
+                    .semantics {
+                        role = Role.Button
+                        contentDescription = homeLabel
+                    }
                     .tvNavRailFocusable(isSelected = false, shape = CircleShape) {
                         onSelect(Routes.HOME)
                     },
@@ -188,9 +218,8 @@ fun VeyraNavigationRail(
                 OrchardMark(Modifier.size(34.dp))
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(VeyraSpace.sm))
 
-            // Nav destinations evenly spaced across the rail height
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -200,58 +229,73 @@ fun VeyraNavigationRail(
             ) {
                 foldableDestinations.forEachIndexed { index, destination ->
                     val isSelected = selectedIndex == index
-                    val activeProgress by animateFloatAsState(
-                        targetValue = if (isSelected) 1f else 0f,
-                        animationSpec = spring(dampingRatio = 0.75f, stiffness = 350f),
-                        label = "RailItemSelect_${destination.route}",
-                    )
-
-                    val unselectedColor = if (glass) Color.White.copy(alpha = 0.65f) else CanopyColors.Muted
+                    val labelText = stringResource(destination.labelRes)
+                    val unselectedColor = if (isCyberpunk) {
+                        VeyraCyber.textMuted
+                    } else if (glass) {
+                        Color.White.copy(alpha = 0.72f)
+                    } else {
+                        CanopyColors.Muted
+                    }
                     val itemColor by animateColorAsState(
-                        targetValue = if (isSelected) Color.White else unselectedColor,
-                        animationSpec = tween(180),
+                        targetValue = if (isSelected) {
+                            if (isCyberpunk) VeyraCyber.cyan else VeyraSemantic.textPrimary
+                        } else {
+                            unselectedColor
+                        },
+                        animationSpec = if (reduceMotion) snap() else tween(180),
                         label = "RailItemColor_${destination.route}",
                     )
 
                     val pillBg = if (isSelected) {
-                        if (tintColor != Color.Unspecified && tintColor.alpha > 0f) {
-                            tintColor.copy(alpha = 0.38f)
-                        } else {
-                            Color.White.copy(alpha = 0.16f)
-                        }
+                        if (isCyberpunk) VeyraCyber.surfaceAlt else tintColor.copy(alpha = 0.30f)
                     } else {
                         Color.Transparent
                     }
 
                     Surface(
-                        shape = RoundedCornerShape(16.dp),
+                        shape = itemShape,
                         color = pillBg,
-                        border = if (isSelected) BorderStroke(1.dp, Color.White.copy(alpha = 0.20f)) else null,
+                        border = if (isSelected) {
+                            BorderStroke(
+                                if (isCyberpunk) VeyraCyber.borderWidth else VeyraSize.hairline,
+                                if (isCyberpunk) VeyraCyber.cyan else VeyraSemantic.focus.copy(alpha = 0.55f),
+                            )
+                        } else null,
                         modifier = Modifier
-                            .size(width = 62.dp, height = 54.dp)
+                            .size(width = 64.dp, height = 56.dp)
+                            .semantics(mergeDescendants = true) {
+                                selected = isSelected
+                                role = Role.Tab
+                                contentDescription = labelText
+                            }
                             .then(if (isTv) Modifier.focusRequester(destinationFocusRequesters[index]) else Modifier)
-                            .tvNavRailFocusable(isSelected = isSelected, shape = RoundedCornerShape(16.dp)) {
+                            .tvNavRailFocusable(isSelected = isSelected, shape = itemShape) {
                                 onSelect(destination.route)
                             },
                     ) {
                         Column(
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = VeyraSpace.xs),
                             verticalArrangement = Arrangement.Center,
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
                             Icon(
                                 destination.icon,
-                                contentDescription = stringResource(destination.labelRes),
+                                contentDescription = null,
                                 tint = itemColor,
-                                modifier = Modifier.size(22.dp),
+                                modifier = Modifier.size(VeyraSize.icon),
                             )
-                            Spacer(Modifier.height(2.dp))
+                            Spacer(Modifier.height(VeyraSpace.xxs))
                             Text(
-                                text = stringResource(destination.labelRes),
+                                text = labelText,
                                 fontSize = 10.sp,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                 color = itemColor,
                                 maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis,
                             )
                         }
                     }

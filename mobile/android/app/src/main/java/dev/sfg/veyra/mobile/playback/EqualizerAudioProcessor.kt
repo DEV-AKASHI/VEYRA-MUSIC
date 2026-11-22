@@ -60,9 +60,12 @@ class EqualizerAudioProcessor : BaseAudioProcessor() {
     override fun queueInput(inputBuffer: ByteBuffer) {
         val frames = inputBuffer.remaining() / (2 * channelCount)
         if (frames == 0) return
+        if (sampleRate > 0 && channelCount > 0) {
+            LiveAudioSpectrumMeter.tapPcm16(inputBuffer, channelCount, sampleRate)
+        }
 
         val cnf = config
-        if (!cnf.enabled || channelCount == 0) {
+        if ((!cnf.enabled && !cnf.crossfeedEnabled) || channelCount == 0) {
             val output = replaceOutputBuffer(inputBuffer.remaining())
             output.put(inputBuffer)
             output.flip()
@@ -70,34 +73,67 @@ class EqualizerAudioProcessor : BaseAudioProcessor() {
         }
 
         val output = replaceOutputBuffer(inputBuffer.remaining())
-        val preampLevel = 10.0.pow(cnf.clampedPreampDb / 20.0)
-        val hasBassBoost = cnf.clampedBassBoost > 0f
-        
-        val activeBands = BooleanArray(10) { i -> abs(cnf.clampedGains[i]) > 0.1f }
+        val preampLevel = if (cnf.enabled) 10.0.pow(cnf.clampedPreampDb / 20.0) else 1.0
+        val hasBassBoost = cnf.enabled && cnf.clampedBassBoost > 0f
+        val activeBands = BooleanArray(10) { i -> cnf.enabled && abs(cnf.clampedGains[i]) > 0.1f }
+        val useLimiter = cnf.limiterEnabled
+        val useCrossfeed = cnf.crossfeedEnabled && channelCount == 2
 
-        for (frame in 0 until frames) {
-            for (channel in 0 until channelCount) {
-                var sample = inputBuffer.short.toDouble() / 32768.0
+        if (useCrossfeed) {
+            for (frame in 0 until frames) {
+                var left = inputBuffer.short.toDouble() / 32768.0
+                var right = inputBuffer.short.toDouble() / 32768.0
 
-                sample *= preampLevel
+                left = processChannel(0, left, preampLevel, activeBands, hasBassBoost)
+                right = processChannel(1, right, preampLevel, activeBands, hasBassBoost)
 
-                // Apply active EQ bands
-                for (band in 0 until 10) {
-                    if (activeBands[band]) {
-                        sample = biquad(eqCoeffs[band], eqState[channel][band], sample)
-                    }
+                // Subtle binaural crossfeed (~14% opposite channel) to reduce headphone fatigue.
+                val mixedLeft = left * 0.90 + right * 0.14
+                val mixedRight = right * 0.90 + left * 0.14
+
+                output.putShort((clampOutput(mixedLeft, useLimiter) * 32767.0).toInt().toShort())
+                output.putShort((clampOutput(mixedRight, useLimiter) * 32767.0).toInt().toShort())
+            }
+        } else {
+            for (frame in 0 until frames) {
+                for (channel in 0 until channelCount) {
+                    val raw = inputBuffer.short.toDouble() / 32768.0
+                    val processed = processChannel(channel, raw, preampLevel, activeBands, hasBassBoost)
+                    output.putShort((clampOutput(processed, useLimiter) * 32767.0).toInt().toShort())
                 }
-
-                // Apply Bass Boost
-                if (hasBassBoost) {
-                    sample = biquad(bassCoeffs, bassState[channel], sample)
-                }
-
-                output.putShort((sample.coerceIn(-1.0, 1.0) * 32767.0).toInt().toShort())
             }
         }
         inputBuffer.position(inputBuffer.limit())
         output.flip()
+    }
+
+    private fun processChannel(
+        channel: Int,
+        input: Double,
+        preampLevel: Double,
+        activeBands: BooleanArray,
+        hasBassBoost: Boolean,
+    ): Double {
+        var sample = input * preampLevel
+        for (band in 0 until 10) {
+            if (activeBands[band]) {
+                sample = biquad(eqCoeffs[band], eqState[channel][band], sample)
+            }
+        }
+        if (hasBassBoost) {
+            sample = biquad(bassCoeffs, bassState[channel], sample)
+        }
+        return sample
+    }
+
+    private fun clampOutput(sample: Double, useLimiter: Boolean): Double {
+        if (!useLimiter) return sample.coerceIn(-1.0, 1.0)
+        // Soft-knee true-peak limiter above 0.89 (~ -1 dBFS)
+        val absVal = abs(sample)
+        if (absVal <= 0.89) return sample
+        val excess = absVal - 0.89
+        val limited = 0.89 + 0.11 * kotlin.math.tanh(excess / 0.11)
+        return if (sample >= 0.0) limited else -limited
     }
 
     private fun biquad(coefficients: DoubleArray, state: DoubleArray, input: Double): Double {

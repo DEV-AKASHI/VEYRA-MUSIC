@@ -86,7 +86,10 @@ import dev.sfg.veyra.mobile.model.LoadState
 import dev.sfg.veyra.mobile.model.SearchResults
 import dev.sfg.veyra.mobile.model.Track
 import dev.sfg.veyra.mobile.ui.components.CatalogCard
+import dev.sfg.veyra.mobile.ui.components.LocalCyberpunkTheme
 import dev.sfg.veyra.mobile.ui.components.MessagePanel
+import dev.sfg.veyra.mobile.ui.theme.VeyraCyber
+import dev.sfg.veyra.mobile.ui.theme.VeyraRadius
 import dev.sfg.veyra.mobile.ui.components.OrchardChromeHeight
 import dev.sfg.veyra.mobile.ui.components.OrchardSectionHeader
 import dev.sfg.veyra.mobile.ui.components.TrackRow
@@ -193,17 +196,29 @@ private fun SearchField(query: String, onChange: (String) -> Unit, onSubmit: (St
     }
     val haptics = LocalHapticFeedback.current
 
+    val isCyberSearch = LocalCyberpunkTheme.current
     TextField(
         value = query,
         onValueChange = onChange,
         interactionSource = interactionSource,
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(if (isGlass) 0.dp else 4.dp, fieldShape, spotColor = Color.Black.copy(alpha = 0.60f))
-            .background(if (isGlass) Color.Transparent else Color(0xFF0A0F1A), fieldShape)
+            .shadow(if (isGlass || isCyberSearch) 0.dp else 4.dp, fieldShape, spotColor = Color.Black.copy(alpha = 0.45f))
+            .background(
+                if (isCyberSearch) VeyraCyber.surface
+                else if (isGlass) Color.Transparent
+                else Color.White.copy(alpha = 0.10f),
+                fieldShape,
+            )
             .border(fieldBorder, fieldShape)
             .glassPane(fieldShape, GlassTone.CHROME),
-        placeholder = { Text(stringResource(R.string.search_placeholder), color = Color(0xFF94A3B8)) },
+        placeholder = {
+            Text(
+                if (isCyberSearch) "> ${stringResource(R.string.search_placeholder).uppercase()}"
+                else stringResource(R.string.search_placeholder),
+                color = if (isCyberSearch) VeyraCyber.cyan.copy(alpha = 0.72f) else Color(0xFF94A3B8),
+            )
+        },
         leadingIcon = {
             Icon(
                 Icons.Rounded.Search,
@@ -275,21 +290,32 @@ private fun SearchCategoryChip(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
-    val chipShape = RoundedCornerShape(12.dp)
-    val cardBrush = remember {
-        Brush.linearGradient(listOf(Color(0xFF151F31), Color(0xFF0F1624)))
+    val isCyberpunk = LocalCyberpunkTheme.current
+    val chipShape = if (isCyberpunk) VeyraCyber.shape else CircleShape
+    val cardBrush = remember(isCyberpunk) {
+        if (isCyberpunk) {
+            Brush.linearGradient(listOf(VeyraCyber.surfaceAlt, VeyraCyber.surface))
+        } else {
+            Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.14f), Color.White.copy(alpha = 0.06f)))
+        }
     }
     val haptics = LocalHapticFeedback.current
     Surface(
         modifier = modifier
-            .height(46.dp)
+            .height(48.dp)
             .tvFocusable(shape = chipShape, scale = 1.05f, onClick = {
                 haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 onClick()
             })
-            .shadow(3.dp, chipShape, spotColor = Color.Black.copy(alpha = 0.50f))
+            .shadow(if (isCyberpunk) 0.dp else 4.dp, chipShape, spotColor = Color.Black.copy(alpha = 0.40f))
             .clip(chipShape)
-            .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.07f)), chipShape)
+            .border(
+                BorderStroke(
+                    if (isCyberpunk) VeyraCyber.borderWidth else 1.dp,
+                    if (isCyberpunk) VeyraCyber.cyan else Color.White.copy(alpha = 0.24f),
+                ),
+                chipShape,
+            )
             .background(cardBrush, chipShape)
             .clickable(onClick = {
                 haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -363,7 +389,8 @@ private fun LazyListScope.history(
         }
     }
     items(history, key = { it }) { value ->
-        val itemShape = RoundedCornerShape(14.dp)
+        val isCyberpunk = LocalCyberpunkTheme.current
+        val itemShape = if (isCyberpunk) VeyraCyber.shape else VeyraRadius.mdShape
         val haptics = LocalHapticFeedback.current
         Surface(
             modifier = Modifier
@@ -380,7 +407,11 @@ private fun LazyListScope.history(
                     onQueryChange(value)
                     onSearch(value)
                 },
-            color = CanopyColors.Surface,
+            color = if (isCyberpunk) VeyraCyber.surface else Color.White.copy(alpha = 0.08f),
+            border = BorderStroke(
+                if (isCyberpunk) 1.5.dp else 1.dp,
+                if (isCyberpunk) VeyraCyber.cyan.copy(alpha = 0.45f) else Color.White.copy(alpha = 0.16f),
+            ),
             shape = itemShape,
         ) {
             Row(

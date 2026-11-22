@@ -25,8 +25,10 @@ package dev.sfg.veyra.mobile.ui.screens
 
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -86,7 +88,16 @@ import androidx.compose.ui.unit.sp
 import dev.sfg.veyra.connect.R
 import dev.sfg.veyra.mobile.model.PlaybackSnapshot
 import dev.sfg.veyra.mobile.model.TransitionMarker
+import dev.sfg.veyra.mobile.playback.LiveAudioSpectrumMeter
+import dev.sfg.veyra.mobile.ui.components.LocalCyberpunkTheme
 import dev.sfg.veyra.mobile.ui.components.durationText
+import dev.sfg.veyra.mobile.ui.components.rememberLiveAudioTick
+import dev.sfg.veyra.mobile.ui.theme.LocalReducedMotion
+import dev.sfg.veyra.mobile.ui.theme.VeyraCyber
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.semantics
 import dev.sfg.veyra.mobile.ui.components.rememberRainbowBrush
 import dev.sfg.veyra.mobile.ui.components.rememberTransitionGlow
 import dev.sfg.veyra.mobile.ui.components.transitionProgress
@@ -133,15 +144,17 @@ fun PlayerScrubber(
         playback.positionMs.toFloat().coerceIn(0f, duration.toFloat())
     }
 
+    val reduceMotion = LocalReducedMotion.current
+    val isCyberpunk = LocalCyberpunkTheme.current
     val trackHeight by animateDpAsState(
         targetValue = if (isInteracting) 8.dp else 4.dp,
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        animationSpec = if (reduceMotion) snap() else spring(stiffness = Spring.StiffnessMediumLow),
         label = "ScrubberTrackHeight",
     )
 
     val thumbVisibleSize by animateDpAsState(
         targetValue = if (isInteracting) 14.dp else 0.dp,
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        animationSpec = if (reduceMotion) snap() else spring(stiffness = Spring.StiffnessMediumLow),
         label = "ScrubberThumbVisibleSize",
     )
 
@@ -150,25 +163,88 @@ fun PlayerScrubber(
         initialValue = 0f,
         targetValue = (2 * Math.PI).toFloat(),
         animationSpec = infiniteRepeatable(
-            animation = tween(2400, easing = LinearEasing),
+            animation = tween(1600, easing = LinearEasing),
             repeatMode = RepeatMode.Restart,
         ),
         label = "ScrubberWavePhase",
     )
-    val targetWaveAmplitude = if (playback.isPlaying) 2.4f else 0f
+    val shimmerPhase by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = (2 * Math.PI).toFloat(),
+        animationSpec = infiniteRepeatable(
+            animation = tween(920, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "ScrubberShimmerPhase",
+    )
+    val targetWaveAmplitude = if (playback.isPlaying && !reduceMotion) 2.4f else 0f
     val waveAmplitude by animateFloatAsState(
         targetValue = targetWaveAmplitude,
-        animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
+        animationSpec = if (reduceMotion) snap() else spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
         label = "ScrubberWaveAmplitude",
+    )
+    val activeScrubBoost by animateFloatAsState(
+        targetValue = if (isInteracting) 1.24f else 1f,
+        animationSpec = if (reduceMotion) snap() else spring(dampingRatio = 0.72f, stiffness = 500f),
+        label = "ScrubberBoost",
     )
     val density = LocalDensity.current
     val haptics = LocalHapticFeedback.current
 
+    val scrubberDescription = "${durationText(currentPosition.toLong())} / ${durationText(duration)}"
+    val bubbleFraction = (currentPosition / duration.toFloat()).coerceIn(0.06f, 0.94f)
     Column(modifier = modifier.fillMaxWidth()) {
+        androidx.compose.animation.AnimatedVisibility(
+            visible = isInteracting,
+            enter = androidx.compose.animation.fadeIn(tween(120)) +
+                androidx.compose.animation.scaleIn(initialScale = 0.88f, animationSpec = tween(140)),
+            exit = androidx.compose.animation.fadeOut(tween(120)),
+        ) {
+            androidx.compose.foundation.layout.BoxWithConstraints(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 4.dp),
+            ) {
+                val bubbleX = (maxWidth - 56.dp) * bubbleFraction
+                val bubbleShape = if (isCyberpunk) VeyraCyber.shape else CircleShape
+                Box(
+                    modifier = Modifier
+                        .padding(start = bubbleX)
+                        .clip(bubbleShape)
+                        .background(
+                            if (isCyberpunk) VeyraCyber.acidYellow
+                            else Color.White.copy(alpha = 0.16f),
+                        )
+                        .border(
+                            if (isCyberpunk) 1.5.dp else 1.dp,
+                            if (isCyberpunk) VeyraCyber.ink else Color.White.copy(alpha = 0.34f),
+                            bubbleShape,
+                        )
+                        .padding(horizontal = 10.dp, vertical = 3.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = durationText(currentPosition.toLong()),
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace,
+                        ),
+                        color = if (isCyberpunk) VeyraCyber.ink else Color.White,
+                    )
+                }
+            }
+        }
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(30.dp),
+                .height(36.dp)
+                .semantics {
+                    contentDescription = scrubberDescription
+                    progressBarRangeInfo = ProgressBarRangeInfo(
+                        current = currentPosition,
+                        range = 0f..duration.toFloat(),
+                    )
+                },
             contentAlignment = Alignment.Center,
         ) {
             Slider(
@@ -207,6 +283,8 @@ fun PlayerScrubber(
                     } else 0f
 
                     val wavePath = remember { Path() }
+                    val scrubBands = remember { FloatArray(LiveAudioSpectrumMeter.BAND_COUNT) }
+                    val scrubTick = rememberLiveAudioTick(playback.isPlaying, reduceMotion)
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -216,12 +294,105 @@ fun PlayerScrubber(
                         Canvas(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(30.dp),
+                                .height(36.dp),
                         ) {
                             val trackW = size.width
                             val centerY = size.height / 2f
                             val endX = (trackW * fraction).coerceIn(0f, trackW)
                             val strokeWidth = trackHeight.toPx()
+
+                            if (!isCyberpunk) {
+                                // Aurora liquid animated waveform spectrum bars conectadas al audio real
+                                val barCount = 44
+                                val slotW = trackW / barCount
+                                val barW = (slotW * 0.48f).coerceIn(2.dp.toPx(), 4.dp.toPx())
+                                val maxHalfH = (size.height * 0.48f)
+                                val minHalfH = 2.5.dp.toPx()
+                                val playedBrush = if (glow > 0.01f) {
+                                    rainbow
+                                } else {
+                                    Brush.horizontalGradient(
+                                        colors = listOf(
+                                            Color(0xFF8B5CF6),
+                                            Color(0xFF38BDF8),
+                                            Color.White,
+                                        ),
+                                        startX = 0f,
+                                        endX = endX.coerceAtLeast(1f),
+                                    )
+                                }
+                                val hasLivePcm = if (playback.isPlaying && !reduceMotion) {
+                                    val _tick = scrubTick.value
+                                    LiveAudioSpectrumMeter.readSpectrum(scrubBands, true)
+                                } else false
+                                for (i in 0 until barCount) {
+                                    val bx = i * slotW + slotW / 2f
+                                    val norm = i / (barCount - 1f)
+                                    val baseEnv = 0.24f + 0.72f * kotlin.math.abs(kotlin.math.sin(norm * Math.PI * 3.4 + 0.6)).toFloat() *
+                                        (0.55f + 0.45f * kotlin.math.cos(norm * Math.PI * 7.0).toFloat())
+                                    val isPlayed = bx <= endX
+                                    val distNorm = kotlin.math.abs(bx - endX) / (trackW * 0.14f).coerceAtLeast(1f)
+                                    val playheadBoost = if (distNorm < 1f && (waveAmplitude > 0.05f || isInteracting)) {
+                                        1f + (1f - distNorm) * (if (isInteracting) 0.55f else 0.36f)
+                                    } else 1f
+                                    val audioEnergy = if (hasLivePcm) {
+                                        val bIdx = ((i * LiveAudioSpectrumMeter.BAND_COUNT) / barCount)
+                                            .coerceIn(0, LiveAudioSpectrumMeter.BAND_COUNT - 1)
+                                        scrubBands[bIdx]
+                                    } else 0.5f
+                                    val liveMod = if (waveAmplitude > 0.05f) {
+                                        if (hasLivePcm) {
+                                            0.52f + 0.78f * audioEnergy
+                                        } else {
+                                            val w1 = kotlin.math.sin(wavePhase + i * 0.58f)
+                                            val w2 = kotlin.math.cos(shimmerPhase - i * 0.92f)
+                                            (0.68f + 0.22f * w1 + 0.16f * w2) * (if (isPlayed) 1.05f else 0.86f)
+                                        }
+                                    } else 1f
+                                    val halfH = (minHalfH + (maxHalfH - minHalfH) * baseEnv * liveMod * playheadBoost * activeScrubBoost)
+                                        .coerceIn(minHalfH, maxHalfH)
+
+                                    if (isPlayed) {
+                                        if (distNorm < 0.45f && waveAmplitude > 0.05f) {
+                                            drawLine(
+                                                color = Color(0xFF38BDF8).copy(alpha = 0.38f),
+                                                start = Offset(bx, centerY - halfH * 1.08f),
+                                                end = Offset(bx, centerY + halfH * 1.08f),
+                                                strokeWidth = barW * 2.1f,
+                                                cap = StrokeCap.Round,
+                                            )
+                                        }
+                                        drawLine(
+                                            brush = playedBrush,
+                                            start = Offset(bx, centerY - halfH),
+                                            end = Offset(bx, centerY + halfH),
+                                            strokeWidth = barW,
+                                            cap = StrokeCap.Round,
+                                        )
+                                    } else {
+                                        drawLine(
+                                            color = Color.White.copy(alpha = if (waveAmplitude > 0.05f) 0.26f else 0.20f),
+                                            start = Offset(bx, centerY - halfH),
+                                            end = Offset(bx, centerY + halfH),
+                                            strokeWidth = barW,
+                                            cap = StrokeCap.Round,
+                                        )
+                                    }
+                                }
+                                if (endX > 1f) {
+                                    drawCircle(
+                                        color = Color(0xFF38BDF8).copy(alpha = if (isInteracting) 0.55f else 0.32f),
+                                        radius = if (isInteracting) 7.dp.toPx() else 4.5.dp.toPx(),
+                                        center = Offset(endX, centerY),
+                                    )
+                                    drawCircle(
+                                        color = Color.White,
+                                        radius = if (isInteracting) 3.5.dp.toPx() else 2.dp.toPx(),
+                                        center = Offset(endX, centerY),
+                                    )
+                                }
+                                return@Canvas
+                            }
 
                             // 1. Guía inactiva de fondo con canal empotrado neumórfico
                             drawLine(
@@ -275,9 +446,8 @@ fun PlayerScrubber(
 
                                 val electricBrush = Brush.horizontalGradient(
                                     colors = listOf(
-                                        Color(0xFF1E6CEB),
-                                        Color(0xFF2275F8),
-                                        Color(0xFF38BDF8),
+                                        VeyraCyber.acidYellow,
+                                        VeyraCyber.cyan,
                                     ),
                                     startX = 0f,
                                     endX = endX.coerceAtLeast(1f),

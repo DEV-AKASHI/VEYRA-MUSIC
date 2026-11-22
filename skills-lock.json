@@ -1,95 +1,137 @@
 {
-  "version": 1,
+  "version": 2,
   "skills": {
     "accessibility": {
       "source": "addyosmani/web-quality-skills",
       "sourceType": "autoskills-registry",
-      "computedHash": "2174f783a038a7ca4869c4c18e14726ec13b9c6b705d59253f647d0ca37cb78d"
+      "computedHash": ""
     },
     "bash-defensive-patterns": {
       "source": "wshobson/agents",
       "sourceType": "autoskills-registry",
-      "computedHash": "2c6409224fbb56ceff6655b73cb03a736ea6c89e622734752c568efafd59a964"
+      "computedHash": ""
+    },
+    "compose-animations": {
+      "source": "chrisbanes/skills",
+      "commit": "5f0a6226806799ecb93c87dd3c8c09acd00bfc1d",
+      "sourceType": "github",
+      "skillPath": "skills/compose-animations/SKILL.md",
+      "computedHash": "68acb77046efe5c8f1006e0466963a694b026ba16086a0ef54f87266b9f81f30"
+    },
+    "compose-component-design": {
+      "source": "chrisbanes/skills",
+      "commit": "5f0a6226806799ecb93c87dd3c8c09acd00bfc1d",
+      "sourceType": "github",
+      "skillPath": "skills/compose-component-design/SKILL.md",
+      "computedHash": "812df175fed3ccff53d117c8417486779f8aed317e9d633cfc41a8a401f2ddf1"
+    },
+    "compose-performance": {
+      "source": "chrisbanes/skills",
+      "commit": "5f0a6226806799ecb93c87dd3c8c09acd00bfc1d",
+      "sourceType": "github",
+      "skillPath": "skills/compose-performance/SKILL.md",
+      "computedHash": "82cd855910d91146db50e87efbfa1e6c9cd289585bed7d76977f54be2b321ba0"
+    },
+    "design-taste-frontend": {
+      "source": "Leonxlnx/taste-skill",
+      "commit": "f6b76575f949707b4e3c37cd86cb44b0b98643e8",
+      "sourceType": "github",
+      "skillPath": "skills/taste-skill/SKILL.md",
+      "computedHash": "b10eab0a9684cd09cf34c31ef04a3bf530a5f4404422f9c520d42372d670c7fc"
     },
     "frontend-design": {
       "source": "anthropics/skills",
       "sourceType": "autoskills-registry",
-      "computedHash": "a4e6516a601f72ffd8bcd0d64609e8ba724d2ce92569a059a6890a5caadf072b"
+      "computedHash": ""
     },
     "gsap-core": {
       "source": "greensock/gsap-skills",
       "sourceType": "autoskills-registry",
-      "computedHash": "e48283d0386774f816bc3445165c4f4f440507eb42d45aa34781a8373d2ff1c4"
+      "computedHash": ""
     },
     "gsap-frameworks": {
       "source": "greensock/gsap-skills",
       "sourceType": "autoskills-registry",
-      "computedHash": "97f2615815e642f630d472a5ff553b9a17b2c270d0b7962419a620d13a7e4b45"
+      "computedHash": ""
     },
     "gsap-performance": {
       "source": "greensock/gsap-skills",
       "sourceType": "autoskills-registry",
-      "computedHash": "5b07e939fd6eb24d998e13d1aad24b3d6ecde4a131a9393e45eff056917fd319"
+      "computedHash": ""
     },
     "gsap-plugins": {
       "source": "greensock/gsap-skills",
       "sourceType": "autoskills-registry",
-      "computedHash": "0005934f847f9a6b0f510bfd8a74f93d96002ea0f1dbafc3f6e19e6a06e9eb74"
+      "computedHash": ""
     },
     "gsap-scrolltrigger": {
       "source": "greensock/gsap-skills",
       "sourceType": "autoskills-registry",
-      "computedHash": "8b45aba1304ca0197a4f440a3421b059ac03b926c0829d51c14caaf46f2f47c3"
+      "computedHash": ""
     },
     "gsap-timeline": {
       "source": "greensock/gsap-skills",
       "sourceType": "autoskills-registry",
-      "computedHash": "f358230f289a063766bdca35290866790065f067e31cc477733e4cb3ee06a6c2"
+      "computedHash": ""
     },
     "gsap-utils": {
       "source": "greensock/gsap-skills",
       "sourceType": "autoskills-registry",
-      "computedHash": "4bc9e220b816f74547d770f73a2878e86df035f42e445c1e98875dd9793fe927"
+      "computedHash": ""
+    },
+    "microinteractions": {
+      "source": "wondelai/skills",
+      "commit": "c37678106e63ef1c5472d848fb3d8b8c5b33fafe",
+      "sourceType": "github",
+      "skillPath": "microinteractions/SKILL.md",
+      "computedHash": "b700f050fe93f71f4588d0a8ec9992c5d7476128b16fcd011268f884010d6292"
+    },
+    "mobile-android-design": {
+      "source": "wshobson/agents",
+      "commit": "91ff75307f5668916f3eb77d5ba556266c961376",
+      "sourceType": "github",
+      "skillPath": "plugins/ui-design/skills/mobile-android-design/SKILL.md",
+      "computedHash": "55efd53301a7dedb208b426587aa66672e3450449c59f4729340f5fa1b96f7ff"
     },
     "nodejs-backend-patterns": {
       "source": "wshobson/agents",
       "sourceType": "autoskills-registry",
-      "computedHash": "ec099fc7d7ece12e8a89c24b12eff36f27dd243db15c5a70f3df8406ec9c738e"
+      "computedHash": ""
     },
     "nodejs-best-practices": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "autoskills-registry",
-      "computedHash": "2c543ab51c9c4093c8a94aa615f39ca55d93835816aeeaa5bbd89261d85c584c"
+      "computedHash": ""
     },
     "seo": {
       "source": "addyosmani/web-quality-skills",
       "sourceType": "autoskills-registry",
-      "computedHash": "7495da57766c99f787a729d4a21234ecb5d29d90f304a0d9a5996dcdc1eec048"
+      "computedHash": ""
     },
     "vite": {
       "source": "antfu/skills",
       "sourceType": "autoskills-registry",
-      "computedHash": "9b57a2fff4dbb3c38e7f2e511f4125784f11cd67f54e89d3e7d9c57fe5834bd5"
+      "computedHash": ""
     },
     "vue": {
       "source": "antfu/skills",
       "sourceType": "autoskills-registry",
-      "computedHash": "112108a26fbd3010ebe0a4c5b08bf38553d46f2c4b35c68dbbbf478ed618f2a4"
+      "computedHash": ""
     },
     "vue-best-practices": {
       "source": "vuejs-ai/skills",
       "sourceType": "autoskills-registry",
-      "computedHash": "a457d007f3461b79a49bc977a84c1a6f511c191e541be36d382a28653f4d3201"
+      "computedHash": ""
     },
     "vue-debug-guides": {
       "source": "hyf0/vue-skills",
       "sourceType": "autoskills-registry",
-      "computedHash": "ef84274bb3af820e3ede22cb55863e6b0755eabe597713707ae9051a81ef3a02"
+      "computedHash": ""
     },
     "zod": {
       "source": "pproenca/dot-skills",
       "sourceType": "autoskills-registry",
-      "computedHash": "2e6455bb2c68a46f88db0fef1151cdb4d0a50b57b6a0cdbe7fa3b68641adf45b"
+      "computedHash": ""
     }
   }
 }

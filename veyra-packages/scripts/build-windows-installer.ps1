@@ -76,26 +76,18 @@ try {
   Pop-Location
 }
 $majorVersion = "$($version.Split('.')[0]).0.0"
-$bundle = Join-Path $managerDir "dist\releases\orchard-packages-$version-$target"
-$template = if (Test-Path (Join-Path $repositoryDir 'packaging\windows\veyra.nsi')) {
-  Join-Path $repositoryDir 'packaging\windows\veyra.nsi'
-} else {
-  Join-Path $repositoryDir 'packaging\windows\orchard.nsi'
-}
-$launcherTemplate = if (Test-Path (Join-Path $repositoryDir 'packaging\windows\veyra.cmd.in')) {
-  Join-Path $repositoryDir 'packaging\windows\veyra.cmd.in'
-} else {
-  Join-Path $repositoryDir 'packaging\windows\orchard.cmd.in'
-}
+$bundle = Join-Path $managerDir "dist\releases\veyra-packages-$version-$target"
+$template = Join-Path $repositoryDir 'packaging\windows\veyra.nsi'
+$launcherTemplate = Join-Path $repositoryDir 'packaging\windows\veyra.cmd.in'
 $icon = Join-Path $repositoryDir 'build\icon.ico'
 $license = Join-Path $repositoryDir 'LICENSE'
 $outputDir = Join-Path $repositoryDir "artifacts\windows\$target"
-$artifactName = if ($Architecture -eq 'x64') { "Orchard-Setup-$version.exe" } else { "Orchard-Setup-$version-arm64.exe" }
+$artifactName = if ($Architecture -eq 'x64') { "Veyra-Setup-$version.exe" } else { "Veyra-Setup-$version-arm64.exe" }
 $output = Join-Path $outputDir $artifactName
 
 foreach ($required in @($bundle, $template, $launcherTemplate, $icon, $license)) {
   if (-not (Test-Path $required)) {
-    throw "Required Orchard Packages input is missing: $required"
+    throw "Required Veyra Packages input is missing: $required"
   }
 }
 foreach ($required in @(
@@ -107,7 +99,7 @@ foreach ($required in @(
 }
 
 $makensis = Find-Makensis
-$launcher = Join-Path ([IO.Path]::GetTempPath()) "orchard-packages-$PID-$Architecture.cmd"
+$launcher = Join-Path ([IO.Path]::GetTempPath()) "veyra-packages-$PID-$Architecture.cmd"
 try {
   $launcherText = (Get-Content -Raw $launcherTemplate).Replace('@ORCHARD_MAJOR_VERSION@', $majorVersion).Replace('@VEYRA_MAJOR_VERSION@', $majorVersion)
   Set-Content -Path $launcher -Value $launcherText -Encoding ascii -NoNewline
@@ -124,7 +116,7 @@ try {
   )
   & $makensis @defines $template
   if ($LASTEXITCODE -ne 0) {
-    throw "NSIS failed to build the Orchard installer (exit code $LASTEXITCODE)."
+    throw "NSIS failed to build the Veyra installer (exit code $LASTEXITCODE)."
   }
   if (-not (Test-Path $output)) {
     throw "NSIS completed without creating $output"

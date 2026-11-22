@@ -367,6 +367,7 @@ private fun FoldableNowPlayingHero(
                         outgoingTrack = outgoingTrack,
                         transitionProgress = activeProgress,
                         transitionStyle = transition?.style.orEmpty(),
+                        isPlaying = playback.isPlaying,
                         onArtworkBounds = onCoverBounds,
                         modifier = Modifier.fillMaxSize(),
                     )
@@ -540,6 +541,7 @@ private fun FoldableNowPlayingSplit(
                             outgoingTrack = outgoingTrack,
                             transitionProgress = activeProgress,
                             transitionStyle = transition?.style.orEmpty(),
+                            isPlaying = playback.isPlaying,
                             onArtworkBounds = onCoverBounds,
                             modifier = Modifier.fillMaxSize(),
                         )

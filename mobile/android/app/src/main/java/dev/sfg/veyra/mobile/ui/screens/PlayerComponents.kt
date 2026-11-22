@@ -64,6 +64,7 @@ import androidx.compose.material.icons.rounded.Cast
 import androidx.compose.material.icons.rounded.DevicesFold
 import androidx.compose.material.icons.rounded.DirectionsCar
 import androidx.compose.material.icons.rounded.Earbuds
+import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.Headphones
 import androidx.compose.material.icons.rounded.Headset
 import androidx.compose.material.icons.rounded.Hearing
@@ -76,6 +77,7 @@ import androidx.compose.material.icons.rounded.Tv
 import androidx.compose.material.icons.rounded.Usb
 import androidx.compose.ui.res.stringResource
 import dev.sfg.veyra.connect.R
+import dev.sfg.veyra.mobile.ui.components.LocalCyberpunkTheme
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
@@ -170,47 +172,55 @@ fun TrackActionButtons(
     onShare: (() -> Unit)?,
     onOpenMenu: () -> Unit,
 ) {
+    val isCyberpunk = dev.sfg.veyra.mobile.ui.components.LocalCyberpunkTheme.current
+    val btnShape = if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.shape else CircleShape
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        val starGradient = if (liked) {
+        val starGradient = if (isCyberpunk) {
+            if (liked) Brush.verticalGradient(listOf(dev.sfg.veyra.mobile.ui.theme.VeyraCyber.surfaceAlt, dev.sfg.veyra.mobile.ui.theme.VeyraCyber.surfaceAlt))
+            else Brush.verticalGradient(listOf(dev.sfg.veyra.mobile.ui.theme.VeyraCyber.surface, dev.sfg.veyra.mobile.ui.theme.VeyraCyber.surface))
+        } else if (liked) {
             Brush.verticalGradient(
                 listOf(
-                    Color(0xFF1E6CEB).copy(alpha = 0.45f),
-                    Color(0xFF0F3A78).copy(alpha = 0.60f),
+                    Color(0xFF1E6CEB).copy(alpha = 0.35f),
+                    Color(0xFF38BDF8).copy(alpha = 0.22f),
                 ),
             )
         } else {
             Brush.verticalGradient(
                 listOf(
-                    Color(0xFF151D2D),
-                    Color(0xFF0E1422),
+                    Color.White.copy(alpha = 0.14f),
+                    Color.White.copy(alpha = 0.06f),
                 ),
             )
         }
-        val starBorder = if (liked) {
+        val starBorder = if (isCyberpunk) {
+            val c = if (liked) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.cyan else dev.sfg.veyra.mobile.ui.theme.VeyraCyber.textMuted.copy(alpha = 0.45f)
+            Brush.verticalGradient(listOf(c, c))
+        } else if (liked) {
             Brush.verticalGradient(
                 listOf(
-                    Color(0xFF38BDF8).copy(alpha = 0.65f),
-                    Color(0xFF1E6CEB).copy(alpha = 0.25f),
+                    Color(0xFF8B5CF6).copy(alpha = 0.42f),
+                    Color(0xFF38BDF8).copy(alpha = 0.24f),
                 ),
             )
         } else {
             Brush.verticalGradient(
                 listOf(
-                    Color.White.copy(alpha = 0.12f),
-                    Color.Black.copy(alpha = 0.40f),
+                    Color.White.copy(alpha = 0.28f),
+                    Color.White.copy(alpha = 0.10f),
                 ),
             )
         }
 
         Box(
             modifier = Modifier
-                .size(38.dp)
-                .clip(CircleShape)
+                .size(44.dp)
+                .clip(btnShape)
                 .background(starGradient)
-                .border(1.dp, starBorder, CircleShape)
+                .border(if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.borderWidth else 1.dp, starBorder, btnShape)
                 .tactilePress(onClick = onLiked),
             contentAlignment = Alignment.Center,
         ) {
@@ -221,30 +231,41 @@ fun TrackActionButtons(
                 } else {
                     stringResource(R.string.action_favorite)
                 },
-                tint = if (liked) Color(0xFF38BDF8) else Color.White.copy(alpha = 0.85f),
+                tint = if (liked) {
+                    if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.cyan else Color(0xFF38BDF8)
+                } else Color.White.copy(alpha = 0.90f),
                 modifier = Modifier.size(20.dp),
             )
         }
 
-        val moreGradient = Brush.verticalGradient(
-            listOf(
-                Color(0xFF151D2D),
-                Color(0xFF0E1422),
-            ),
-        )
-        val moreBorder = Brush.verticalGradient(
-            listOf(
-                Color.White.copy(alpha = 0.12f),
-                Color.Black.copy(alpha = 0.40f),
-            ),
-        )
+        val moreGradient = if (isCyberpunk) {
+            Brush.verticalGradient(listOf(dev.sfg.veyra.mobile.ui.theme.VeyraCyber.surface, dev.sfg.veyra.mobile.ui.theme.VeyraCyber.surface))
+        } else {
+            Brush.verticalGradient(
+                listOf(
+                    Color.White.copy(alpha = 0.14f),
+                    Color.White.copy(alpha = 0.06f),
+                ),
+            )
+        }
+        val moreBorder = if (isCyberpunk) {
+            val c = dev.sfg.veyra.mobile.ui.theme.VeyraCyber.textMuted.copy(alpha = 0.45f)
+            Brush.verticalGradient(listOf(c, c))
+        } else {
+            Brush.verticalGradient(
+                listOf(
+                    Color.White.copy(alpha = 0.28f),
+                    Color.White.copy(alpha = 0.10f),
+                ),
+            )
+        }
 
         Box(
             modifier = Modifier
-                .size(38.dp)
-                .clip(CircleShape)
+                .size(44.dp)
+                .clip(btnShape)
                 .background(moreGradient)
-                .border(1.dp, moreBorder, CircleShape)
+                .border(if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.borderWidth else 1.dp, moreBorder, btnShape)
                 .tactilePress(onClick = { if (onShare != null) onOpenMenu() else onMore?.invoke() }),
             contentAlignment = Alignment.Center,
         ) {
@@ -259,47 +280,114 @@ fun TrackActionButtons(
 }
 
 /**
- * Top pill drag handle.
+ * Top player header: Glass circular back/title/favorite in Aurora; mechanical HUD in Cyberpunk.
  */
 @Composable
-fun PlayerTopHandle(onDismiss: () -> Unit, modifier: Modifier = Modifier) {
-    Box(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .clickable(onClick = onDismiss)
-                .padding(top = 14.dp, bottom = 14.dp),
-        contentAlignment = Alignment.Center,
+fun PlayerTopHandle(
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+    liked: Boolean = false,
+    onLiked: (() -> Unit)? = null,
+) {
+    val isCyberpunk = LocalCyberpunkTheme.current
+    val btnShape = if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.shape else CircleShape
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 10.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
             modifier = Modifier
-                .width(44.dp)
-                .height(6.dp)
-                .clip(CircleShape)
-                .background(Color(0xFF080C14))
+                .size(42.dp)
+                .clip(btnShape)
+                .background(
+                    if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.surface
+                    else Color.White.copy(alpha = 0.12f),
+                )
                 .border(
-                    0.8.dp,
-                    Brush.verticalGradient(
-                        listOf(Color.Black.copy(alpha = 0.8f), Color.White.copy(alpha = 0.08f)),
-                    ),
-                    CircleShape,
-                ),
+                    if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.borderWidth else 1.dp,
+                    if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.cyan else Color.White.copy(alpha = 0.26f),
+                    btnShape,
+                )
+                .tactilePress(onClick = onDismiss),
             contentAlignment = Alignment.Center,
         ) {
+            Icon(
+                imageVector = Icons.Rounded.ExpandMore,
+                contentDescription = stringResource(R.string.player_close),
+                tint = if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.cyan else Color.White,
+                modifier = Modifier.size(22.dp),
+            )
+        }
+
+        if (isCyberpunk) {
             Box(
                 modifier = Modifier
-                    .width(40.dp)
-                    .height(4.dp)
-                    .clip(CircleShape)
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(
-                                Color.White.copy(alpha = 0.65f),
-                                Color.White.copy(alpha = 0.35f),
-                            ),
-                        ),
-                    ),
+                    .clip(dev.sfg.veyra.mobile.ui.theme.VeyraCyber.shape)
+                    .background(dev.sfg.veyra.mobile.ui.theme.VeyraCyber.acidYellow)
+                    .border(
+                        dev.sfg.veyra.mobile.ui.theme.VeyraCyber.borderWidth,
+                        dev.sfg.veyra.mobile.ui.theme.VeyraCyber.ink,
+                        dev.sfg.veyra.mobile.ui.theme.VeyraCyber.shape,
+                    )
+                    .padding(horizontal = 10.dp, vertical = 4.dp),
+            ) {
+                Text(
+                    text = "LIVE // DSP",
+                    color = dev.sfg.veyra.mobile.ui.theme.VeyraCyber.ink,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 1.sp,
+                )
+            }
+        } else {
+            Text(
+                text = "Now Playing",
+                color = Color.White.copy(alpha = 0.92f),
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.2.sp,
+                ),
             )
+        }
+
+        if (onLiked != null) {
+            Box(
+                modifier = Modifier
+                    .size(42.dp)
+                    .clip(btnShape)
+                    .background(
+                        if (isCyberpunk) {
+                            if (liked) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.magenta else dev.sfg.veyra.mobile.ui.theme.VeyraCyber.surface
+                        } else {
+                            if (liked) Color(0xFF38BDF8).copy(alpha = 0.28f) else Color.White.copy(alpha = 0.12f)
+                        },
+                    )
+                    .border(
+                        if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.borderWidth else 1.dp,
+                        if (isCyberpunk) {
+                            if (liked) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.ink else dev.sfg.veyra.mobile.ui.theme.VeyraCyber.textMuted.copy(alpha = 0.5f)
+                        } else {
+                            if (liked) Color(0xFF38BDF8).copy(alpha = 0.7f) else Color.White.copy(alpha = 0.26f)
+                        },
+                        btnShape,
+                    )
+                    .tactilePress(onClick = onLiked),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = if (liked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                    contentDescription = if (liked) stringResource(R.string.playerx_favorited_cd) else stringResource(R.string.action_favorite),
+                    tint = if (liked) {
+                        if (isCyberpunk) Color.White else Color(0xFF38BDF8)
+                    } else Color.White.copy(alpha = 0.90f),
+                    modifier = Modifier.size(19.dp),
+                )
+            }
+        } else {
+            Spacer(Modifier.size(42.dp))
         }
     }
 }
@@ -447,8 +535,31 @@ fun PlayerBottomDestinations(
     audioDeckActive: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
+    val isCyberpunk = LocalCyberpunkTheme.current
+    val dockModifier = if (isCyberpunk) {
+        modifier
+            .fillMaxWidth()
+            .padding(horizontal = 10.dp, vertical = 4.dp)
+    } else {
+        modifier
+            .fillMaxWidth()
+            .padding(horizontal = 6.dp, vertical = 4.dp)
+            .clip(RoundedCornerShape(28.dp))
+            .background(Color.White.copy(alpha = 0.08f))
+            .border(
+                1.dp,
+                Brush.verticalGradient(
+                    listOf(
+                        Color.White.copy(alpha = 0.28f),
+                        Color.White.copy(alpha = 0.06f),
+                    ),
+                ),
+                RoundedCornerShape(28.dp),
+            )
+            .padding(horizontal = 10.dp, vertical = 6.dp)
+    }
     Row(
-        modifier = modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp),
+        modifier = dockModifier,
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -525,43 +636,51 @@ private fun DestinationButton(
     icon: ImageVector,
     badge: (@Composable androidx.compose.foundation.layout.BoxScope.() -> Unit)? = null,
 ) {
-    val discGradient = if (active) {
+    val isCyberpunk = dev.sfg.veyra.mobile.ui.components.LocalCyberpunkTheme.current
+    val btnShape = if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.shape else CircleShape
+    val discGradient = if (isCyberpunk) {
+        if (active) Brush.verticalGradient(listOf(dev.sfg.veyra.mobile.ui.theme.VeyraCyber.surfaceAlt, dev.sfg.veyra.mobile.ui.theme.VeyraCyber.surfaceAlt))
+        else Brush.verticalGradient(listOf(dev.sfg.veyra.mobile.ui.theme.VeyraCyber.surface, dev.sfg.veyra.mobile.ui.theme.VeyraCyber.surface))
+    } else if (active) {
         Brush.verticalGradient(
             listOf(
-                Color(0xFF1E6CEB).copy(alpha = 0.45f),
-                Color(0xFF0F3A78).copy(alpha = 0.60f),
+                Color(0xFF8B5CF6).copy(alpha = 0.42f),
+                Color(0xFF38BDF8).copy(alpha = 0.24f),
             ),
         )
     } else {
         Brush.verticalGradient(
             listOf(
-                Color(0xFF141C2C),
-                Color(0xFF0D1422),
+                Color.White.copy(alpha = 0.14f),
+                Color.White.copy(alpha = 0.06f),
             ),
         )
     }
-    val discBorder = if (active) {
+    val discBorder = if (isCyberpunk) {
+        val c = if (active) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.cyan else dev.sfg.veyra.mobile.ui.theme.VeyraCyber.textMuted.copy(alpha = 0.45f)
+        Brush.verticalGradient(listOf(c, c))
+    } else if (active) {
         Brush.verticalGradient(
             listOf(
-                Color(0xFF38BDF8).copy(alpha = 0.65f),
-                Color(0xFF1E6CEB).copy(alpha = 0.25f),
+                Color(0xFF38BDF8).copy(alpha = 0.72f),
+                Color(0xFF1E6CEB).copy(alpha = 0.32f),
             ),
         )
     } else {
         Brush.verticalGradient(
             listOf(
+                Color.White.copy(alpha = 0.28f),
                 Color.White.copy(alpha = 0.10f),
-                Color.Black.copy(alpha = 0.35f),
             ),
         )
     }
 
     Box(
         modifier = Modifier
-            .size(42.dp)
-            .clip(CircleShape)
+            .size(44.dp)
+            .clip(btnShape)
             .background(discGradient)
-            .border(1.dp, discBorder, CircleShape)
+            .border(if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.borderWidth else 1.dp, discBorder, btnShape)
             .tactilePress(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
@@ -605,20 +724,25 @@ private fun OutputRoutePill(targets: PlaybackTargetState, onClick: () -> Unit) {
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
         }
 
+    val isCyberpunk = dev.sfg.veyra.mobile.ui.components.LocalCyberpunkTheme.current
+    val pillShape = if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.shape else CircleShape
     Box(
         modifier = Modifier
-            .clip(CircleShape)
-            .background(Color(0xFF090D17))
+            .clip(pillShape)
+            .background(if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.surface else Color.White.copy(alpha = 0.10f))
             .border(
-                1.dp,
-                Brush.verticalGradient(
-                    listOf(
-                        Color.White.copy(alpha = 0.16f),
-                        Color.White.copy(alpha = 0.04f),
-                        Color.Black.copy(alpha = 0.40f),
-                    ),
-                ),
-                CircleShape,
+                if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.borderWidth else 1.dp,
+                if (isCyberpunk) {
+                    Brush.verticalGradient(listOf(dev.sfg.veyra.mobile.ui.theme.VeyraCyber.cyan, dev.sfg.veyra.mobile.ui.theme.VeyraCyber.cyan))
+                } else {
+                    Brush.verticalGradient(
+                        listOf(
+                            Color.White.copy(alpha = 0.26f),
+                            Color.White.copy(alpha = 0.10f),
+                        ),
+                    )
+                },
+                pillShape,
             )
             .tactilePress(onClick = {
                 if (needsNameAccess) {

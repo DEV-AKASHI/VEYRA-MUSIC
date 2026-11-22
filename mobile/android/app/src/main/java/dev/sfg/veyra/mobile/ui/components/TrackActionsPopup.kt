@@ -89,10 +89,11 @@ internal fun TrackActionsPopup(
     onViewAlbum: (() -> Unit)? = null,
     onViewArtist: (() -> Unit)? = null,
 ) {
+    val isCyberpunk = LocalCyberpunkTheme.current
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = CanopyColors.Surface,
+        containerColor = if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.surface else Color(0xFF16132E),
         dragHandle = { BottomSheetDefaults.DragHandle(color = CanopyColors.Muted.copy(alpha = 0.4f)) },
     ) {
         Column(Modifier.padding(horizontal = 20.dp).padding(bottom = 28.dp)) {

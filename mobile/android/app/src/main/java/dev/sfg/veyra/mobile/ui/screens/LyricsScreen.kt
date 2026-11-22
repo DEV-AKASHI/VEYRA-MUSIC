@@ -33,6 +33,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.*
 import dev.sfg.veyra.mobile.ui.scroll.OrchardLazyColumn as LazyColumn
@@ -68,6 +69,7 @@ import kotlinx.coroutines.flow.first
 import kotlin.math.abs
 
 /** Auto-scrolling, word-timed lyric list matching desktop fullscreen lyrics fidelity. */
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 internal fun LyricLines(
     lines: List<LyricLine>,
@@ -77,6 +79,7 @@ internal fun LyricLines(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(horizontal = 24.dp, vertical = 32.dp),
     accent: Color = CanopyColors.LyricActive,
+    onShareQuote: ((List<String>) -> Unit)? = null,
 ) {
     // Playback snapshots arrive twice a second. Keep one frame-clock coroutine alive between
     // them and fold small clock corrections in gently; restarting the animation at every
@@ -278,10 +281,30 @@ internal fun LyricLines(
                                     alpha = animatedAlpha
                                     transformOrigin = if (isAlternate) TransformOrigin(1f, 0.5f) else TransformOrigin(0f, 0.5f)
                                 }
-                                .clickable(enabled = line.startMs != null) {
-                                    browsing = false
-                                    line.startMs?.let(onSeek)
-                                }
+                                .then(
+                                    if (onShareQuote != null) {
+                                        Modifier.combinedClickable(
+                                            onClick = {
+                                                if (line.startMs != null) {
+                                                    browsing = false
+                                                    onSeek(line.startMs)
+                                                }
+                                            },
+                                            onLongClick = {
+                                                val start = displayIndex
+                                                val end = (start + 2).coerceAtMost(lines.lastIndex)
+                                                val quote = (start..end)
+                                                    .mapNotNull { idx -> lines.getOrNull(idx)?.text?.takeIf { it.isNotBlank() } }
+                                                if (quote.isNotEmpty()) onShareQuote(quote)
+                                            },
+                                        )
+                                    } else {
+                                        Modifier.clickable(enabled = line.startMs != null) {
+                                            browsing = false
+                                            line.startMs?.let(onSeek)
+                                        }
+                                    }
+                                )
                                 .padding(vertical = LINE_SPACING),
                             horizontalAlignment = if (isAlternate) Alignment.End else Alignment.Start,
                         ) {
@@ -322,21 +345,23 @@ internal fun LyricLines(
 
         // Center-aligned, glassmorphic "Resume lyrics" pill button when browsing away from live position.
         if (browsing && synced) {
+            val isCyberpunk = dev.sfg.veyra.mobile.ui.components.LocalCyberpunkTheme.current
+            val pillShape = if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.shape else RoundedCornerShape(999.dp)
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 20.dp)
                     .background(
-                        color = Color(0xFF131B2B).copy(alpha = 0.92f),
-                        shape = RoundedCornerShape(999.dp),
+                        color = if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.surface else Color(0xFF131B2B).copy(alpha = 0.92f),
+                        shape = pillShape,
                     )
                     .border(
-                        width = 1.dp,
-                        color = Color.White.copy(alpha = 0.12f),
-                        shape = RoundedCornerShape(999.dp),
+                        width = if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.borderWidth else 1.dp,
+                        color = if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.cyan else Color.White.copy(alpha = 0.12f),
+                        shape = pillShape,
                     )
                     .clickable { browsing = false }
-                    .padding(horizontal = 18.dp, vertical = 10.dp),
+                    .padding(horizontal = 18.dp, vertical = 12.dp),
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,

@@ -21,7 +21,7 @@ def earmarkTargetDir = layout.buildDirectory.dir('earmark/rust').get().asFile
 // Declared here rather than read back off the android extension because two toolchains consume
 // them and AGP no longer exposes the resolved NDK path to build scripts.
 def veyraNdkVersion = '28.2.13676358'
-def veyraMinSdk = 24
+def veyraMinSdk = 26
 // Compatible con dispositivos móviles y Android TV de 64 y 32 bits.
 def veyraReleaseAbis = ['arm64-v8a', 'armeabi-v7a']
 def veyraDebugAbis = veyraReleaseAbis + ['x86_64']
@@ -65,8 +65,8 @@ android {
         applicationId = 'dev.sfg.veyra.mobile'
         minSdk = veyraMinSdk
         targetSdk = 36
-        versionCode = 4
-        versionName = '1.0.3'
+        versionCode = 5
+        versionName = '1.0.4'
         buildConfigField 'String', 'CODENAME', '"AKASHI DEV"'
         // Only the build that is actually published may offer updates. Every other
         // build has its own applicationId, so the published APK is neither an

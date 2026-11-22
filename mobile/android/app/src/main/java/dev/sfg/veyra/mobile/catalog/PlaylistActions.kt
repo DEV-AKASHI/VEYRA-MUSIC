@@ -42,13 +42,17 @@ class PlaylistActions(private val client: InnerTubeClient) {
         )
     }
 
-    fun create(title: String, videoId: String): String {
+    fun create(title: String, videoId: String? = null): String {
         val cleanTitle = title.trim()
         require(cleanTitle.isNotEmpty()) { "Enter a playlist name." }
-        require(videoId.isNotBlank()) { "This track cannot be added to a playlist." }
-        val result = client.post("playlist/create", JSONObject()
-            .put("title", cleanTitle)
-            .put("videoIds", JSONArray().put(videoId)))
+        val payload = JSONObject().put("title", cleanTitle)
+        val cleanVideoId = videoId?.trim().orEmpty()
+        if (cleanVideoId.isNotEmpty()) {
+            payload.put("videoIds", JSONArray().put(cleanVideoId))
+        } else {
+            payload.put("privacyStatus", "PRIVATE")
+        }
+        val result = client.post("playlist/create", payload)
         return result.optString("playlistId").ifBlank { result.optString("playlist_id") }
             .also { check(it.isNotBlank()) { "YouTube did not create the playlist." } }
     }

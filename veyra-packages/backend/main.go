@@ -120,7 +120,7 @@ func runExtension() error {
 		case "packages.install":
 			version, _ := data["version"].(string)
 			if !service.beginInstall() {
-				_ = service.broadcast("packages.error", map[string]any{"requestId": requestID, "message": "Another Orchard package operation is already running."})
+				_ = service.broadcast("packages.error", map[string]any{"requestId": requestID, "message": "Another Veyra Music package operation is already running."})
 				continue
 			}
 			installs.Add(1)
@@ -132,7 +132,7 @@ func runExtension() error {
 		case "packages.uninstall":
 			version, _ := data["version"].(string)
 			if !service.beginInstall() {
-				_ = service.broadcast("packages.error", map[string]any{"requestId": requestID, "message": "Another Orchard package operation is already running."})
+				_ = service.broadcast("packages.error", map[string]any{"requestId": requestID, "message": "Another Veyra Music package operation is already running."})
 				continue
 			}
 			installs.Add(1)

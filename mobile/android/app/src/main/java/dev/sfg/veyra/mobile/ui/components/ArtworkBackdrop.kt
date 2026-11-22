@@ -56,6 +56,8 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import dev.sfg.veyra.mobile.artwork.highResolutionArtworkUrl
 import dev.sfg.veyra.mobile.ui.theme.CanopyColors
+import dev.sfg.veyra.mobile.ui.theme.LocalReducedMotion
+import dev.sfg.veyra.mobile.ui.theme.VeyraCyber
 
 /**
  * Fondo ambiental dinámico de la app con proyección de portada y velo Obsidian Slate.
@@ -90,7 +92,11 @@ fun ArtworkBackdrop(
         label = "BackdropCore",
     )
 
-    val effectiveAnimated = animated || (isPlaying && artworkUrl.isNotBlank())
+    val reduceMotion = LocalReducedMotion.current
+    val isCyberpunk = LocalCyberpunkTheme.current
+    val isLiquidAurora = !isCyberpunk
+
+    val effectiveAnimated = !reduceMotion && (animated || (isPlaying && artworkUrl.isNotBlank()))
     val drift: State<Float> = if (effectiveAnimated) {
         rememberInfiniteTransition(label = "BackdropDrift").animateFloat(
             initialValue = 0f,
@@ -147,7 +153,7 @@ fun ArtworkBackdrop(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(CanopyColors.Chrome)
+            .background(if (isCyberpunk) VeyraCyber.canvas else Color(0xFF090718))
     ) {
         if (artworkUrl.isNotBlank()) {
             val context = LocalContext.current
@@ -164,9 +170,13 @@ fun ArtworkBackdrop(
                         scaleX = ambientScale.value
                         scaleY = ambientScale.value
                         rotationZ = ambientRotation.value
-                        alpha = if (rich) 0.58f else 0.44f
+                        alpha = when {
+                            isCyberpunk -> 0.24f
+                            rich -> 0.62f
+                            else -> 0.52f
+                        }
                     }
-                    .blur(52.dp),
+                    .blur(if (isCyberpunk) 64.dp else 52.dp),
             )
         }
 
@@ -180,7 +190,6 @@ fun ArtworkBackdrop(
                     val glow = if (rich) RICH_GLOW_ALPHA else GLOW_ALPHA
                     val twoPi = (2.0 * kotlin.math.PI).toFloat()
 
-                    // Órbitas Lissajous multi-armónicas
                     val topX = size.width * (0.28f + 0.16f * kotlin.math.cos(phase * twoPi))
                     val topY = size.height * (0.14f + 0.10f * kotlin.math.sin(phase * twoPi))
                     val top = Offset(topX, topY)
@@ -193,54 +202,64 @@ fun ArtworkBackdrop(
                     val midY = size.height * (0.42f + 0.12f * kotlin.math.cos(phase * twoPi * 1.1f))
                     val mid = Offset(midX, midY)
 
-                    // Poza 1: Acento dinámico primario
+                    // Poza 1: Carátula o Aurora Violet-Indigo (o Cyan en Cyberpunk sin carátula)
+                    val primaryOrb = when {
+                        artworkUrl.isNotBlank() -> accent
+                        isCyberpunk -> VeyraCyber.cyan
+                        else -> Color(0xFF7C3AED)
+                    }
                     drawRect(
                         Brush.radialGradient(
                             colors = listOf(
-                                accent.copy(alpha = if (artworkUrl.isNotBlank()) glow * 2.0f else glow),
+                                primaryOrb.copy(alpha = if (artworkUrl.isNotBlank()) glow * 2.15f else if (isCyberpunk) 0.36f else 0.50f),
                                 Color.Transparent,
                             ),
                             center = top,
+                            radius = size.maxDimension * 0.82f * pulse,
+                        ),
+                    )
+
+                    // Poza 2: Complementario carátula o Magenta / Acid accent
+                    val secondaryOrb = when {
+                        artworkUrl.isNotBlank() -> lerp(base.value, accent, 0.40f)
+                        isCyberpunk -> VeyraCyber.magenta
+                        else -> Color(0xFFEC4899)
+                    }
+                    drawRect(
+                        Brush.radialGradient(
+                            colors = listOf(
+                                secondaryOrb.copy(alpha = if (artworkUrl.isNotBlank()) glow * 1.7f else if (isCyberpunk) 0.24f else 0.34f),
+                                Color.Transparent,
+                            ),
+                            center = low,
                             radius = size.maxDimension * 0.74f * pulse,
                         ),
                     )
 
-                    // Poza 2: Matiz complementario profundo
+                    // Poza 3: Sky Flare / Electric Liquid Light
                     drawRect(
                         Brush.radialGradient(
                             colors = listOf(
-                                lerp(base.value, accent, 0.40f).copy(alpha = if (artworkUrl.isNotBlank()) glow * 1.6f else glow),
-                                Color.Transparent,
-                            ),
-                            center = low,
-                            radius = size.maxDimension * 0.68f * pulse,
-                        ),
-                    )
-
-                    // Poza 3: Halo de acento Veyra azul eléctrico / destello Sky Flare
-                    drawRect(
-                        Brush.radialGradient(
-                            colors = listOf(
-                                Color(0xFF1E6CEB).copy(alpha = glow * 1.1f),
-                                Color(0xFF38BDF8).copy(alpha = glow * 0.5f),
+                                (if (isCyberpunk) VeyraCyber.acidYellow else Color(0xFF38BDF8)).copy(
+                                    alpha = if (artworkUrl.isNotBlank()) glow * 0.85f else if (isCyberpunk) 0.14f else 0.36f,
+                                ),
                                 Color.Transparent,
                             ),
                             center = mid,
-                            radius = size.maxDimension * 0.56f * pulse,
+                            radius = size.maxDimension * 0.62f * pulse,
                         ),
                     )
 
-                    // Velo Obsidian Slate calibrado para preservar contraste sin sofocar color
-                    if (artworkUrl.isNotBlank()) {
-                        drawRect(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    Color(0xFF0B0F19).copy(alpha = 0.18f),
-                                    Color(0xFF0B0F19).copy(alpha = 0.48f),
-                                ),
-                            )
+                    // Velo calibrado: profundo #05070E en Cyberpunk para conservar contraste neón con color puro de carátula
+                    val veilBase = if (isCyberpunk) Color(0xFF05070E) else Color(0xFF090718)
+                    drawRect(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                veilBase.copy(alpha = if (isCyberpunk) 0.46f else 0.08f),
+                                veilBase.copy(alpha = if (isCyberpunk) 0.72f else 0.36f),
+                            ),
                         )
-                    }
+                    )
                 }
         )
     }

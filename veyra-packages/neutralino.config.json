@@ -1,12 +1,12 @@
 {
   "$schema": "https://raw.githubusercontent.com/neutralinojs/neutralinojs/main/schemas/neutralino.config.schema.json",
-  "applicationId": "dev.sfg.orchard.packages",
-  "applicationName": "Orchard Packages",
-  "applicationIcon": "resources/icons/orchard-packages.png",
-  "author": "SFG545",
-  "copyright": "Copyright (C) 2026 SFG545",
-  "description": "A small installer and version manager for Orchard",
-  "version": "5.0.0",
+  "applicationId": "dev.akashi.veyra.packages",
+  "applicationName": "Veyra Packages",
+  "applicationIcon": "resources/icons/veyra-packages.png",
+  "author": "AKASHI DEV",
+  "copyright": "Copyright (C) 2026 AKASHI DEV",
+  "description": "Installer and version manager for Veyra Music",
+  "version": "1.0.3",
   "defaultMode": "window",
   "port": 0,
   "documentRoot": "/resources/",
@@ -29,15 +29,15 @@
   ],
   "extensions": [
     {
-      "id": "dev.sfg.orchard.packages.backend",
-      "commandLinux": "${NL_PATH}/extensions/orchard-packages-backend",
-      "commandDarwin": "${NL_PATH}/extensions/orchard-packages-backend",
-      "commandWindows": "${NL_PATH}/extensions/orchard-packages-backend.exe"
+      "id": "dev.akashi.veyra.packages.backend",
+      "commandLinux": "${NL_PATH}/extensions/veyra-packages-backend",
+      "commandDarwin": "${NL_PATH}/extensions/veyra-packages-backend",
+      "commandWindows": "${NL_PATH}/extensions/veyra-packages-backend.exe"
     }
   ],
   "modes": {
     "window": {
-      "title": "Orchard Packages",
+      "title": "Veyra Music",
       "width": 560,
       "height": 520,
       "minWidth": 460,
@@ -45,7 +45,7 @@
       "center": true,
       "fullScreen": false,
       "alwaysOnTop": false,
-      "icon": "/resources/icons/orchard-packages.png",
+      "icon": "/resources/icons/veyra-packages.png",
       "enableInspector": false,
       "borderless": false,
       "maximize": false,
@@ -56,7 +56,7 @@
     }
   },
   "cli": {
-    "binaryName": "orchard-packages",
+    "binaryName": "veyra-packages",
     "resourcesPath": "/resources/",
     "extensionsPath": "/extensions/",
     "clientLibrary": "/resources/js/neutralino.js",

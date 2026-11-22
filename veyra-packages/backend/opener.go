@@ -44,7 +44,7 @@ func (i *installer) openRelease(ctx context.Context, version string) error {
 		}
 	}
 	if selected == nil {
-		return fmt.Errorf("Orchard %s is not present in the package manifest", version)
+		return fmt.Errorf("Veyra Music %s is not present in the package manifest", version)
 	}
 	target, err := detectTarget()
 	if err != nil {
@@ -55,26 +55,26 @@ func (i *installer) openRelease(ctx context.Context, version string) error {
 		return err
 	}
 	if err := validateInstallation(installDirectory, version, target); err != nil {
-		return fmt.Errorf("Orchard %s is not installed", version)
+		return fmt.Errorf("Veyra Music %s is not installed", version)
 	}
 	if !runtimeReady(runtimeDirectory, target) {
 		return fmt.Errorf("Electron %s is not installed", selected.ElectronVersion)
 	}
 
-	launcher := filepath.Join(installDirectory, "orchard")
+	launcher := filepath.Join(installDirectory, "veyra")
 	var command *exec.Cmd
 	if strings.HasPrefix(target, "win32-") {
 		if err := writeLauncher(installDirectory, target, selected.ElectronVersion); err != nil {
-			return fmt.Errorf("could not repair the Orchard launcher: %w", err)
+			return fmt.Errorf("could not repair the Veyra Music launcher: %w", err)
 		}
-		launcher = filepath.Join(installDirectory, "orchard.cmd")
+		launcher = filepath.Join(installDirectory, "veyra.cmd")
 		command = exec.Command("cmd", "/c", launcher)
 	} else {
 		command = exec.Command(launcher)
 	}
 	command.Dir = installDirectory
 	if err := command.Start(); err != nil {
-		return fmt.Errorf("could not open Orchard: %w", err)
+		return fmt.Errorf("could not open Veyra Music: %w", err)
 	}
 	return command.Process.Release()
 }

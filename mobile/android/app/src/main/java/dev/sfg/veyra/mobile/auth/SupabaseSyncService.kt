@@ -98,6 +98,33 @@ class SupabaseSyncService(context: Context) {
         userEmail = ""
     }
 
+    /**
+     * Pings Supabase every 4 days to prevent free-tier project from pausing due to inactivity.
+     */
+    suspend fun keepAlivePing(force: Boolean = false): Boolean = withContext(Dispatchers.IO) {
+        if (!isConfigured()) return@withContext false
+        val lastPing = prefs.getLong("last_supabase_ping", 0L)
+        val now = System.currentTimeMillis()
+        val fourDaysMs = 4 * 24 * 60 * 60 * 1000L
+        if (!force && lastPing > 0L && (now - lastPing) < fourDaysMs) {
+            return@withContext false
+        }
+        try {
+            val endpoint = "$supabaseUrl/rest/v1/track_analysis?select=video_id&limit=1"
+            val key = if (accessToken.isNotBlank()) accessToken else anonKey
+            val response = getAs(endpoint, key)
+            if (response.first in 200..299) {
+                prefs.edit().putLong("last_supabase_ping", now).apply()
+                true
+            } else {
+                false
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Keep-alive ping failed", e)
+            false
+        }
+    }
+
     suspend fun signIn(email: String, pass: String): Result<String> = withContext(Dispatchers.IO) {
         if (!isConfigured()) {
             return@withContext Result.failure(

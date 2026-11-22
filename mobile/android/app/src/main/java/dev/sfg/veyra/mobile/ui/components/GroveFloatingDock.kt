@@ -24,9 +24,15 @@
 package dev.sfg.veyra.mobile.ui.components
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -34,6 +40,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
@@ -54,12 +61,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Pause
-import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.SkipNext
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -75,46 +76,46 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import dev.sfg.veyra.connect.R
 import dev.sfg.veyra.mobile.model.PlaybackSnapshot
 import dev.sfg.veyra.mobile.model.TransitionMarker
-import dev.sfg.veyra.mobile.ui.modifiers.chiseledSlot
-import dev.sfg.veyra.mobile.ui.modifiers.neumorphicSurface
+import dev.sfg.veyra.mobile.playback.LiveAudioSpectrumMeter
+import dev.sfg.veyra.mobile.ui.glass.GlassTone
+import dev.sfg.veyra.mobile.ui.glass.LocalGlass
+import dev.sfg.veyra.mobile.ui.glass.glassPane
 import dev.sfg.veyra.mobile.ui.modifiers.tactilePress
 import dev.sfg.veyra.mobile.ui.theme.CanopyColors
 import dev.sfg.veyra.mobile.ui.theme.LocalAccent
+import dev.sfg.veyra.mobile.ui.theme.LocalReducedMotion
 import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
-
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.foundation.Canvas
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Stroke
 import kotlin.math.PI
+import kotlin.math.roundToInt
 import kotlin.math.sin
 
-private val GroveDockShape = RoundedCornerShape(26.dp)
-private val GroveCoverShape = RoundedCornerShape(12.dp)
+private val LiquidDockShape = RoundedCornerShape(32.dp)
+private val LiquidCoverShape = CircleShape
 
 /**
- * Modo Grove: Isla Flotante Neumórfica suspendida para móvil.
- * Optimizado para uso ergonómico con una mano en el tercio inferior.
+ * Liquid Design + Aurora UI MiniPlayer: refractive translucent capsule, circular artwork,
+ * droplet Play/Pause button and Aurora spectrum wave synced to album palette.
  */
 @Composable
 fun GroveFloatingDock(
@@ -136,6 +137,8 @@ fun GroveFloatingDock(
     val coroutineScope = rememberCoroutineScope()
     val density = LocalDensity.current
     val haptics = LocalHapticFeedback.current
+    val reduceMotion = LocalReducedMotion.current
+    val glass = LocalGlass.current.enabled
 
     val currentOffsetY = if (isDragging) dragOffsetY.coerceAtLeast(0f) else settleAnim.value.coerceAtLeast(0f)
     val dismissThresholdPx = with(density) { 48.dp.toPx() }
@@ -149,7 +152,11 @@ fun GroveFloatingDock(
     val progress = if (effectiveDuration > 0) {
         (playback.positionMs.toFloat() / effectiveDuration.toFloat()).coerceIn(0f, 1f)
     } else 0f
-    val animatedProgress by animateFloatAsState(targetValue = progress, label = "GroveDockProgress")
+    val animatedProgress by animateFloatAsState(
+        targetValue = progress,
+        animationSpec = if (reduceMotion) snap() else spring(),
+        label = "GroveDockProgress",
+    )
 
     val infiniteTransition = rememberInfiniteTransition(label = "GroveDockAura")
     val auraAlpha by infiniteTransition.animateFloat(
@@ -173,8 +180,8 @@ fun GroveFloatingDock(
         label = "MiniWavePhase",
     )
     val waveAmplitude by animateFloatAsState(
-        targetValue = if (playback.isPlaying) 2.2f else 0f,
-        animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
+        targetValue = if (playback.isPlaying && !reduceMotion) 2.2f else 0f,
+        animationSpec = if (reduceMotion) snap() else spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
         label = "MiniWaveAmplitude",
     )
 
@@ -223,20 +230,23 @@ fun GroveFloatingDock(
             .alpha(dismissAlpha)
             .then(dragModifier)
     ) {
-        // Resplandor ambiental exterior dinámico tipo Desktop ambientAuraPulse
-        if (playback.isPlaying) {
+        // Liquid Aurora ambient halo reactivo al audio real
+        val dockTick = rememberLiveAudioTick(playback.isPlaying, reduceMotion)
+        if (playback.isPlaying && !reduceMotion) {
             val trackAccent = LocalAccent.current
+            val liveDockBeat = LiveAudioSpectrumMeter.readBeatEnergy(true)
+            val dynamicHaloAlpha = if (liveDockBeat >= 0f) 0.25f + 0.45f * liveDockBeat else auraAlpha
             Box(
                 modifier = Modifier
                     .matchParentSize()
                     .padding(horizontal = 6.dp)
-                    .clip(GroveDockShape)
+                    .clip(LiquidDockShape)
                     .background(
                         Brush.radialGradient(
                             colors = listOf(
-                                trackAccent.copy(alpha = auraAlpha * 0.55f),
-                                Color(0xFF38BDF8).copy(alpha = auraAlpha * 0.40f),
-                                Color(0xFF1E6CEB).copy(alpha = auraAlpha * 0.25f),
+                                trackAccent.copy(alpha = dynamicHaloAlpha * 0.56f),
+                                Color(0xFF8B5CF6).copy(alpha = dynamicHaloAlpha * 0.42f),
+                                Color(0xFF38BDF8).copy(alpha = dynamicHaloAlpha * 0.30f),
                                 Color.Transparent,
                             ),
                         ),
@@ -244,27 +254,37 @@ fun GroveFloatingDock(
             )
         }
 
-        // Chasis de Isla Flotante con acabado Neumorphic Enterprise Slate
-        val chassisGradient = Brush.linearGradient(
-            colors = listOf(Color(0xFF131B2C), Color(0xFF0D1322)),
+        // Liquid Design calibrated translucent capsule (legible over scrolled text)
+        val trackTint = LocalAccent.current
+        val chassisGradient = Brush.verticalGradient(
+            colors = listOf(
+                androidx.compose.ui.graphics.lerp(Color(0xE0130F28), trackTint, 0.16f),
+                androidx.compose.ui.graphics.lerp(Color(0xEB0B091A), Color(0xFF1E1B4B), 0.22f),
+            ),
         )
         val chassisBorderBrush = Brush.verticalGradient(
             listOf(
-                Color.White.copy(alpha = 0.15f),
-                Color.White.copy(alpha = 0.04f),
-                Color.Black.copy(alpha = 0.40f),
+                Color.White.copy(alpha = 0.46f),
+                Color.White.copy(alpha = 0.14f),
+                Color(0xFF38BDF8).copy(alpha = 0.28f),
             ),
         )
 
+        val dockDescription = "${track.title}, ${dev.sfg.veyra.mobile.ui.components.localizedArtistName(track.artist)}"
         Surface(
-            shape = GroveDockShape,
+            shape = LiquidDockShape,
             color = Color.Transparent,
-            shadowElevation = 14.dp,
-            border = androidx.compose.foundation.BorderStroke(1.2.dp, chassisBorderBrush),
+            shadowElevation = 0.dp,
+            border = androidx.compose.foundation.BorderStroke(1.1.dp, chassisBorderBrush),
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(GroveDockShape)
+                .then(if (glass) Modifier.glassPane(LiquidDockShape, GlassTone.CHROME) else Modifier)
+                .clip(LiquidDockShape)
                 .background(chassisGradient)
+                .semantics {
+                    role = Role.Button
+                    contentDescription = dockDescription
+                }
                 .clickable(onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     onClick()
@@ -281,25 +301,28 @@ fun GroveFloatingDock(
                         .padding(horizontal = 12.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Carátula Squircle con relieve neumórfico
+                    // Carátula circular líquida con halo de cristal Aurora
                     Box(
                         modifier = Modifier
-                            .size(48.dp)
-                            .clip(GroveCoverShape)
+                            .size(46.dp)
+                            .clip(LiquidCoverShape)
                             .clickable(onClick = {
                                 haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 onClick()
                             })
-                            .background(Color(0xFF090E17))
+                            .background(Color.White.copy(alpha = 0.10f))
                             .border(
-                                1.2.dp,
-                                Brush.verticalGradient(
+                                1.5.dp,
+                                Brush.sweepGradient(
                                     listOf(
-                                        Color.White.copy(alpha = 0.20f),
-                                        Color.Black.copy(alpha = 0.45f),
+                                        Color.White.copy(alpha = 0.56f),
+                                        Color(0xFF38BDF8).copy(alpha = 0.48f),
+                                        Color(0xFF8B5CF6).copy(alpha = 0.42f),
+                                        Color.White.copy(alpha = 0.18f),
+                                        Color.White.copy(alpha = 0.56f),
                                     ),
                                 ),
-                                GroveCoverShape,
+                                LiquidCoverShape,
                             )
                     ) {
                         AnimatedContent(
@@ -307,7 +330,7 @@ fun GroveFloatingDock(
                             transitionSpec = {
                                 fadeIn(animationSpec = tween(350)) togetherWith fadeOut(animationSpec = tween(250))
                             },
-                            label = "GroveArtworkCrossfade",
+                            label = "LiquidArtworkCrossfade",
                         ) { (artUrl, artTitle) ->
                             ArtworkTile(
                                 url = artUrl,
@@ -315,7 +338,7 @@ fun GroveFloatingDock(
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .onGloballyPositioned { onArtworkBounds?.invoke(it.boundsInRoot()) },
-                                radius = 12
+                                radius = 999
                             )
                         }
                     }
@@ -342,13 +365,22 @@ fun GroveFloatingDock(
                                     onClick()
                                 })
                         ) {
-                            Text(
-                                text = title,
-                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                                color = CanopyColors.Text,
-                                maxLines = 1,
-                                modifier = Modifier.basicMarquee()
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                if (playback.isPlaying) {
+                                    VeyraLiveEqualizerBars(
+                                        playing = true,
+                                        modifier = Modifier.size(width = 13.dp, height = 11.dp),
+                                    )
+                                    Spacer(Modifier.width(6.dp))
+                                }
+                                Text(
+                                    text = title,
+                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = CanopyColors.Text,
+                                    maxLines = 1,
+                                    modifier = Modifier.basicMarquee(),
+                                )
+                            }
                             Spacer(Modifier.height(2.dp))
                             Text(
                                 text = dev.sfg.veyra.mobile.ui.components.localizedArtistName(artist),
@@ -362,111 +394,110 @@ fun GroveFloatingDock(
                     Spacer(Modifier.width(8.dp))
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        // Botón Play/Pause con platillo empotrado (dish) y disco convexo neumórfico
-                        val playConvexGradient = Brush.verticalGradient(
+                        // Liquid droplet Play/Pause button
+                        val playLiquidGradient = Brush.linearGradient(
                             colors = listOf(
-                                Color(0xFF2E84FE),
-                                Color(0xFF1E6CEB),
-                                Color(0xFF104CA8),
+                                Color(0xFF8B5CF6),
+                                Color(0xFF6366F1),
+                                Color(0xFF38BDF8),
                             ),
                         )
                         Box(
                             modifier = Modifier
-                                .size(46.dp)
+                                .size(48.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFF090D17))
-                                .border(1.dp, Color.Black.copy(alpha = 0.65f), CircleShape),
+                                .semantics {
+                                    role = Role.Button
+                                }
+                                .tactilePress(onClick = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    onTogglePlay()
+                                }),
                             contentAlignment = Alignment.Center,
                         ) {
-                            if (playback.isPlaying) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .clip(CircleShape)
-                                        .background(
-                                            Brush.radialGradient(
-                                                colors = listOf(
-                                                    Color(0xFF38BDF8).copy(alpha = auraAlpha * 0.45f),
-                                                    Color(0xFF1E6CEB).copy(alpha = auraAlpha * 0.20f),
-                                                    Color.Transparent,
-                                                ),
-                                            ),
-                                        ),
-                                )
-                            }
                             Box(
                                 modifier = Modifier
-                                    .size(38.dp)
+                                    .size(40.dp)
                                     .clip(CircleShape)
-                                    .background(playConvexGradient)
+                                    .background(playLiquidGradient)
                                     .border(
-                                        1.2.dp,
+                                        1.1.dp,
                                         Brush.verticalGradient(
                                             listOf(
-                                                Color.White.copy(alpha = 0.40f),
-                                                Color.White.copy(alpha = 0.10f),
-                                                Color.Black.copy(alpha = 0.35f),
+                                                Color.White.copy(alpha = 0.55f),
+                                                Color.White.copy(alpha = 0.14f),
                                             ),
                                         ),
                                         CircleShape,
-                                    )
-                                    .tactilePress(onClick = {
-                                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        onTogglePlay()
-                                    }),
-                                contentAlignment = Alignment.Center
+                                    ),
+                                contentAlignment = Alignment.Center,
                             ) {
-                                Crossfade(targetState = playback.isPlaying, label = "GrovePlayCrossfade") { playing ->
-                                    Icon(
-                                        imageVector = if (playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                                Crossfade(
+                                    targetState = playback.isPlaying,
+                                    animationSpec = if (reduceMotion) snap() else tween(180),
+                                    label = "LiquidPlayCrossfade",
+                                ) { playing ->
+                                    VeyraGlyphIcon(
+                                        kind = if (playing) VeyraIconKind.PAUSE else VeyraIconKind.PLAY,
+                                        tint = Color.White,
+                                        filled = true,
                                         contentDescription = if (playing) {
                                             stringResource(R.string.action_pause)
                                         } else {
                                             stringResource(R.string.action_play)
                                         },
-                                        tint = Color.White,
-                                        modifier = Modifier.size(22.dp)
+                                        modifier = Modifier.size(20.dp),
                                     )
                                 }
                             }
                         }
 
-                        Spacer(Modifier.width(6.dp))
+                        Spacer(Modifier.width(4.dp))
 
-                        // Botón Siguiente Neumórfico
+                        // Liquid circular Next button
                         Box(
                             modifier = Modifier
-                                .size(34.dp)
+                                .size(48.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFF0D1424))
-                                .border(1.dp, Color.White.copy(alpha = 0.10f), CircleShape)
+                                .semantics {
+                                    role = Role.Button
+                                }
                                 .tactilePress(onClick = {
                                     haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                     onNext()
                                 }),
-                            contentAlignment = Alignment.Center
+                            contentAlignment = Alignment.Center,
                         ) {
-                            Icon(
-                                imageVector = Icons.Rounded.SkipNext,
-                                contentDescription = stringResource(R.string.action_next),
-                                tint = CanopyColors.Text,
-                                modifier = Modifier.size(18.dp)
-                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = 0.12f))
+                                    .border(1.dp, Color.White.copy(alpha = 0.28f), CircleShape),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                VeyraGlyphIcon(
+                                    kind = VeyraIconKind.SKIP_NEXT,
+                                    tint = Color.White,
+                                    contentDescription = stringResource(R.string.action_next),
+                                    modifier = Modifier.size(18.dp),
+                                )
+                            }
                         }
                     }
                 }
 
-                // Canal inferior con onda sinusoidal activa y gradiente azul eléctrico a Sky Flare
+                // Liquid Aurora active wave
                 val miniWavePath = remember { Path() }
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(16.dp)
+                        .height(14.dp)
                         .align(Alignment.BottomCenter)
-                        .padding(horizontal = 14.dp, vertical = 0.dp),
+                        .padding(horizontal = 20.dp),
                 ) {
                     val waveBrush = Brush.horizontalGradient(
-                        colors = listOf(Color(0xFF1E6CEB), Color(0xFF2275F8), Color(0xFF38BDF8)),
+                        colors = listOf(Color(0xFF8B5CF6), Color(0xFFEC4899), Color(0xFF38BDF8)),
                     )
                     Canvas(modifier = Modifier.fillMaxSize()) {
                         val canvasWidth = size.width
@@ -485,11 +516,16 @@ fun GroveFloatingDock(
                             cap = StrokeCap.Round,
                         )
 
-                        // Trazo ondulado activo con onda sinusoidal pura y suave
+                        // Trazo ondulado activo reactivo al beat real del audio
+                        val _dockFrame = dockTick.value
+                        val beatWaveScale = if (playback.isPlaying && !reduceMotion) {
+                            val b = LiveAudioSpectrumMeter.readBeatEnergy(true)
+                            if (b >= 0f) 0.70f + 1.15f * b else 1f
+                        } else 1f
                         val wavelength = 54.dp.toPx().coerceAtLeast(10f)
                         if (progressX > 1f && wavelength > 0f) {
                             miniWavePath.reset()
-                            val ampPx = waveAmplitude.dp.toPx().coerceIn(0f, (canvasHeight / 2f) - 1.5f)
+                            val ampPx = (waveAmplitude * beatWaveScale).dp.toPx().coerceIn(0f, (canvasHeight / 2f) - 1.5f)
                             val k = (2 * PI / wavelength).toFloat()
                             val leadInDist = 18.dp.toPx()
                             miniWavePath.moveTo(0f, midY)

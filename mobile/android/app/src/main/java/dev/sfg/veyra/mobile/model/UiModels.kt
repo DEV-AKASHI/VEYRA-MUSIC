@@ -84,6 +84,7 @@ data class OrchardSettings(
      * every screen's contrast, and Android 12 only gets an approximation of it.
      */
     val frostedGlass: Boolean = false,
+    val auraSyncEnabled: Boolean = false,
     /** Overlap the end of a track with the start of the next one. */
     val crossfadeEnabled: Boolean = false,
     val crossfadeSeconds: Int = DEFAULT_CROSSFADE_SECONDS,
@@ -147,6 +148,12 @@ data class OrchardSettings(
     val betaChannelEnabled: Boolean = false,
     /** Paradigma visual del reproductor móvil: GROVE (dock flotante neumórfico) u OBSIDIAN (rack HUD). */
     val playerMode: MobilePlayerMode = MobilePlayerMode.GROVE,
+    /** Automatically switch EQ preset per audio output route (Bluetooth, Wired/USB, Speaker). */
+    val autoEqByOutputEnabled: Boolean = false,
+    /** Saved EQ preset IDs keyed by route family ("BLUETOOTH", "WIRED_USB", "SPEAKER"). */
+    val eqProfilesByRoute: Map<String, String> = emptyMap(),
+    /** Enable double-tap seek (-10s / +10s) on the player artwork. */
+    val doubleTapSeekEnabled: Boolean = true,
 ) {
     /** Clamped, because a persisted value from an older build must not size the cache absurdly. */
     val cacheSizeBytes: Long

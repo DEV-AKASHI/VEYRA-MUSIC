@@ -246,7 +246,8 @@ private fun FrostedDevicesScreenContent(
     val hasRemote = targets.devices.any { !it.isLocal }
     val message = targets.message.ifBlank { connectMessage }
 
-    Column(Modifier.fillMaxSize().background(CanopyColors.Chrome)) {
+    val isCyberDevices = dev.sfg.veyra.mobile.ui.components.LocalCyberpunkTheme.current
+    Column(Modifier.fillMaxSize().background(if (isCyberDevices) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.canvas else Color.Transparent)) {
         Box(Modifier.padding(horizontal = 16.dp, vertical = 16.dp)) {
             FrostedHeaderRow(onBack = onBack)
         }
@@ -1900,15 +1901,17 @@ private fun StandardListeningPartyPanel(
     onLeave: () -> Unit,
 ) {
     var codeInput by remember { mutableStateOf("") }
-    val shape = RoundedCornerShape(20.dp)
+    val isCyberpunk = dev.sfg.veyra.mobile.ui.components.LocalCyberpunkTheme.current
+    val shape = if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.shape else RoundedCornerShape(20.dp)
     Surface(
-        color = glassFill(CanopyColors.Surface),
+        color = if (isCyberpunk) dev.sfg.veyra.mobile.ui.theme.VeyraCyber.surface else glassFill(CanopyColors.Surface),
         shape = shape,
+        border = if (isCyberpunk) androidx.compose.foundation.BorderStroke(dev.sfg.veyra.mobile.ui.theme.VeyraCyber.borderWidth, dev.sfg.veyra.mobile.ui.theme.VeyraCyber.cyan.copy(alpha = 0.65f)) else null,
         modifier =
             Modifier.fillMaxWidth()
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 24.dp)
-                .glassPane(shape),
+                .then(if (isCyberpunk) Modifier else Modifier.glassPane(shape)),
     ) {
         Column(Modifier.padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {

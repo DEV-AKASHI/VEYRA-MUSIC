@@ -45,26 +45,26 @@ export function getInstallPaths(
     const configRoot = environment.APPDATA || path.join(homeDirectory, "AppData", "Roaming");
     const localData = environment.LOCALAPPDATA || path.join(homeDirectory, "AppData", "Local");
     return {
-      installDirectory: path.join(configRoot, "orchard", "versions", majorVersion),
-      runtimeDirectory: path.join(configRoot, "orchard", "runtimes", "electron", electronVersion, target),
-      cacheDirectory: path.join(localData, "Orchard Packages", "Cache")
+      installDirectory: path.join(configRoot, "veyra", "versions", majorVersion),
+      runtimeDirectory: path.join(configRoot, "veyra", "runtimes", "electron", electronVersion, target),
+      cacheDirectory: path.join(localData, "Veyra Packages", "Cache")
     };
   }
 
   if (platform === "darwin") {
     const applicationSupport = path.join(homeDirectory, "Library", "Application Support");
     return {
-      installDirectory: path.join(applicationSupport, "orchard", "versions", majorVersion),
-      runtimeDirectory: path.join(applicationSupport, "orchard", "runtimes", "electron", electronVersion, target),
-      cacheDirectory: path.join(homeDirectory, "Library", "Caches", "Orchard Packages")
+      installDirectory: path.join(applicationSupport, "veyra", "versions", majorVersion),
+      runtimeDirectory: path.join(applicationSupport, "veyra", "runtimes", "electron", electronVersion, target),
+      cacheDirectory: path.join(homeDirectory, "Library", "Caches", "Veyra Packages")
     };
   }
 
   const configRoot = environment.XDG_CONFIG_HOME || path.join(homeDirectory, ".config");
   const cacheRoot = environment.XDG_CACHE_HOME || path.join(homeDirectory, ".cache");
   return {
-    installDirectory: path.join(configRoot, "orchard", "versions", majorVersion),
-    runtimeDirectory: path.join(configRoot, "orchard", "runtimes", "electron", electronVersion, target),
-    cacheDirectory: path.join(cacheRoot, "orchard-packages")
+    installDirectory: path.join(configRoot, "veyra", "versions", majorVersion),
+    runtimeDirectory: path.join(configRoot, "veyra", "runtimes", "electron", electronVersion, target),
+    cacheDirectory: path.join(cacheRoot, "veyra-packages")
   };
 }

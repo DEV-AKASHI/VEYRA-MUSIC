@@ -72,11 +72,17 @@ import androidx.compose.ui.unit.dp
 import dev.sfg.veyra.connect.R
 import dev.sfg.veyra.mobile.model.PlaybackStatus
 import dev.sfg.veyra.mobile.model.RepeatMode
+import dev.sfg.veyra.mobile.ui.components.LocalCyberpunkTheme
 import dev.sfg.veyra.mobile.ui.modifiers.tactilePress
 import dev.sfg.veyra.mobile.ui.theme.CanopyColors
 import dev.sfg.veyra.mobile.ui.theme.LocalAccent
+import dev.sfg.veyra.mobile.ui.theme.LocalReducedMotion
+import dev.sfg.veyra.mobile.ui.theme.VeyraCyber
+import dev.sfg.veyra.mobile.ui.theme.VeyraSize
 import dev.sfg.veyra.mobile.ui.theme.legibleOnDarkChrome
 import dev.sfg.veyra.mobile.ui.tv.tvFocusable
+import androidx.compose.animation.core.snap
+import androidx.compose.foundation.layout.offset
 
 /**
  * Ergonomic transport controls row providing direct access to Previous,
@@ -97,6 +103,8 @@ fun PlayerTransportControls(
     modifier: Modifier = Modifier,
 ) {
     val haptics = LocalHapticFeedback.current
+    val isCyberpunk = LocalCyberpunkTheme.current
+    val controlShape = if (isCyberpunk) VeyraCyber.shape else CircleShape
 
     Row(
         modifier = modifier
@@ -111,41 +119,48 @@ fun PlayerTransportControls(
             description = stringResource(R.string.action_shuffle),
             active = shuffle,
             enabled = localControls,
+            isCyberpunk = isCyberpunk,
             onClick = {
                 haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 onShuffle()
             },
         )
 
-        val transportSlotBorder = Brush.verticalGradient(
-            listOf(Color.Black.copy(alpha = 0.65f), Color.White.copy(alpha = 0.06f)),
-        )
-        val transportDiscBorder = Brush.verticalGradient(
-            listOf(Color.White.copy(alpha = 0.22f), Color.Black.copy(alpha = 0.40f)),
-        )
-        val transportDiscGradient = Brush.verticalGradient(
-            colors = listOf(Color(0xFF1E293B), Color(0xFF111827)),
-        )
+        val transportSlotBorder = if (isCyberpunk) {
+            Brush.verticalGradient(listOf(VeyraCyber.cyan.copy(alpha = 0.7f), VeyraCyber.cyan.copy(alpha = 0.7f)))
+        } else {
+            Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.28f), Color.White.copy(alpha = 0.08f)))
+        }
+        val transportDiscBorder = if (isCyberpunk) {
+            Brush.verticalGradient(listOf(VeyraCyber.cyan, VeyraCyber.cyan))
+        } else {
+            Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.34f), Color.White.copy(alpha = 0.10f)))
+        }
+        val transportDiscGradient = if (isCyberpunk) {
+            Brush.verticalGradient(listOf(VeyraCyber.surfaceAlt, VeyraCyber.surface))
+        } else {
+            Brush.verticalGradient(colors = listOf(Color.White.copy(alpha = 0.16f), Color.White.copy(alpha = 0.06f)))
+        }
 
-        // Previous Button con platillo empotrado (dish) y disco convexo neumórfico
+        // Previous Button
         Box(
             modifier = Modifier
                 .size(52.dp)
-                .tvFocusable(shape = CircleShape, scale = 1.12f, onClick = {
+                .tvFocusable(shape = controlShape, scale = 1.12f, onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     onPrevious()
                 })
-                .clip(CircleShape)
-                .background(Color(0xFF090D17))
-                .border(1.dp, transportSlotBorder, CircleShape),
+                .clip(controlShape)
+                .background(if (isCyberpunk) VeyraCyber.ink else Color.White.copy(alpha = 0.06f))
+                .border(if (isCyberpunk) VeyraCyber.borderWidth else 1.dp, transportSlotBorder, controlShape),
             contentAlignment = Alignment.Center,
         ) {
             Box(
                 modifier = Modifier
                     .size(44.dp)
-                    .clip(CircleShape)
+                    .clip(controlShape)
                     .background(transportDiscGradient)
-                    .border(1.2.dp, transportDiscBorder, CircleShape)
+                    .border(if (isCyberpunk) 0.dp else 1.dp, transportDiscBorder, controlShape)
                     .tactilePress(onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         onPrevious()
@@ -155,41 +170,42 @@ fun PlayerTransportControls(
                 Icon(
                     imageVector = Icons.Rounded.SkipPrevious,
                     contentDescription = stringResource(R.string.playerx_previous_track_cd),
-                    tint = Color(0xFFCBD5E1),
+                    tint = if (isCyberpunk) VeyraCyber.text else Color.White,
                     modifier = Modifier.size(26.dp),
                 )
             }
         }
 
-        // Hero Play/Pause Button con platillo empotrado, disco convexo y halo ambient
+        // Hero Play/Pause Button
         HeroPlayButton(
             isPlaying = isPlaying,
             isBuffering = status == PlaybackStatus.BUFFERING || status == PlaybackStatus.LOADING,
+            isCyberpunk = isCyberpunk,
             onClick = {
                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                 onToggle()
             },
         )
 
-        // Next Button con platillo empotrado (dish) y disco convexo neumórfico
+        // Next Button
         Box(
             modifier = Modifier
                 .size(52.dp)
-                .tvFocusable(shape = CircleShape, scale = 1.12f, onClick = {
+                .tvFocusable(shape = controlShape, scale = 1.12f, onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     onNext()
                 })
-                .clip(CircleShape)
-                .background(Color(0xFF090D17))
-                .border(1.dp, transportSlotBorder, CircleShape),
+                .clip(controlShape)
+                .background(if (isCyberpunk) VeyraCyber.ink else Color.White.copy(alpha = 0.06f))
+                .border(if (isCyberpunk) VeyraCyber.borderWidth else 1.dp, transportSlotBorder, controlShape),
             contentAlignment = Alignment.Center,
         ) {
             Box(
                 modifier = Modifier
                     .size(44.dp)
-                    .clip(CircleShape)
+                    .clip(controlShape)
                     .background(transportDiscGradient)
-                    .border(1.2.dp, transportDiscBorder, CircleShape)
+                    .border(if (isCyberpunk) 0.dp else 1.dp, transportDiscBorder, controlShape)
                     .tactilePress(onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         onNext()
@@ -199,7 +215,7 @@ fun PlayerTransportControls(
                 Icon(
                     imageVector = Icons.Rounded.SkipNext,
                     contentDescription = stringResource(R.string.playerx_next_track_cd),
-                    tint = Color(0xFFCBD5E1),
+                    tint = if (isCyberpunk) VeyraCyber.text else Color.White,
                     modifier = Modifier.size(26.dp),
                 )
             }
@@ -211,6 +227,7 @@ fun PlayerTransportControls(
             description = stringResource(R.string.action_repeat),
             active = repeatMode != RepeatMode.OFF,
             enabled = localControls,
+            isCyberpunk = isCyberpunk,
             onClick = {
                 haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 onRepeat()
@@ -223,13 +240,66 @@ fun PlayerTransportControls(
 private fun HeroPlayButton(
     isPlaying: Boolean,
     isBuffering: Boolean,
+    isCyberpunk: Boolean,
     onClick: () -> Unit,
 ) {
+    val reduceMotion = LocalReducedMotion.current
+    if (isCyberpunk) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(80.dp)
+                .padding(end = 4.dp, bottom = 4.dp)
+                .tvFocusable(shape = VeyraCyber.shape, scale = 1.06f, onClick = onClick),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(68.dp)
+                    .offset(4.dp, 4.dp)
+                    .background(VeyraCyber.cyan, VeyraCyber.shape),
+            )
+            Box(
+                modifier = Modifier
+                    .size(68.dp)
+                    .clip(VeyraCyber.shape)
+                    .background(VeyraCyber.acidYellow)
+                    .border(VeyraCyber.borderWidth, VeyraCyber.ink, VeyraCyber.shape)
+                    .tactilePress(onClick = onClick),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (isBuffering) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(32.dp),
+                        color = VeyraCyber.ink,
+                        strokeWidth = 3.dp,
+                    )
+                } else {
+                    Crossfade(
+                        targetState = isPlaying,
+                        animationSpec = if (reduceMotion) snap() else tween(160),
+                        label = "CyberPlayPauseIcon",
+                    ) { playing ->
+                        Icon(
+                            imageVector = if (playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                            contentDescription = if (playing) {
+                                stringResource(R.string.action_pause)
+                            } else {
+                                stringResource(R.string.action_play)
+                            },
+                            tint = VeyraCyber.ink,
+                            modifier = Modifier.size(36.dp),
+                        )
+                    }
+                }
+            }
+        }
+        return
+    }
     val playGradient = Brush.verticalGradient(
         colors = listOf(
-            Color(0xFF2E84FE),
-            Color(0xFF1E6CEB),
-            Color(0xFF0F47A2),
+            Color(0xFF8B5CF6),
+            Color(0xFF6366F1),
+            Color(0xFF38BDF8),
         ),
     )
     val infiniteTransition = androidx.compose.animation.core.rememberInfiniteTransition(label = "HeroAura")
@@ -273,8 +343,8 @@ private fun HeroPlayButton(
         label = "HeroScalePulse",
     )
     val animatedScale by animateFloatAsState(
-        targetValue = if (isPlaying) scalePulse else 1f,
-        animationSpec = tween(300),
+        targetValue = if (isPlaying && !reduceMotion) scalePulse else 1f,
+        animationSpec = if (reduceMotion) snap() else tween(300),
         label = "HeroScaleAnim",
     )
 
@@ -284,7 +354,7 @@ private fun HeroPlayButton(
             .size(84.dp)
             .tvFocusable(shape = CircleShape, scale = 1.08f, onClick = onClick),
     ) {
-        if (isPlaying) {
+        if (isPlaying && !reduceMotion) {
             // Halo exterior lento (capa profunda)
             Box(
                 modifier = Modifier
@@ -342,64 +412,58 @@ private fun HeroPlayButton(
             }
         }
 
-        // Platillo empotrado neumórfico (dish slot)
+        // Aurora frosted glass Play/Pause circle
         Box(
             modifier = Modifier
-                .size(76.dp)
+                .size(72.dp)
+                .graphicsLayer {
+                    scaleX = animatedScale
+                    scaleY = animatedScale
+                }
                 .clip(CircleShape)
-                .background(Color(0xFF080C14))
-                .border(
-                    1.2.dp,
+                .background(
                     Brush.verticalGradient(
-                        listOf(Color.Black.copy(alpha = 0.75f), Color.White.copy(alpha = 0.08f)),
+                        listOf(
+                            Color.White.copy(alpha = 0.24f),
+                            Color.White.copy(alpha = 0.10f),
+                        ),
+                    ),
+                )
+                .border(
+                    1.4.dp,
+                    Brush.verticalGradient(
+                        listOf(
+                            Color.White.copy(alpha = 0.50f),
+                            Color.White.copy(alpha = 0.14f),
+                        ),
                     ),
                     CircleShape,
-                ),
+                )
+                .tactilePress(onClick = onClick),
             contentAlignment = Alignment.Center,
         ) {
-            // Disco convexo con bisel cenital y sombra inferior
-            Box(
-                modifier = Modifier
-                    .size(64.dp)
-                    .graphicsLayer {
-                        scaleX = animatedScale
-                        scaleY = animatedScale
-                    }
-                    .clip(CircleShape)
-                    .background(playGradient)
-                    .border(
-                        1.4.dp,
-                        Brush.verticalGradient(
-                            listOf(
-                                Color.White.copy(alpha = 0.45f),
-                                Color.White.copy(alpha = 0.10f),
-                                Color.Black.copy(alpha = 0.40f),
-                            ),
-                        ),
-                        CircleShape,
+            if (isBuffering) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(34.dp),
+                    color = Color.White,
+                    strokeWidth = 3.dp,
+                )
+            } else {
+                Crossfade(
+                    targetState = isPlaying,
+                    animationSpec = if (reduceMotion) snap() else tween(160),
+                    label = "PlayPauseIcon",
+                ) { playing ->
+                    Icon(
+                        imageVector = if (playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                        contentDescription = if (playing) {
+                            stringResource(R.string.action_pause)
+                        } else {
+                            stringResource(R.string.action_play)
+                        },
+                        tint = Color.White,
+                        modifier = Modifier.size(34.dp),
                     )
-                    .tactilePress(onClick = onClick),
-                contentAlignment = Alignment.Center,
-            ) {
-                if (isBuffering) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(36.dp),
-                        color = Color.White,
-                        strokeWidth = 3.dp,
-                    )
-                } else {
-                    Crossfade(targetState = isPlaying, label = "PlayPauseIcon") { playing ->
-                        Icon(
-                            imageVector = if (playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                            contentDescription = if (playing) {
-                                stringResource(R.string.action_pause)
-                            } else {
-                                stringResource(R.string.action_play)
-                            },
-                            tint = Color.White,
-                            modifier = Modifier.size(36.dp),
-                        )
-                    }
                 }
             }
         }
@@ -412,39 +476,57 @@ private fun TransportToggleOption(
     description: String,
     active: Boolean,
     enabled: Boolean,
+    isCyberpunk: Boolean = false,
     onClick: () -> Unit,
 ) {
     val activeColor by animateColorAsState(
         targetValue = when {
             !enabled -> Color.White.copy(alpha = 0.25f)
-            active -> Color(0xFF38BDF8)
+            active -> if (isCyberpunk) VeyraCyber.cyan else Color(0xFF38BDF8)
             else -> Color(0xFF94A3B8)
         },
         label = "ToggleActiveColor",
     )
+    val optionShape = if (isCyberpunk) VeyraCyber.shape else CircleShape
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        // Platillo empotrado neumórfico
+        // Platillo empotrado neumórfico / Cyber con área táctil >= 48dp
         Box(
             modifier = Modifier
-                .size(42.dp)
-                .tvFocusable(shape = CircleShape, scale = 1.15f, onClick = if (enabled) onClick else null)
-                .clip(CircleShape)
-                .background(Color(0xFF080C14))
+                .size(VeyraSize.touchTarget)
+                .tvFocusable(shape = optionShape, scale = 1.15f, onClick = if (enabled) onClick else null)
+                .clip(optionShape)
+                .background(if (isCyberpunk) VeyraCyber.surface else Color(0xFF080C14))
                 .border(
-                    1.dp,
-                    Brush.verticalGradient(
-                        listOf(Color.Black.copy(alpha = 0.8f), Color.White.copy(alpha = 0.07f)),
-                    ),
-                    CircleShape,
+                    if (isCyberpunk) VeyraCyber.borderWidth else 1.dp,
+                    if (isCyberpunk) {
+                        Brush.verticalGradient(
+                            listOf(
+                                if (active && enabled) VeyraCyber.cyan else VeyraCyber.textMuted.copy(alpha = 0.35f),
+                                if (active && enabled) VeyraCyber.cyan else VeyraCyber.textMuted.copy(alpha = 0.35f),
+                            ),
+                        )
+                    } else {
+                        Brush.verticalGradient(
+                            listOf(Color.Black.copy(alpha = 0.8f), Color.White.copy(alpha = 0.07f)),
+                        )
+                    },
+                    optionShape,
                 ),
             contentAlignment = Alignment.Center,
         ) {
             // Disco interior táctil
-            val discGradient = if (active && enabled) {
+            val discGradient = if (isCyberpunk) {
+                Brush.verticalGradient(
+                    listOf(
+                        if (active && enabled) VeyraCyber.surfaceAlt else VeyraCyber.surface,
+                        if (active && enabled) VeyraCyber.surfaceAlt else VeyraCyber.surface,
+                    ),
+                )
+            } else if (active && enabled) {
                 Brush.verticalGradient(
                     listOf(
                         Color(0xFF1E6CEB).copy(alpha = 0.45f),
@@ -478,9 +560,9 @@ private fun TransportToggleOption(
             Box(
                 modifier = Modifier
                     .size(34.dp)
-                    .clip(CircleShape)
+                    .clip(optionShape)
                     .background(discGradient)
-                    .border(1.dp, discBorder, CircleShape)
+                    .then(if (isCyberpunk) Modifier else Modifier.border(1.dp, discBorder, optionShape))
                     .tactilePress(enabled = enabled, onClick = onClick),
                 contentAlignment = Alignment.Center,
             ) {

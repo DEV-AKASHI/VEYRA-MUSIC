@@ -115,6 +115,8 @@ import dev.sfg.veyra.mobile.listenbrainz.ListenBrainzState
 import dev.sfg.veyra.mobile.model.AudioQuality
 import dev.sfg.veyra.mobile.model.MobilePlayerMode
 import dev.sfg.veyra.mobile.model.OrchardSettings
+import androidx.compose.animation.core.snap
+import dev.sfg.veyra.mobile.ui.components.LocalCyberpunkTheme
 import dev.sfg.veyra.mobile.ui.components.OrchardChromeHeight
 import dev.sfg.veyra.mobile.ui.components.ReleaseNotesDialog
 import dev.sfg.veyra.mobile.ui.components.UpdateDialog
@@ -124,6 +126,9 @@ import dev.sfg.veyra.mobile.ui.glass.LocalGlass
 import dev.sfg.veyra.mobile.ui.glass.glassPane
 import dev.sfg.veyra.mobile.ui.theme.CanopyColors
 import dev.sfg.veyra.mobile.ui.theme.LocalAccent
+import dev.sfg.veyra.mobile.ui.theme.LocalReducedMotion
+import dev.sfg.veyra.mobile.ui.theme.VeyraCyber
+import dev.sfg.veyra.mobile.ui.theme.VeyraRadius
 
 @Composable
 fun SettingsScreen(
@@ -175,7 +180,7 @@ fun SettingsScreen(
     val isGlass = LocalGlass.current.enabled
     val settingsAccent = lerp(LocalAccent.current, Color.White, 0.35f)
     CompositionLocalProvider(LocalAccent provides settingsAccent) {
-        Column(Modifier.fillMaxSize().background(if (isGlass) Color.Transparent else CanopyColors.Chrome)) {
+        Column(Modifier.fillMaxSize().background(Color.Transparent)) {
             Text(
                 stringResource(R.string.settings_title),
                 style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
@@ -233,6 +238,31 @@ fun SettingsScreen(
                     PanelDivider()
                     CacheSizeRow(settings, onSettings)
                     PanelDivider()
+                    ToggleRow(
+                        title = "Limitador Anti-Clipping",
+                        subtitle = "Evita distorsión digital al subir preamp o bajos en el EQ",
+                        checked = settings.equalizerConfig.limiterEnabled,
+                        onChecked = {
+                            onSettings(settings.copy(equalizerConfig = settings.equalizerConfig.copy(limiterEnabled = it)))
+                        },
+                    )
+                    PanelDivider()
+                    ToggleRow(
+                        title = "Crossfeed Binaural",
+                        subtitle = "Amplía la escena sonora para sesiones largas con audífonos",
+                        checked = settings.equalizerConfig.crossfeedEnabled,
+                        onChecked = {
+                            onSettings(settings.copy(equalizerConfig = settings.equalizerConfig.copy(crossfeedEnabled = it)))
+                        },
+                    )
+                    PanelDivider()
+                    ToggleRow(
+                        title = "EQ automático por salida",
+                        subtitle = "Guarda y cambia el preset según Bluetooth, USB/Cable o Altavoz",
+                        checked = settings.autoEqByOutputEnabled,
+                        onChecked = { onSettings(settings.copy(autoEqByOutputEnabled = it)) },
+                    )
+                    PanelDivider()
                     ClearCacheRow(
                         cacheSizeBytes = cacheSizeBytes,
                         isClearing = isClearingCache,
@@ -282,6 +312,18 @@ fun SettingsScreen(
                         settings = settings,
                         onSettings = onSettings,
                     )
+                    PanelDivider()
+                    SourcesHealthRow(
+                        ytSignedIn = auth is AuthState.SignedIn,
+                        qobuzConnected = qobuzStatus.isConnected,
+                        spotifyConnected = settings.spotifySpdc.isNotBlank(),
+                        supabaseSync = settings.bestMixSupabaseSync,
+                    )
+                    PanelDivider()
+                    SettingsBackupRow(
+                        settings = settings,
+                        onImport = onSettings,
+                    )
                 }
 
                 SectionLabel(stringResource(R.string.settings_section_appearance))
@@ -299,6 +341,13 @@ fun SettingsScreen(
                         subtitle = stringResource(R.string.settings_player_gestures_subtitle),
                         checked = settings.playerGesturesEnabled,
                         onChecked = { onSettings(settings.copy(playerGesturesEnabled = it)) },
+                    )
+                    PanelDivider()
+                    ToggleRow(
+                        title = "Doble toque para saltar (±10s)",
+                        subtitle = "Toca dos veces a la izquierda o derecha de la carátula",
+                        checked = settings.doubleTapSeekEnabled,
+                        onChecked = { onSettings(settings.copy(doubleTapSeekEnabled = it)) },
                     )
                     PanelDivider()
                     ToggleRow(
@@ -328,21 +377,12 @@ fun SettingsScreen(
                         checked = settings.animatedBackground,
                         onChecked = { onSettings(settings.copy(animatedBackground = it)) },
                     )
-                }
-
-                SectionLabel(stringResource(R.string.settings_section_experimental))
-                SettingsPanel {
+                    PanelDivider()
                     ToggleRow(
-                        title = stringResource(R.string.settings_frosted_glass),
-                        subtitle = stringResource(
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                R.string.settings_frosted_glass_subtitle
-                            } else {
-                                R.string.settings_frosted_glass_legacy_subtitle
-                            }
-                        ),
-                        checked = settings.frostedGlass,
-                        onChecked = { onSettings(settings.copy(frostedGlass = it)) },
+                        title = stringResource(R.string.settings_aura_sync),
+                        subtitle = stringResource(R.string.settings_aura_sync_subtitle),
+                        checked = settings.auraSyncEnabled,
+                        onChecked = { onSettings(settings.copy(auraSyncEnabled = it)) },
                     )
                 }
 
@@ -477,20 +517,40 @@ private fun AccountCard(
     onSwitchAccount: () -> Unit,
     onSignOut: () -> Unit,
 ) {
-    val isGlass = LocalGlass.current.enabled
+    val isCyberpunk = LocalCyberpunkTheme.current
+    val isLiquidAurora = dev.sfg.veyra.mobile.ui.components.LocalLiquidAuroraTheme.current
+    val cardShape = if (isCyberpunk) VeyraCyber.shape else SettingsPanelShape
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 14.dp)
-            .shadow(elevation = if (isGlass) 4.dp else 10.dp, shape = SettingsPanelShape, spotColor = Color(0x66000000), ambientColor = Color(0x33000000))
             .then(
-                if (isGlass) {
-                    Modifier.glassPane(SettingsPanelShape, GlassTone.PANEL)
+                if (isCyberpunk) {
+                    Modifier
+                        .clip(cardShape)
+                        .background(VeyraCyber.surface)
+                        .border(VeyraCyber.borderWidth, VeyraCyber.cyan, cardShape)
                 } else {
                     Modifier
-                        .clip(SettingsPanelShape)
-                        .background(Brush.verticalGradient(listOf(Color(0xFF151D2D), Color(0xFF0F1420))))
-                        .border(1.dp, Brush.verticalGradient(listOf(Color(0x28FFFFFF), Color(0x0AFFFFFF))), SettingsPanelShape)
+                        .clip(cardShape)
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(
+                                    Color.White.copy(alpha = if (isLiquidAurora) 0.14f else 0.11f),
+                                    Color.White.copy(alpha = 0.05f),
+                                ),
+                            ),
+                        )
+                        .border(
+                            1.1.dp,
+                            Brush.verticalGradient(
+                                listOf(
+                                    Color.White.copy(alpha = 0.42f),
+                                    Color.White.copy(alpha = 0.10f),
+                                ),
+                            ),
+                            cardShape,
+                        )
                 }
             ),
     ) {
@@ -500,12 +560,18 @@ private fun AccountCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 val avatarUrl = (auth as? AuthState.SignedIn)?.avatarUrl.orEmpty()
+                val isCyberAvatar = LocalCyberpunkTheme.current
+                val avatarShape = if (isCyberAvatar) VeyraCyber.shape else CircleShape
                 Box(
                     modifier = Modifier
                         .size(54.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF080C14))
-                        .border(1.dp, Color(0x24FFFFFF), CircleShape)
+                        .clip(avatarShape)
+                        .background(if (isCyberAvatar) VeyraCyber.ink else Color.White.copy(alpha = 0.10f))
+                        .border(
+                            if (isCyberAvatar) VeyraCyber.borderWidth else 1.dp,
+                            if (isCyberAvatar) VeyraCyber.cyan else Color.White.copy(alpha = 0.28f),
+                            avatarShape,
+                        )
                         .padding(2.dp),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -630,46 +696,92 @@ private fun AccountButton(
     }
 }
 
-/** Accent headings with Sky Flare indicator. */
+/** Section heading styled cleanly for Liquid Aurora or Cyberpunk HUD. */
 @Composable
 private fun SectionLabel(value: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(start = 20.dp, top = 26.dp, bottom = 8.dp),
-    ) {
-        Box(
+    val isCyberpunk = LocalCyberpunkTheme.current
+    if (isCyberpunk) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .size(width = 3.dp, height = 12.dp)
-                .clip(RoundedCornerShape(2.dp))
-                .background(CanopyColors.SecondaryAccent),
-        )
-        Spacer(Modifier.width(8.dp))
-        Text(
-            value,
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            color = CanopyColors.Text,
-        )
+                .padding(start = 16.dp, top = 24.dp, bottom = 8.dp)
+                .clip(VeyraCyber.shape)
+                .background(VeyraCyber.acidYellow)
+                .border(1.5.dp, VeyraCyber.ink, VeyraCyber.shape)
+                .padding(horizontal = 10.dp, vertical = 4.dp),
+        ) {
+            Text(
+                text = "// ${value.uppercase()}",
+                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Black),
+                color = VeyraCyber.ink,
+            )
+        }
+    } else {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .padding(start = 18.dp, top = 24.dp, bottom = 8.dp)
+                .clip(CircleShape)
+                .background(Color.White.copy(alpha = 0.08f))
+                .border(1.dp, Color.White.copy(alpha = 0.24f), CircleShape)
+                .padding(horizontal = 12.dp, vertical = 5.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(7.dp)
+                    .clip(CircleShape)
+                    .background(Brush.radialGradient(listOf(Color(0xFF38BDF8), Color(0xFF8B5CF6)))),
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                value,
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                color = Color.White,
+            )
+        }
     }
 }
 
-private val SettingsPanelShape = RoundedCornerShape(18.dp)
+private val SettingsPanelShape = RoundedCornerShape(26.dp)
 
 @Composable
 private fun SettingsPanel(content: @Composable ColumnScope.() -> Unit) {
     val isGlass = LocalGlass.current.enabled
+    val isCyberpunk = LocalCyberpunkTheme.current
+    val panelShape = if (isCyberpunk) VeyraCyber.shape else SettingsPanelShape
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 14.dp)
-            .shadow(elevation = if (isGlass) 4.dp else 10.dp, shape = SettingsPanelShape, spotColor = Color(0x66000000), ambientColor = Color(0x33000000))
             .then(
-                if (isGlass) {
-                    Modifier.glassPane(SettingsPanelShape, GlassTone.PANEL)
+                if (isCyberpunk) {
+                    Modifier
+                        .clip(panelShape)
+                        .background(VeyraCyber.surface)
+                        .border(VeyraCyber.borderWidth, VeyraCyber.cyan, panelShape)
+                } else if (isGlass) {
+                    Modifier.glassPane(panelShape, GlassTone.PANEL)
                 } else {
                     Modifier
-                        .clip(SettingsPanelShape)
-                        .background(Brush.verticalGradient(listOf(Color(0xFF141C2C), Color(0xFF0F1522))))
-                        .border(1.dp, Brush.verticalGradient(listOf(Color(0x24FFFFFF), Color(0x0AFFFFFF))), SettingsPanelShape)
+                        .clip(panelShape)
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(
+                                    Color.White.copy(alpha = 0.14f),
+                                    Color.White.copy(alpha = 0.05f),
+                                ),
+                            ),
+                        )
+                        .border(
+                            1.1.dp,
+                            Brush.verticalGradient(
+                                listOf(
+                                    Color.White.copy(alpha = 0.40f),
+                                    Color.White.copy(alpha = 0.08f),
+                                ),
+                            ),
+                            panelShape,
+                        )
                 }
             ),
     ) {
@@ -704,28 +816,36 @@ fun NeumorphicSwitch(
     onCheckedChange: ((Boolean) -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
+    val reduceMotion = LocalReducedMotion.current
     val thumbOffset by animateFloatAsState(
         targetValue = if (checked) 22f else 0f,
-        animationSpec = spring(dampingRatio = 0.75f, stiffness = 420f),
+        animationSpec = if (reduceMotion) snap() else spring(dampingRatio = 0.75f, stiffness = 420f),
         label = "switchThumb",
     )
     val density = LocalDensity.current
 
+    val isCyberpunk = LocalCyberpunkTheme.current
+    val switchShape = if (isCyberpunk) VeyraCyber.shape else CircleShape
     Box(
         modifier = modifier
             .width(50.dp)
             .height(28.dp)
-            .clip(CircleShape)
-            .background(Color(0xFF080C14))
+            .clip(switchShape)
+            .background(
+                if (isCyberpunk) {
+                    if (checked) VeyraCyber.surfaceAlt else VeyraCyber.ink
+                } else {
+                    if (checked) Color(0xAA7C3AED) else Color.White.copy(alpha = 0.12f)
+                }
+            )
             .border(
-                1.dp,
-                Brush.verticalGradient(
-                    listOf(
-                        Color(0x18000000),
-                        if (checked) CanopyColors.SecondaryAccent.copy(alpha = 0.35f) else Color(0x18FFFFFF),
-                    )
-                ),
-                CircleShape,
+                if (isCyberpunk) VeyraCyber.borderWidth else 1.dp,
+                if (isCyberpunk) {
+                    if (checked) VeyraCyber.cyan else VeyraCyber.textMuted.copy(alpha = 0.55f)
+                } else {
+                    if (checked) Color(0x8838BDF8) else Color(0x38FFFFFF)
+                },
+                switchShape,
             )
             .then(
                 if (onCheckedChange != null) {
@@ -742,28 +862,32 @@ fun NeumorphicSwitch(
             modifier = Modifier
                 .offset { IntOffset(with(density) { thumbOffset.dp.roundToPx() }, 0) }
                 .size(24.dp)
-                .shadow(elevation = if (checked) 4.dp else 2.dp, shape = CircleShape, spotColor = if (checked) CanopyColors.SecondaryAccent else Color.Black)
-                .clip(CircleShape)
+                .shadow(elevation = if (isCyberpunk) 0.dp else 4.dp, shape = switchShape, spotColor = Color.Black)
+                .clip(switchShape)
                 .background(
-                    if (checked) {
-                        Brush.verticalGradient(listOf(Color(0xFF2E84FE), Color(0xFF104EB6)))
+                    if (isCyberpunk) {
+                        if (checked) Brush.verticalGradient(listOf(VeyraCyber.acidYellow, VeyraCyber.acidYellow))
+                        else Brush.verticalGradient(listOf(VeyraCyber.surface, VeyraCyber.surface))
+                    } else if (checked) {
+                        Brush.verticalGradient(listOf(Color.White, Color(0xFFE0F2FE)))
                     } else {
-                        Brush.verticalGradient(listOf(Color(0xFF263347), Color(0xFF131B2B)))
+                        Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.85f), Color.White.copy(alpha = 0.65f)))
                     }
                 )
                 .border(
-                    1.dp,
-                    if (checked) Color(0x66FFFFFF) else Color(0x24FFFFFF),
-                    CircleShape,
+                    if (isCyberpunk) 1.5.dp else 1.dp,
+                    if (isCyberpunk) VeyraCyber.ink else Color.White.copy(alpha = 0.55f),
+                    switchShape,
                 ),
             contentAlignment = Alignment.Center,
         ) {
             Box(
                 modifier = Modifier
                     .size(5.dp)
-                    .clip(CircleShape)
+                    .clip(switchShape)
                     .background(
-                        if (checked) Color(0xFF38BDF8) else Color(0x4094A3B8)
+                        if (isCyberpunk) VeyraCyber.ink
+                        else if (checked) Color(0xFF7C3AED) else Color(0x6664748B)
                     )
             )
         }
@@ -874,51 +998,66 @@ private fun <T> SegmentedControl(
     modifier: Modifier = Modifier,
 ) {
     val haptic = LocalHapticFeedback.current
+    val isCyberpunk = LocalCyberpunkTheme.current
+    val pillShape = if (isCyberpunk) VeyraCyber.shape else CircleShape
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(CircleShape)
-            .background(Color(0xFF080C14))
-            .border(1.dp, Color(0x1AFFFFFF), CircleShape)
+            .clip(pillShape)
+            .background(if (isCyberpunk) VeyraCyber.ink else Color.White.copy(alpha = 0.07f))
+            .border(
+                if (isCyberpunk) VeyraCyber.borderWidth else 1.dp,
+                if (isCyberpunk) VeyraCyber.cyan.copy(alpha = 0.72f) else Color.White.copy(alpha = 0.18f),
+                pillShape,
+            )
             .padding(4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         items.forEach { item ->
             val isSelected = item == selectedItem
             val animatedScale by animateFloatAsState(
-                targetValue = if (isSelected) 1.02f else 1f,
+                targetValue = if (isSelected && !isCyberpunk) 1.02f else 1f,
                 animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
                 label = "SegmentedScale",
             )
             val animatedElevation by animateFloatAsState(
-                targetValue = if (isSelected) 4f else 0f,
+                targetValue = if (isSelected && !isCyberpunk) 6f else 0f,
                 animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
                 label = "SegmentedElevation",
             )
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .height(38.dp)
+                    .height(40.dp)
                     .shadow(
                         elevation = animatedElevation.dp,
-                        shape = CircleShape,
-                        spotColor = Color(0xFF1E6CEB).copy(alpha = 0.55f),
+                        shape = pillShape,
+                        spotColor = Color(0xFF8B5CF6).copy(alpha = 0.55f),
                     )
-                    .clip(CircleShape)
+                    .clip(pillShape)
                     .graphicsLayer {
                         scaleX = animatedScale
                         scaleY = animatedScale
                     }
                     .background(
                         if (isSelected) {
-                            Brush.verticalGradient(listOf(Color(0xFF2E84FE), Color(0xFF104EB6)))
+                            if (isCyberpunk) {
+                                Brush.verticalGradient(listOf(VeyraCyber.acidYellow, VeyraCyber.acidYellow))
+                            } else {
+                                Brush.horizontalGradient(
+                                    listOf(
+                                        Color(0xFF7C3AED).copy(alpha = 0.90f),
+                                        Color(0xFF2563EB).copy(alpha = 0.90f),
+                                    ),
+                                )
+                            }
                         } else {
                             Brush.verticalGradient(listOf(Color.Transparent, Color.Transparent))
                         }
                     )
                     .then(
-                        if (isSelected) {
-                            Modifier.border(1.dp, Color(0x66FFFFFF), CircleShape)
+                        if (isSelected && !isCyberpunk) {
+                            Modifier.border(1.dp, Color.White.copy(alpha = 0.38f), pillShape)
                         } else Modifier
                     )
                     .clickable {
@@ -933,7 +1072,9 @@ private fun <T> SegmentedControl(
                     text = label(item),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                    color = if (isSelected) Color.White else CanopyColors.Muted,
+                    color = if (isSelected) {
+                        if (isCyberpunk) VeyraCyber.ink else Color.White
+                    } else CanopyColors.Muted,
                 )
             }
         }
@@ -1052,27 +1193,74 @@ private fun PlayerModeRow(value: MobilePlayerMode, onChange: (MobilePlayerMode) 
             label = { it.label(context) },
         )
         Spacer(Modifier.height(10.dp))
-        Row(
+        // Live mini-preview card showing the active visual language
+        val previewCyber = value == MobilePlayerMode.OBSIDIAN
+        val previewShape = if (previewCyber) VeyraCyber.shape else VeyraRadius.mdShape
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(10.dp))
-                .background(Color(0xFF0F172A).copy(alpha = 0.65f))
-                .border(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(10.dp))
-                .padding(horizontal = 12.dp, vertical = 9.dp),
-            verticalAlignment = Alignment.CenterVertically,
+                .clip(previewShape)
+                .background(
+                    if (previewCyber) {
+                        Brush.horizontalGradient(listOf(VeyraCyber.canvas, VeyraCyber.surface))
+                    } else {
+                        Brush.horizontalGradient(
+                            listOf(
+                                Color(0xFF7C3AED).copy(alpha = 0.28f),
+                                Color.White.copy(alpha = 0.08f),
+                                Color(0xFF38BDF8).copy(alpha = 0.22f),
+                            ),
+                        )
+                    },
+                )
+                .border(
+                    if (previewCyber) VeyraCyber.borderWidth else 1.dp,
+                    if (previewCyber) VeyraCyber.cyan else Color.White.copy(alpha = 0.24f),
+                    previewShape,
+                )
+                .padding(horizontal = 12.dp, vertical = 10.dp),
         ) {
-            Icon(
-                imageVector = if (value == MobilePlayerMode.GROVE) Icons.Rounded.MusicNote else Icons.Rounded.GraphicEq,
-                contentDescription = null,
-                tint = if (value == MobilePlayerMode.GROVE) Color(0xFF38BDF8) else Color(0xFF67E8F9),
-                modifier = Modifier.size(16.dp),
-            )
-            Spacer(Modifier.width(8.dp))
-            Text(
-                text = value.description(context),
-                style = MaterialTheme.typography.bodySmall,
-                color = CanopyColors.Muted,
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clip(if (previewCyber) VeyraCyber.shape else RoundedCornerShape(8.dp))
+                            .background(if (previewCyber) VeyraCyber.surfaceAlt else Color(0xFF8B5CF6).copy(alpha = 0.35f))
+                            .border(
+                                if (previewCyber) 1.5.dp else 1.dp,
+                                if (previewCyber) VeyraCyber.cyan else Color(0xFF38BDF8).copy(alpha = 0.6f),
+                                if (previewCyber) VeyraCyber.shape else RoundedCornerShape(8.dp),
+                            ),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = if (previewCyber) Icons.Rounded.GraphicEq else Icons.Rounded.MusicNote,
+                            contentDescription = null,
+                            tint = if (previewCyber) VeyraCyber.cyan else Color(0xFF38BDF8),
+                            modifier = Modifier.size(16.dp),
+                        )
+                    }
+                    Spacer(Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = value.label(context),
+                            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                            color = if (previewCyber) VeyraCyber.cyan else CanopyColors.Text,
+                        )
+                        Text(
+                            text = value.description(context),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = CanopyColors.Muted,
+                            maxLines = 2,
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -1088,3 +1276,118 @@ private fun MobilePlayerMode.description(context: Context): String =
         MobilePlayerMode.GROVE -> context.getString(R.string.settings_player_mode_grove_desc)
         MobilePlayerMode.OBSIDIAN -> context.getString(R.string.settings_player_mode_obsidian_desc)
     }
+
+@Composable
+private fun SourcesHealthRow(
+    ytSignedIn: Boolean,
+    qobuzConnected: Boolean,
+    spotifyConnected: Boolean,
+    supabaseSync: Boolean,
+) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp)) {
+        Text(
+            text = "Salud de Fuentes",
+            style = MaterialTheme.typography.bodyLarge,
+            color = CanopyColors.Text,
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = "Estado de sesión y sincronización en tiempo real",
+            style = MaterialTheme.typography.bodyMedium,
+            color = CanopyColors.Muted,
+        )
+        Spacer(Modifier.height(10.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            dev.sfg.veyra.mobile.ui.components.StatusPillBadge(
+                label = "YT",
+                status = if (ytSignedIn) dev.sfg.veyra.mobile.ui.components.StatusPillTone.ACTIVE else dev.sfg.veyra.mobile.ui.components.StatusPillTone.MUTED,
+                size = dev.sfg.veyra.mobile.ui.components.StatusPillSize.SM,
+            )
+            dev.sfg.veyra.mobile.ui.components.StatusPillBadge(
+                label = "QOBUZ",
+                status = if (qobuzConnected) dev.sfg.veyra.mobile.ui.components.StatusPillTone.ACTIVE else dev.sfg.veyra.mobile.ui.components.StatusPillTone.MUTED,
+                size = dev.sfg.veyra.mobile.ui.components.StatusPillSize.SM,
+            )
+            dev.sfg.veyra.mobile.ui.components.StatusPillBadge(
+                label = "CANVAS",
+                status = if (spotifyConnected) dev.sfg.veyra.mobile.ui.components.StatusPillTone.SYNC else dev.sfg.veyra.mobile.ui.components.StatusPillTone.MUTED,
+                size = dev.sfg.veyra.mobile.ui.components.StatusPillSize.SM,
+            )
+            dev.sfg.veyra.mobile.ui.components.StatusPillBadge(
+                label = "CLOUD",
+                status = if (supabaseSync) dev.sfg.veyra.mobile.ui.components.StatusPillTone.PRIMARY else dev.sfg.veyra.mobile.ui.components.StatusPillTone.MUTED,
+                size = dev.sfg.veyra.mobile.ui.components.StatusPillSize.SM,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SettingsBackupRow(
+    settings: OrchardSettings,
+    onImport: (OrchardSettings) -> Unit,
+) {
+    val context = LocalContext.current
+    val exportLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri ->
+        if (uri != null) {
+            val ok = dev.sfg.veyra.mobile.settings.SettingsBackupHelper.exportToUri(context, uri, settings)
+            android.widget.Toast.makeText(
+                context,
+                if (ok) "Respaldo exportado con éxito" else "No se pudo exportar el respaldo",
+                android.widget.Toast.LENGTH_SHORT,
+            ).show()
+        }
+    }
+    val importLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        if (uri != null) {
+            val restored = dev.sfg.veyra.mobile.settings.SettingsBackupHelper.importFromUri(context, uri, settings)
+            if (restored != null) {
+                onImport(restored)
+                android.widget.Toast.makeText(context, "Configuración restaurada", android.widget.Toast.LENGTH_SHORT).show()
+            } else {
+                android.widget.Toast.makeText(context, "Archivo de respaldo inválido", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp)) {
+        Text(
+            text = "Respaldo de Configuración y EQ",
+            style = MaterialTheme.typography.bodyLarge,
+            color = CanopyColors.Text,
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = "Exporta o restaura tus temas, Aura Sync y presets de ecualizador",
+            style = MaterialTheme.typography.bodyMedium,
+            color = CanopyColors.Muted,
+        )
+        Spacer(Modifier.height(12.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            dev.sfg.veyra.mobile.ui.components.VeyraButton(
+                label = "Exportar JSON",
+                onClick = { exportLauncher.launch("veyra-settings-backup.json") },
+                variant = dev.sfg.veyra.mobile.ui.components.VeyraButtonVariant.SECONDARY,
+                size = dev.sfg.veyra.mobile.ui.components.VeyraButtonSize.SMALL,
+                modifier = Modifier.weight(1f),
+            )
+            dev.sfg.veyra.mobile.ui.components.VeyraButton(
+                label = "Importar JSON",
+                onClick = { importLauncher.launch(arrayOf("application/json", "*/*")) },
+                variant = dev.sfg.veyra.mobile.ui.components.VeyraButtonVariant.PRIMARY,
+                size = dev.sfg.veyra.mobile.ui.components.VeyraButtonSize.SMALL,
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}

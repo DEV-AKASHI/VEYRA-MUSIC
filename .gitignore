@@ -38,6 +38,7 @@ native-audio-rust/vendor/earmark/target/
 mobile/android/keystore/
 releases/desktop/binaries/*.tar.gz
 releases/desktop/binaries/*.zip
+releases/desktop/binaries/*.exe
 releases/desktop/binaries/veyra-*
 
 

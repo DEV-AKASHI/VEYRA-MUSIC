@@ -233,32 +233,65 @@ class VeyraViewModel(application: Application) : AndroidViewModel(application) {
     fun removeDownload(videoId: String) = graph.downloads.removeDownload(videoId)
     fun removeDownloads(tracks: List<Track>) = graph.downloads.removeDownloads(tracks.map { it.id })
 
-    fun createPlaylist(title: String, track: Track, onCreated: (String) -> Unit = {}) = viewModelScope.launch {
-        runCatching {
-            withContext(Dispatchers.IO) {
-                val playbackTrack = graph.audioVersions.audioVersion(track)
-                graph.playlistActions.create(title, playbackTrack.id)
-            }
+    fun createPlaylist(title: String, track: Track? = null, onCreated: (String) -> Unit = {}) {
+        val cleanTitle = title.trim()
+        if (cleanTitle.isEmpty()) return
+        if (graph.auth.state.value !is AuthState.SignedIn) {
+            graph.postWarning(getApplication<Application>().getString(R.string.msg_sign_in_playlists))
+            return
         }
-            .onSuccess(onCreated)
-            .onFailure { graph.postWarning(it.message ?: getApplication<Application>().getString(R.string.msg_could_not_create_playlist)) }
+        viewModelScope.launch {
+            runCatching {
+                withContext(Dispatchers.IO) {
+                    val resolvedTrack = track?.let { graph.audioVersions.audioVersion(it) }
+                    val createdId = graph.playlistActions.create(cleanTitle, resolvedTrack?.id)
+                    val initialTracks = listOfNotNull(resolvedTrack)
+                    graph.library.addCreatedPlaylist(
+                        Playlist(
+                            id = createdId,
+                            title = cleanTitle,
+                            author = getApplication<Application>().getString(R.string.hero_type_playlist),
+                            artworkUrl = resolvedTrack?.artworkUrl.orEmpty(),
+                            tracks = initialTracks,
+                        ),
+                    )
+                    // Refresca la biblioteca remota en segundo plano sin bloquear la respuesta.
+                    runCatching { graph.library.refreshSignedInLibrary() }
+                    createdId
+                }
+            }
+                .onSuccess { createdId ->
+                    graph.postWarning(getApplication<Application>().getString(R.string.msg_playlist_created, cleanTitle))
+                    onCreated(createdId)
+                }
+                .onFailure {
+                    graph.postWarning(it.message ?: getApplication<Application>().getString(R.string.msg_could_not_create_playlist))
+                }
+        }
     }
-    fun addTrackToPlaylist(playlistId: String, track: Track) = viewModelScope.launch {
-        val likedMusic = PlaylistActions.isLikedMusicPlaylist(playlistId)
-        runCatching {
-            withContext(Dispatchers.IO) {
-                // Album and playlist rows can point at an official video even though playback
-                // replaces it with the matching album-audio id. Persist that same version so
-                // adding a row and playing it cannot select two different recordings.
-                val playbackTrack = graph.audioVersions.audioVersion(track)
-                graph.playlistActions.add(playlistId, playbackTrack.id)
-                graph.catalog.browse(if (likedMusic) PlaylistActions.LIKED_MUSIC_BROWSE_ID else playlistId)
-            }
-        }.onSuccess {
-            if (likedMusic) graph.library.setLiked(track, true)
-            applyRefreshedPlaylist(it)
+
+    fun addTrackToPlaylist(playlistId: String, track: Track) {
+        if (graph.auth.state.value !is AuthState.SignedIn) {
+            graph.postWarning(getApplication<Application>().getString(R.string.msg_sign_in_playlists))
+            return
         }
-            .onFailure { graph.postWarning(it.message ?: getApplication<Application>().getString(R.string.msg_could_not_add_to_playlist)) }
+        viewModelScope.launch {
+            val likedMusic = PlaylistActions.isLikedMusicPlaylist(playlistId)
+            runCatching {
+                withContext(Dispatchers.IO) {
+                    // Album and playlist rows can point at an official video even though playback
+                    // replaces it with the matching album-audio id. Persist that same version so
+                    // adding a row and playing it cannot select two different recordings.
+                    val playbackTrack = graph.audioVersions.audioVersion(track)
+                    graph.playlistActions.add(playlistId, playbackTrack.id)
+                    graph.catalog.browse(if (likedMusic) PlaylistActions.LIKED_MUSIC_BROWSE_ID else playlistId)
+                }
+            }.onSuccess {
+                if (likedMusic) graph.library.setLiked(track, true)
+                applyRefreshedPlaylist(it)
+            }
+                .onFailure { graph.postWarning(it.message ?: getApplication<Application>().getString(R.string.msg_could_not_add_to_playlist)) }
+        }
     }
     fun removeTrackFromPlaylist(playlistId: String, track: Track) = viewModelScope.launch {
         val likedMusic = PlaylistActions.isLikedMusicPlaylist(playlistId)
@@ -396,6 +429,9 @@ class VeyraViewModel(application: Application) : AndroidViewModel(application) {
         observeAutoplay()
         observeAutoDownloadOnPlay()
         observeConnectDeviceSync()
+        viewModelScope.launch(Dispatchers.IO) {
+            SupabaseSyncService(application).keepAlivePing()
+        }
     }
 
     private fun observeNetworkState() {
@@ -568,10 +604,13 @@ class VeyraViewModel(application: Application) : AndroidViewModel(application) {
             ?: getApplication<Application>().getString(R.string.playerx_your_queue)
 
         viewModelScope.launch {
-            val start = if (graph.downloads.isDownloaded(tracks[safeIndex].id)) {
-                tracks[safeIndex]
+            val rawStart = tracks[safeIndex]
+            val start = if (graph.downloads.isDownloaded(rawStart.id)) {
+                rawStart
             } else {
-                graph.audioVersions.audioVersion(tracks[safeIndex])
+                kotlinx.coroutines.withTimeoutOrNull(350L) {
+                    graph.audioVersions.audioVersion(rawStart)
+                } ?: rawStart
             }
             Log.d(TAG, "playAll: starting playback with track ${start.id} ('${start.title}')")
             val requested = tracks.toMutableList().apply { this[safeIndex] = start }

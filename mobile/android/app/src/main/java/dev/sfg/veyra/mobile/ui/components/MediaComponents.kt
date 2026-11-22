@@ -89,6 +89,9 @@ import dev.sfg.veyra.mobile.ui.glass.glassFill
 import dev.sfg.veyra.mobile.ui.glass.glassPane
 import dev.sfg.veyra.mobile.ui.theme.CanopyColors
 import dev.sfg.veyra.mobile.ui.theme.LocalAccent
+import dev.sfg.veyra.mobile.ui.theme.VeyraCyber
+import dev.sfg.veyra.mobile.ui.theme.VeyraRadius
+import dev.sfg.veyra.mobile.ui.theme.VeyraSemantic
 import dev.sfg.veyra.mobile.ui.tv.tvFocusable
 
 @Composable
@@ -103,40 +106,74 @@ fun OrchardSectionHeader(
     action: String? = null,
     onAction: (() -> Unit)? = null,
 ) {
-    Row(
+    val isCyberpunk = LocalCyberpunkTheme.current
+    Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
+            .padding(horizontal = 16.dp, vertical = 10.dp),
     ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleLarge.copy(
-                fontWeight = FontWeight.Bold,
-                letterSpacing = (-0.3).sp,
-            ),
-            color = CanopyColors.Text,
-        )
-        if (action != null && onAction != null) {
-            val haptics = LocalHapticFeedback.current
-            Surface(
-                onClick = {
-                    haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onAction()
-                },
-                color = glassFill(CanopyColors.Surface),
-                shape = CircleShape,
-                modifier = Modifier.height(32.dp).glassPane(CircleShape, GlassTone.CONTROL),
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f, fill = false),
             ) {
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 12.dp)) {
-                    Text(
-                        text = action,
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                        color = LocalAccent.current,
+                if (isCyberpunk) {
+                    Box(
+                        modifier = Modifier
+                            .width(4.dp)
+                            .height(18.dp)
+                            .background(VeyraCyber.cyan, VeyraCyber.shape),
                     )
+                    Spacer(Modifier.width(10.dp))
+                }
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = if (isCyberpunk) 0.4.sp else (-0.3).sp,
+                    ),
+                    color = CanopyColors.Text,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            if (action != null && onAction != null) {
+                val haptics = LocalHapticFeedback.current
+                val actionShape = if (isCyberpunk) VeyraCyber.shape else CircleShape
+                Surface(
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onAction()
+                    },
+                    color = if (isCyberpunk) VeyraCyber.surface else glassFill(CanopyColors.Surface),
+                    shape = actionShape,
+                    border = if (isCyberpunk) BorderStroke(VeyraCyber.borderWidth, VeyraCyber.cyan) else null,
+                    modifier = Modifier
+                        .height(34.dp)
+                        .then(if (isCyberpunk) Modifier else Modifier.glassPane(actionShape, GlassTone.CONTROL)),
+                ) {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 12.dp)) {
+                        Text(
+                            text = action,
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                            color = if (isCyberpunk) VeyraCyber.cyan else LocalAccent.current,
+                        )
+                    }
                 }
             }
+        }
+        if (isCyberpunk) {
+            Spacer(Modifier.height(6.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.5.dp)
+                    .background(VeyraCyber.cyan.copy(alpha = 0.30f)),
+            )
         }
     }
 }
@@ -148,9 +185,10 @@ fun CatalogCard(item: CatalogItem, onClick: () -> Unit, modifier: Modifier = Mod
         CategoryCard(item = item, onClick = onClick, modifier = modifier)
         return
     }
+    val isCyberpunk = LocalCyberpunkTheme.current
     val isArtist = item is CatalogItem.Performer
-    val cornerRadius = if (isArtist) 999.dp else 14.dp
-    val artworkRadius = if (isArtist) 999 else 14
+    val cornerRadius = if (isArtist) 999.dp else if (isCyberpunk) 6.dp else 16.dp
+    val artworkRadius = if (isArtist) 999 else if (isCyberpunk) 6 else 16
     val haptics = LocalHapticFeedback.current
     val shape = RoundedCornerShape(cornerRadius)
     Column(
@@ -166,16 +204,51 @@ fun CatalogCard(item: CatalogItem, onClick: () -> Unit, modifier: Modifier = Mod
             Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f)
-                .shadow(
-                    elevation = if (isArtist) 6.dp else 5.dp,
-                    shape = RoundedCornerShape(cornerRadius),
-                    spotColor = Color.Black.copy(alpha = 0.60f),
+                .then(
+                    if (isCyberpunk) Modifier
+                    else Modifier.shadow(
+                        elevation = if (isArtist) 8.dp else 6.dp,
+                        shape = shape,
+                        spotColor = Color.Black.copy(alpha = 0.60f),
+                    )
                 )
-                .clip(RoundedCornerShape(cornerRadius))
-                .background(Color(0xFF131B2C))
-                .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)), RoundedCornerShape(cornerRadius))
+                .clip(shape)
+                .background(if (isCyberpunk) VeyraCyber.surface else Color.White.copy(alpha = 0.08f))
+                .border(
+                    if (isCyberpunk) BorderStroke(VeyraCyber.borderWidth, VeyraCyber.cyan.copy(alpha = 0.72f))
+                    else BorderStroke(
+                        1.dp,
+                        Brush.verticalGradient(
+                            listOf(Color.White.copy(alpha = 0.28f), Color.White.copy(alpha = 0.06f)),
+                        ),
+                    ),
+                    shape,
+                )
         ) {
             ArtworkTile(item.artworkUrl, item.title, Modifier.fillMaxSize(), artworkRadius)
+            if (isCyberpunk && !isArtist) {
+                val tag = when (item) {
+                    is CatalogItem.Record -> "ÁLBUM"
+                    is CatalogItem.Collection -> "LISTA"
+                    is CatalogItem.Song -> "PISTA"
+                    else -> "MIX"
+                }
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(6.dp)
+                        .clip(VeyraCyber.shape)
+                        .background(VeyraCyber.acidYellow)
+                        .padding(horizontal = 5.dp, vertical = 2.dp),
+                ) {
+                    Text(
+                        text = tag,
+                        color = VeyraCyber.ink,
+                        fontSize = 8.5.sp,
+                        fontWeight = FontWeight.Black,
+                    )
+                }
+            }
         }
         Spacer(Modifier.height(8.dp))
         Row(
@@ -215,8 +288,9 @@ fun CategoryCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val shape = RoundedCornerShape(12.dp)
-    val stripeColor = item.stripeColor?.let { Color(it.toInt()) } ?: LocalAccent.current
+    val isCyberpunk = LocalCyberpunkTheme.current
+    val shape = if (isCyberpunk) VeyraCyber.shape else VeyraRadius.mdShape
+    val stripeColor = item.stripeColor?.let { Color(it.toInt()) } ?: if (isCyberpunk) VeyraCyber.cyan else LocalAccent.current
     val haptics = LocalHapticFeedback.current
 
     Surface(
@@ -226,8 +300,9 @@ fun CategoryCard(
                 haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 onClick()
             })
-            .glassPane(shape, GlassTone.CONTROL),
-        color = glassFill(CanopyColors.Surface),
+            .then(if (isCyberpunk) Modifier else Modifier.glassPane(shape, GlassTone.CONTROL)),
+        color = if (isCyberpunk) VeyraCyber.surface else glassFill(VeyraSemantic.surface),
+        border = if (isCyberpunk) BorderStroke(VeyraCyber.borderWidth, VeyraCyber.cyan.copy(alpha = 0.55f)) else null,
         shape = shape,
     ) {
         Row(
@@ -258,7 +333,8 @@ fun CategoryCard(
 /** Expressive top pick hero card with rich gradient scrim and pill badge. */
 @Composable
 fun TopPickCard(item: CatalogItem, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val shape = RoundedCornerShape(18.dp)
+    val isCyberpunk = LocalCyberpunkTheme.current
+    val shape = if (isCyberpunk) VeyraCyber.shape else VeyraRadius.lgShape
     val haptics = LocalHapticFeedback.current
     Box(
         modifier
@@ -269,7 +345,13 @@ fun TopPickCard(item: CatalogItem, onClick: () -> Unit, modifier: Modifier = Mod
                 onClick()
             })
             .clip(shape)
-            .border(BorderStroke(1.dp, CanopyColors.Rule), shape),
+            .border(
+                BorderStroke(
+                    if (isCyberpunk) VeyraCyber.borderWidth else 1.dp,
+                    if (isCyberpunk) VeyraCyber.cyan.copy(alpha = 0.72f) else CanopyColors.Rule,
+                ),
+                shape,
+            ),
     ) {
         ArtworkTile(item.artworkUrl, item.title, Modifier.fillMaxSize(), 0)
         Box(
@@ -445,12 +527,18 @@ fun TrackRow(
         )
     }
 
-    val rowShape = RoundedCornerShape(if (compact) 8.dp else 10.dp)
+    val isCyberpunk = LocalCyberpunkTheme.current
+    val rowShape = if (isCyberpunk) VeyraCyber.shape else RoundedCornerShape(if (compact) 8.dp else 10.dp)
     Column(modifier = modifier.fillMaxWidth()) {
         Surface(
-            color = bgColor,
+            color = if (isCyberpunk && highlighted) VeyraCyber.surfaceAlt else bgColor,
             shape = rowShape,
-            border = if (highlighted) BorderStroke(1.dp, Color(0xFF38BDF8).copy(alpha = 0.35f)) else null,
+            border = if (highlighted) {
+                BorderStroke(
+                    if (isCyberpunk) VeyraCyber.borderWidth else 1.dp,
+                    if (isCyberpunk) VeyraCyber.cyan else Color(0xFF38BDF8).copy(alpha = 0.35f),
+                )
+            } else null,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp, vertical = 1.dp)
@@ -512,7 +600,9 @@ fun TrackRow(
                     ) {
                         Text(
                             track.title,
-                            color = if (highlighted) LocalAccent.current else Color.White,
+                            color = if (highlighted) {
+                                if (isCyberpunk) VeyraCyber.acidYellow else Color(0xFF38BDF8)
+                            } else Color.White,
                             style = titleStyle,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -555,12 +645,36 @@ fun TrackRow(
                     )
                 }
                 if (trailingText.isNotBlank()) {
-                    Text(
-                        trailingText,
-                        color = Color.White.copy(alpha = 0.45f),
-                        style = subtitleStyle,
-                        modifier = Modifier.padding(horizontal = 6.dp)
-                    )
+                    val chipShape = if (isCyberpunk) VeyraCyber.shape else CircleShape
+                    Box(
+                        modifier = Modifier
+                            .padding(horizontal = 6.dp)
+                            .clip(chipShape)
+                            .background(
+                                if (isCyberpunk) VeyraCyber.surfaceAlt
+                                else Color.White.copy(alpha = if (highlighted) 0.14f else 0.06f),
+                            )
+                            .border(
+                                1.dp,
+                                if (isCyberpunk) {
+                                    if (highlighted) VeyraCyber.acidYellow else VeyraCyber.cyan.copy(alpha = 0.45f)
+                                } else {
+                                    Color.White.copy(alpha = 0.12f)
+                                },
+                                chipShape,
+                            )
+                            .padding(horizontal = 7.dp, vertical = 2.dp),
+                    ) {
+                        Text(
+                            trailingText,
+                            color = if (isCyberpunk) {
+                                if (highlighted) VeyraCyber.acidYellow else VeyraCyber.text
+                            } else {
+                                Color.White.copy(alpha = 0.72f)
+                            },
+                            style = subtitleStyle.copy(fontWeight = FontWeight.SemiBold),
+                        )
+                    }
                 }
                 IconButton(onClick = { popupOpen = true }, modifier = Modifier.size(36.dp)) {
                     Icon(

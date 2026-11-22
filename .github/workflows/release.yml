@@ -245,10 +245,10 @@ jobs:
           bun install --cwd veyra-packages --frozen-lockfile --ignore-scripts
           bun run --cwd veyra-packages build:release linux-arm64
           manager_version="${{ needs.prepare.outputs.manager_version }}"
-          bundle="veyra-packages/dist/releases/orchard-packages-$manager_version-linux-arm64"
+          bundle="veyra-packages/dist/releases/veyra-packages-$manager_version-linux-arm64"
           mkdir -p release-assets
           ZSTD_CLEVEL=6 tar --zstd -cf \
-            "release-assets/orchard-packages-$manager_version-linux-arm64.tar.zst" \
+            "release-assets/veyra-packages-$manager_version-linux-arm64.tar.zst" \
             -C "$bundle" .
           bun run --cwd veyra-packages package:linux linux-arm64
           cp artifacts/linux/linux-arm64/*.deb artifacts/linux/linux-arm64/*.rpm release-assets/
@@ -325,9 +325,9 @@ jobs:
           bun run --cwd veyra-packages build:release win32-${{ matrix.arch }}
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $managerVersion = '${{ needs.prepare.outputs.manager_version }}'
-          $bundle = "veyra-packages/dist/releases/orchard-packages-$managerVersion-win32-${{ matrix.arch }}"
+          $bundle = "veyra-packages/dist/releases/veyra-packages-$managerVersion-win32-${{ matrix.arch }}"
           New-Item -ItemType Directory -Force release-assets | Out-Null
-          Compress-Archive -Path "$bundle/*" -DestinationPath "release-assets/orchard-packages-$managerVersion-win32-${{ matrix.arch }}.zip"
+          Compress-Archive -Path "$bundle/*" -DestinationPath "release-assets/veyra-packages-$managerVersion-win32-${{ matrix.arch }}.zip"
           pwsh -NoProfile -ExecutionPolicy Bypass -File veyra-packages/scripts/build-windows-installer.ps1 -Architecture '${{ matrix.arch }}'
           $installers = @(Get-ChildItem "artifacts/windows/win32-${{ matrix.arch }}" -File -Filter '*.exe')
           if ($installers.Count -ne 1) { throw "Expected one Windows installer, found $($installers.Count)." }
@@ -407,10 +407,10 @@ jobs:
           bun install --cwd veyra-packages --frozen-lockfile --ignore-scripts
           bun run --cwd veyra-packages build:release darwin-${{ matrix.arch }}
           manager_version='${{ needs.prepare.outputs.manager_version }}'
-          bundle="veyra-packages/dist/releases/orchard-packages-$manager_version-darwin-${{ matrix.arch }}"
+          bundle="veyra-packages/dist/releases/veyra-packages-$manager_version-darwin-${{ matrix.arch }}"
           mkdir -p release-assets
           ditto -c -k "$bundle" \
-            "release-assets/orchard-packages-$manager_version-darwin-${{ matrix.arch }}.zip"
+            "release-assets/veyra-packages-$manager_version-darwin-${{ matrix.arch }}.zip"
 
       - name: Save macOS native inputs
         uses: actions/upload-artifact@v7
@@ -485,10 +485,10 @@ jobs:
         run: |
           set -euo pipefail
           manager_version="${{ needs.prepare.outputs.manager_version }}"
-          bundle="veyra-packages/dist/releases/orchard-packages-$manager_version-linux-x64"
+          bundle="veyra-packages/dist/releases/veyra-packages-$manager_version-linux-x64"
           mkdir -p release-assets
           ZSTD_CLEVEL=6 tar --zstd -cf \
-            "release-assets/orchard-packages-$manager_version-linux-x64.tar.zst" \
+            "release-assets/veyra-packages-$manager_version-linux-x64.tar.zst" \
             -C "$bundle" .
           cp artifacts/linux/linux-x64/*.deb artifacts/linux/linux-x64/*.rpm release-assets/
           cp artifacts/flatpak/*.flatpak release-assets/ 2>/dev/null || true
@@ -760,13 +760,13 @@ jobs:
           aws s3 cp release-assets/ "s3://$R2_BUCKET/" \
             --endpoint-url "$R2_ENDPOINT" \
             --exclude '*' \
-            --include 'orchard*.tar.zst' \
-            --include 'orchard*.zip' \
-            --include 'orchard*.deb' \
-            --include 'orchard*.rpm' \
-            --include 'orchard*.exe' \
-            --include 'Orchard*.exe' \
-            --include 'orchard*.flatpak' \
+            --include 'veyra*.tar.zst' \
+            --include 'veyra*.zip' \
+            --include 'veyra*.deb' \
+            --include 'veyra*.rpm' \
+            --include 'veyra*.exe' \
+            --include 'Veyra*.exe' \
+            --include 'veyra*.flatpak' \
             --recursive
 
           cp release-assets/manifest.json "$RUNNER_TEMP/new-manifest.json"
@@ -793,7 +793,7 @@ jobs:
         if: needs.prepare.outputs.is_beta != 'true' && needs.prepare.outputs.build_android == 'true'
         run: |
           set -euo pipefail
-          apk="$(find release-assets -maxdepth 1 -type f -name 'Orchard-*.apk' -print -quit)"
+          apk="$(find release-assets -maxdepth 1 -type f \( -name 'Veyra-*.apk' -o -name 'veyramusic*.apk' -o -name 'Orchard-*.apk' \) -print -quit)"
           test -n "$apk"
           test -f release-assets/latest-android.json
           aws s3 cp "$apk" "s3://$R2_BUCKET/orchard/$(basename "$apk")" --endpoint-url "$R2_ENDPOINT"
@@ -832,6 +832,7 @@ jobs:
         build-windows,
         build-macos,
         build-android,
+        build-r2,
       ]
     if: >-
       always()
@@ -862,22 +863,28 @@ jobs:
           set -euo pipefail
           cd release-assets
           version='${{ needs.prepare.outputs.version }}'
-          for f in *; do
-            if [[ -f "$f" ]]; then
-              if [[ "$f" =~ \.exe$ ]]; then
-                if [[ "$f" != "veyramusic.exe" && "$f" != "veyramusic-setup-${version}.exe" ]]; then
-                  cp "$f" "veyramusic.exe"
-                  cp "$f" "veyramusic-setup-${version}.exe"
-                fi
-              fi
-              if [[ "$f" =~ \.apk$ ]]; then
-                if [[ "$f" != "veyramusic.apk" && "$f" != "veyramusic-${version}.apk" ]]; then
-                  cp "$f" "veyramusic.apk"
-                  cp "$f" "veyramusic-${version}.apk"
-                fi
-              fi
+          if [[ -f "Veyra-Setup-${version}.exe" ]]; then
+            cp "Veyra-Setup-${version}.exe" "veyramusic.exe"
+            cp "Veyra-Setup-${version}.exe" "veyramusic-setup-${version}.exe"
+          elif [[ -f "Orchard-Setup-${version}.exe" ]]; then
+            cp "Orchard-Setup-${version}.exe" "veyramusic.exe"
+            cp "Orchard-Setup-${version}.exe" "veyramusic-setup-${version}.exe"
+          else
+            first_exe="$(find . -maxdepth 1 -name '*.exe' ! -name 'veyramusic*' | head -n 1 || true)"
+            if [[ -n "$first_exe" ]]; then
+              cp "$first_exe" "veyramusic.exe"
+              cp "$first_exe" "veyramusic-setup-${version}.exe"
             fi
-          done
+          fi
+
+          prod_apk="$(find . -maxdepth 1 -name 'Veyra-*.apk' ! -name '*unaligned*' ! -name '*-preview*' | head -n 1 || true)"
+          if [[ -z "$prod_apk" ]]; then
+            prod_apk="$(find . -maxdepth 1 -name 'Orchard-*.apk' ! -name '*unaligned*' ! -name '*-preview*' | head -n 1 || true)"
+          fi
+          if [[ -n "$prod_apk" ]]; then
+            cp "$prod_apk" "veyramusic.apk"
+            cp "$prod_apk" "veyramusic-${version}.apk"
+          fi
 
       - name: Generate checksums
         run: |

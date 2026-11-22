@@ -1,140 +1,143 @@
-/**
- * Veyra Music — Official Direct Download Portal Logic
- * Sello: AKASHI DEV
- */
+/* ==========================================================================
+ * Veyra Music — Portal Oficial de Descargas (AKASHI DEV)
+ * Lógica interactiva de temas (Aurora / Cyberpunk), espectros PCM y descargas.
+ * ========================================================================== */
 
-(() => {
+(function () {
   'use strict';
 
-  // SVG Icons Minimalistas
-  const ICONS = {
-    mobile: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>',
-    tv: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="13" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>',
-    linux: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>',
-    windows: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.949-1.801"/></svg>',
-    desktop: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>'
+  const OFFICIAL_RELEASES_API = 'https://api.github.com/repos/SCARLXRD-1/VEYRA-MUSIC/releases?per_page=15';
+  const RELEASES_PAGE_URL = 'https://github.com/SCARLXRD-1/VEYRA-MUSIC/releases';
+  const CACHE_KEY = 'veyra_releases_cache_v3';
+  const CACHE_TTL_MS = 15 * 60 * 1000;
+  const IS_LOCAL_PREVIEW = ['localhost', '127.0.0.1', ''].includes(window.location.hostname);
+
+  const FALLBACK_VERSION = 'v1.0.4';
+  const TV_EXPERIMENTAL_VERSION = 'v1.0.3';
+
+  const PLATFORM_STATES = {
+    mobile: 'new',
+    tv: 'experimental',
+    linux: 'disabled',
+    windows: 'disabled'
   };
 
-  // Hashes oficiales verificados
+  let DOWNLOAD_URLS = {
+    mobile: IS_LOCAL_PREVIEW ? 'downloads/Veyra-Music-Android-1.0.4-mobile.apk' : 'https://github.com/SCARLXRD-1/VEYRA-MUSIC/releases/download/v1.0.4-mobile/veyramusic.apk',
+    tv: `https://github.com/SCARLXRD-1/VEYRA-MUSIC/releases/download/${TV_EXPERIMENTAL_VERSION}/veyramusic.apk`,
+    linux: null,
+    windows: null
+  };
+
   const OFFICIAL_HASHES = {
-    '69129b4c295508b7869444365fe70f5f9c573e3a55db76a05725644524d91da5': {
-      platform: 'Android Móvil / Smart TV (v1.0.2)',
-      file: 'veyramusic.apk',
-      size: '162 MB'
+    '65111cef4dd6fafaea05d36ef9f0980be66a7f9a649fc87fc4646dd53338793a': {
+      file: 'Veyra-Music-Android-1.0.4-mobile.apk',
+      platform: 'Android Móvil (Nueva Versión v1.0.4)',
+      size: '~41.2 MB'
     },
-    '0016e72ca6e347d85e97ee50ef52e3bd0c20e8e7ef281dda1ddf8c8ea7ffe73f': {
-      platform: 'Linux Desktop (x64) (v1.0.2)',
-      file: 'veyra-v1.0.2-linux-x64.tar.gz',
-      size: '393 MB'
-    },
-    'fe3ac1a8361eaa11fb17285c570c34fb8a1dbfb861311fc55531747d7e64ac1c': {
-      platform: 'Windows Desktop (x64) (v1.0.2)',
-      file: 'veyra-v1.0.2-windows-x64.zip',
-      size: '405 MB'
-    },
-    'd353d4e027470c4a3f5b616b73fe234e1ee74fd3a01a24a6e30b5397303cc416': {
-      platform: 'Android Móvil / Smart TV (v1.0.1)',
-      file: 'app-release.apk',
-      size: '162 MB'
-    },
-    '79eea24a888cc99de6aad1a26bc4d5fbca7d03b6de027464d478cd5700e09510': {
-      platform: 'Android Móvil / Smart TV (v1.0.0)',
-      file: 'app-release.apk',
-      size: '129 MB'
-    },
-    '380e01b4bcb502bf499145b30d78d0dbc75509245f630aade38aa21ded0d3aac': {
-      platform: 'Linux Desktop (x64) (v1.0.0)',
-      file: 'veyra-v1.0.0-linux-x64.tar.gz',
-      size: '394 MB'
-    },
-    'b5116718574bd13e3eff4415658251b2d0ff60d5a91655e5c1bbd253f6c35b29': {
-      platform: 'Windows Desktop (x64) (v1.0.0)',
-      file: 'veyra-v1.0.0-windows-x64.zip',
-      size: '343 MB'
+    '034b197254d114191e95e1fe55f1d452ee216629ee6bd49556157cf67085f999': {
+      file: 'Veyra-Music-TV-1.0.3-tv.apk',
+      platform: 'Smart TV (Etapa Experimental)',
+      size: '~28.9 MB'
     }
-  };
-
-  const IS_WEB_HOSTED = window.location.protocol === 'http:' || window.location.protocol === 'https:';
-
-  const DOWNLOAD_URLS = {
-    mobile: IS_WEB_HOSTED ? '/download/android' : 'https://github.com/SCARLXRD-1/VEYRA-MUSIC/releases/download/v1.0.3/veyramusic.apk',
-    tv: IS_WEB_HOSTED ? '/download/tv' : 'https://github.com/SCARLXRD-1/VEYRA-MUSIC/releases/download/v1.0.3/veyramusic.apk',
-    linux: IS_WEB_HOSTED ? '/download/linux' : 'https://github.com/SCARLXRD-1/VEYRA-MUSIC/releases/download/v1.0.3/veyra-v1.0.3-linux-x64.tar.gz',
-    windows: IS_WEB_HOSTED ? '/download/windows' : 'https://github.com/SCARLXRD-1/VEYRA-MUSIC/releases/download/v1.0.3/veyra-v1.0.3-windows-x64.zip'
   };
 
   /* -------------------------------------------------------------------------
-   * 1. Detección Inteligente del Sistema Operativo
+   * Estado del tema visual y pausa global de animaciones (WCAG 2.2.2)
+   * ------------------------------------------------------------------------- */
+  let currentVeyraTheme = 'aurora';
+  let isVisualizerPaused = false;
+  let lastTriggerButton = null;
+
+  function applyVeyraTheme(themeName) {
+    const nextTheme = themeName === 'cyberpunk' ? 'cyberpunk' : 'aurora';
+    currentVeyraTheme = nextTheme;
+    document.documentElement.setAttribute('data-veyra-theme', nextTheme);
+
+    document.querySelectorAll('[data-theme-choice]').forEach(btn => {
+      const active = btn.dataset.themeChoice === nextTheme;
+      btn.classList.toggle('active', active);
+    });
+
+    const stageChip = document.getElementById('stage-mode-chip');
+    const rackBadge = document.getElementById('rack-mode-badge');
+    if (stageChip) {
+      stageChip.textContent = nextTheme === 'cyberpunk' ? '[CYBERPUNK // DSP]' : 'LIQUID AURORA';
+    }
+    if (rackBadge) {
+      rackBadge.textContent = nextTheme === 'cyberpunk' ? '[DSP // CYBERPUNK]' : 'DSP // LIQUID AURORA';
+    }
+  }
+
+  function setupThemeAndAuraControls() {
+    document.querySelectorAll('[data-theme-choice]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        applyVeyraTheme(btn.dataset.themeChoice);
+      });
+    });
+
+    const auraBtn = document.getElementById('aura-sync-toggle');
+    if (auraBtn) {
+      auraBtn.addEventListener('click', () => {
+        const enabled = !document.documentElement.classList.contains('has-aura-sync');
+        document.documentElement.classList.toggle('has-aura-sync', enabled);
+        auraBtn.classList.toggle('active', enabled);
+        auraBtn.setAttribute('aria-pressed', String(enabled));
+        showToast(enabled ? 'Aura Sync RGB activado' : 'Aura Sync RGB en pausa');
+      });
+    }
+
+    const visToggle = document.getElementById('visualizer-toggle-btn');
+    const stagePlayBtn = document.getElementById('stage-play-btn');
+
+    function updateVisualizerPlayState(paused) {
+      isVisualizerPaused = paused;
+      document.documentElement.classList.toggle('is-visualizer-paused', paused);
+
+      if (visToggle) {
+        visToggle.textContent = paused ? 'Reanudar espectro' : 'Pausar espectro';
+      }
+
+      const playIcon = document.getElementById('stage-play-icon');
+      if (playIcon) {
+        playIcon.innerHTML = paused
+          ? '<polygon points="7 4 19 12 7 20 7 4"/>'
+          : '<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>';
+      }
+    }
+
+    if (visToggle) {
+      visToggle.addEventListener('click', () => updateVisualizerPlayState(!isVisualizerPaused));
+    }
+    if (stagePlayBtn) {
+      stagePlayBtn.addEventListener('click', () => updateVisualizerPlayState(!isVisualizerPaused));
+    }
+
+    applyVeyraTheme('aurora');
+  }
+
+  /* -------------------------------------------------------------------------
+   * 1. Detección inteligente de plataforma
    * ------------------------------------------------------------------------- */
   function detectClientPlatform() {
     const ua = (navigator.userAgent || '').toLowerCase();
-    
-    if (ua.includes('android')) {
-      if (ua.includes('tv') || ua.includes('leanback') || ua.includes('aft')) {
-        return {
-          id: 'tv',
-          name: 'Smart TV & Android TV',
-          iconSvg: ICONS.tv,
-          arch: 'Universal APK',
-          btnLabel: 'Descargar APK TV (162 MB)',
-          url: DOWNLOAD_URLS.tv,
-          filename: 'veyramusic.apk',
-          meta: 'Formato: APK universal para Android TV &bull; Control D-Pad &bull; 162 MB'
-        };
-      }
-      return {
-        id: 'mobile',
-        name: 'Android Móvil & Tablet',
-        iconSvg: ICONS.mobile,
-        arch: 'Universal APK',
-        btnLabel: 'Descargar APK Móvil (162 MB)',
-        url: DOWNLOAD_URLS.mobile,
-        filename: 'veyramusic.apk',
-        meta: 'Formato: APK universal &bull; Android 7.0+ &bull; 162 MB'
-      };
-    }
+    const isTV = /smart-tv|smarttv|googletv|appletv|hbbtv|pov_tv|netcast|webos|tizen|android tv|aftb|aftt|aftm/.test(ua);
+    if (isTV) return 'tv';
 
-    if (ua.includes('win')) {
-      return {
-        id: 'windows',
-        name: 'Windows 10 / 11 (64-bit)',
-        iconSvg: ICONS.windows,
-        arch: 'x64 Portable',
-        btnLabel: 'Descargar Veyra Windows (405 MB)',
-        url: DOWNLOAD_URLS.windows,
-        filename: 'veyra-v1.0.3-windows-x64.zip',
-        meta: 'Formato: Portable Zip &bull; SMTC Media Ready &bull; 405 MB'
-      };
-    }
+    if (/android/.test(ua)) return 'mobile';
 
-    if (ua.includes('linux')) {
-      return {
-        id: 'linux',
-        name: 'Linux Desktop (Wayland / X11)',
-        iconSvg: ICONS.linux,
-        arch: 'x86_64',
-        btnLabel: 'Descargar Veyra Linux (393 MB)',
-        url: DOWNLOAD_URLS.linux,
-        filename: 'veyra-v1.0.3-linux-x64.tar.gz',
-        meta: 'Formato: Standalone Tar.gz &bull; C++/Rust DSP Nativo &bull; 393 MB'
-      };
-    }
-
-    // Fallback general (Linux / Desktop predeterminado)
+    const desktopRedirectMeta = 'Linux y Windows pausados temporalmente • Usa Android Móvil v1.0.4';
     return {
-      id: 'linux',
-      name: 'Linux Desktop (x86_64)',
-      iconSvg: ICONS.linux,
-      arch: 'x86_64',
-      btnLabel: 'Descargar Veyra Linux (378 MB)',
-      url: DOWNLOAD_URLS.linux,
-      filename: 'veyra-v1.0.3-linux-x64.tar.gz',
-      meta: 'Formato: Standalone Tar.gz &bull; C++/Rust DSP Nativo &bull; 378 MB'
+      isDesktopPaused: /win|mac|linux/.test(ua),
+      meta: desktopRedirectMeta
     };
   }
 
   function setupAutoDetection() {
-    const detected = detectClientPlatform();
+    const detectedInfo = detectClientPlatform();
+    const platform = typeof detectedInfo === 'string' ? detectedInfo : 'mobile';
+    const isDesktopPaused = typeof detectedInfo === 'object' && detectedInfo.isDesktopPaused;
+
     const iconEl = document.getElementById('detected-icon');
     const nameEl = document.getElementById('detected-platform-name');
     const archEl = document.getElementById('detected-arch-badge');
@@ -142,18 +145,36 @@
     const btnLabelEl = document.getElementById('detected-btn-label');
     const metaEl = document.getElementById('detected-file-meta');
 
-    if (iconEl && detected.iconSvg) iconEl.innerHTML = detected.iconSvg;
-    if (nameEl) nameEl.textContent = detected.name;
-    if (archEl) archEl.textContent = detected.arch;
-    if (btnEl) {
-      btnEl.href = detected.url;
-      btnEl.setAttribute('download', detected.filename);
-      btnEl.setAttribute('data-filename', detected.filename);
-      btnEl.setAttribute('target', 'download_target_frame');
+    const mobileSvg = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="3"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>';
+    const tvSvg = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="18" x2="12" y2="21"/></svg>';
+
+    if (platform === 'tv') {
+      if (iconEl) iconEl.innerHTML = tvSvg;
+      if (nameEl) nameEl.textContent = 'Smart TV (Etapa Experimental)';
+      if (archEl) archEl.textContent = `APK · ${TV_EXPERIMENTAL_VERSION} Beta`;
+      if (btnEl) {
+        btnEl.href = DOWNLOAD_URLS.tv;
+        btnEl.setAttribute('download', `Veyra-Music-TV-${TV_EXPERIMENTAL_VERSION.replace(/^v/, '')}-tv.apk`);
+      }
+      if (btnLabelEl) btnLabelEl.textContent = `Descargar TV Experimental ${TV_EXPERIMENTAL_VERSION}`;
+      if (metaEl) {
+        metaEl.innerHTML = '<span>Android TV / Google TV</span><span class="meta-separator">&bull;</span><span>Etapa Experimental</span>';
+      }
+      return;
     }
-    if (btnLabelEl) btnLabelEl.textContent = detected.btnLabel;
+
+    if (iconEl) iconEl.innerHTML = mobileSvg;
+    if (nameEl) nameEl.textContent = 'Android Móvil — Nueva Versión';
+    if (archEl) archEl.textContent = `APK · ${FALLBACK_VERSION}`;
+    if (btnEl) {
+      btnEl.href = DOWNLOAD_URLS.mobile;
+      btnEl.setAttribute('download', 'Veyra-Music-Android-1.0.4-mobile.apk');
+    }
+    if (btnLabelEl) btnLabelEl.textContent = `Descargar Nueva Versión Móvil (${FALLBACK_VERSION})`;
     if (metaEl) {
-      metaEl.innerHTML = `<span>${detected.meta}</span> <span class="meta-separator">&bull;</span> <span>Verificado criptográficamente</span> <span class="meta-separator">&bull;</span> <span>Sin telemetría</span>`;
+      metaEl.innerHTML = isDesktopPaused
+        ? `<span>${detectedInfo.meta}</span>`
+        : '<span>Android 10+ Universal</span><span class="meta-separator">&bull;</span><span>Liquid Aurora + Cyberpunk</span>';
     }
   }
 
@@ -175,18 +196,14 @@
 
         const filter = tab.dataset.filter;
         cards.forEach(card => {
-          if (filter === 'all' || card.dataset.category === filter) {
-            card.style.display = 'flex';
-          } else {
-            card.style.display = 'none';
-          }
+          card.style.display = (filter === 'all' || card.dataset.category === filter) ? 'flex' : 'none';
         });
       });
     });
   }
 
   /* -------------------------------------------------------------------------
-   * 3. Copiado de Hashes y Notificación Toast
+   * 3. Toast, Copiado y Acordeón ADB
    * ------------------------------------------------------------------------- */
   function showToast(message) {
     const toast = document.getElementById('toast');
@@ -199,7 +216,7 @@
     clearTimeout(window.__toastTimer);
     window.__toastTimer = setTimeout(() => {
       toast.classList.add('is-hidden');
-    }, 2800);
+    }, 3000);
   }
 
   function setupCopyButtons() {
@@ -213,7 +230,6 @@
         await navigator.clipboard.writeText(hash);
         showToast('Firma SHA-256 copiada al portapapeles');
       } catch {
-        // Fallback para contextos sin clipboard API
         const tempInput = document.createElement('input');
         tempInput.value = hash;
         document.body.appendChild(tempInput);
@@ -225,36 +241,27 @@
     });
   }
 
-  /* -------------------------------------------------------------------------
-   * 4. Alternador de Instrucciones de Consola / Terminal
-   * ------------------------------------------------------------------------- */
   function setupInstructionToggles() {
-    const toggles = document.querySelectorAll('.toggle-instructions-btn');
-    toggles.forEach(btn => {
+    document.querySelectorAll('.toggle-instructions-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        const targetId = btn.dataset.target;
-        const box = document.getElementById(targetId);
+        const box = document.getElementById(btn.dataset.target);
         if (!box) return;
-
         const isHidden = box.classList.toggle('is-hidden');
         const textSpan = btn.querySelector('span');
         if (textSpan) {
-          textSpan.textContent = isHidden 
-            ? (targetId.includes('tv') ? 'Guía de instalación en TV (ADB)' : targetId.includes('linux') ? 'Comando de ejecución' : 'Instrucciones de uso')
-            : 'Ocultar instrucciones';
+          textSpan.textContent = isHidden ? 'Guía de instalación en TV (ADB)' : 'Ocultar guía ADB';
         }
       });
     });
   }
 
   /* -------------------------------------------------------------------------
-   * 5. Verificador Interactivo de Hashes SHA-256
+   * 4. Verificador SHA-256
    * ------------------------------------------------------------------------- */
   function setupHashVerifier() {
     const input = document.getElementById('sha-input');
     const btn = document.getElementById('verify-btn');
     const resultBox = document.getElementById('verify-result');
-
     if (!input || !btn || !resultBox) return;
 
     function verify() {
@@ -265,21 +272,13 @@
         return;
       }
 
-      resultBox.classList.remove('is-hidden');
       const match = OFFICIAL_HASHES[query];
-
       if (match) {
         resultBox.className = 'verify-result is-valid';
-        resultBox.innerHTML = `
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-          <div><strong>Firma oficial verificada:</strong> Corresponde a <strong>${match.file}</strong> (${match.platform}, ${match.size}). Compilación oficial auténtica de AKASHI DEV.</div>
-        `;
+        resultBox.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg><div><strong>Firma verificada:</strong> Corresponde a <strong>${match.file}</strong> (${match.platform}, ${match.size}).</div>`;
       } else {
         resultBox.className = 'verify-result is-invalid';
-        resultBox.innerHTML = `
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <div><strong>La firma no coincide:</strong> El hash ingresado no corresponde a ningún paquete oficial verificado. Comprueba la integridad del archivo descargado.</div>
-        `;
+        resultBox.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div><strong>Sin coincidencia:</strong> El hash ingresado no coincide con ningún paquete oficial actual.</div>`;
       }
     }
 
@@ -290,586 +289,416 @@
   }
 
   /* -------------------------------------------------------------------------
-   * 6. Generador de Código QR Autónomo para Descarga Móvil
+   * 5. Modal QR Móvil
    * ------------------------------------------------------------------------- */
   function generateQrMatrix(text) {
     const size = 25;
     const matrix = Array.from({ length: size }, () => Array(size).fill(0));
-
-    function addFinder(startX, startY) {
+    function addFinder(sx, sy) {
       for (let y = 0; y < 7; y++) {
         for (let x = 0; x < 7; x++) {
           if (x === 0 || x === 6 || y === 0 || y === 6 || (x >= 2 && x <= 4 && y >= 2 && y <= 4)) {
-            matrix[startY + y][startX + x] = 1;
+            matrix[sy + y][sx + x] = 1;
           }
         }
       }
     }
-
     addFinder(0, 0);
     addFinder(size - 7, 0);
     addFinder(0, size - 7);
 
     let seed = 0;
-    for (let i = 0; i < text.length; i++) {
-      seed = (seed * 31 + text.charCodeAt(i)) >>> 0;
-    }
-
-    function pseudoRandom() {
+    for (let i = 0; i < text.length; i++) seed = (seed * 31 + text.charCodeAt(i)) >>> 0;
+    function nextRand() {
       seed = (seed * 1664525 + 1013904223) >>> 0;
       return (seed >>> 16) / 65536;
     }
-
     for (let y = 0; y < size; y++) {
       for (let x = 0; x < size; x++) {
         const inFinder = (x < 8 && y < 8) || (x >= size - 8 && y < 8) || (x < 8 && y >= size - 8);
-        if (!inFinder) {
-          matrix[y][x] = pseudoRandom() > 0.5 ? 1 : 0;
-        }
+        if (!inFinder) matrix[y][x] = nextRand() > 0.5 ? 1 : 0;
       }
     }
-
     return matrix;
   }
 
   function drawQrCanvas(canvasId, text) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
-
     const ctx = canvas.getContext('2d');
     const matrix = generateQrMatrix(text);
-    const size = matrix.length;
-    const cellSize = canvas.width / size;
-
+    const cell = canvas.width / matrix.length;
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.fillStyle = '#0B0F19';
-    for (let y = 0; y < size; y++) {
-      for (let x = 0; x < size; x++) {
-        if (matrix[y][x] === 1) {
-          ctx.fillRect(Math.floor(x * cellSize), Math.floor(y * cellSize), Math.ceil(cellSize), Math.ceil(cellSize));
-        }
-      }
-    }
+    ctx.fillStyle = '#090718';
+    matrix.forEach((row, y) => {
+      row.forEach((val, x) => {
+        if (val === 1) ctx.fillRect(Math.floor(x * cell), Math.floor(y * cell), Math.ceil(cell), Math.ceil(cell));
+      });
+    });
   }
 
   function setupQrModal() {
     const modal = document.getElementById('qr-modal-mobile');
-    const openBtns = document.querySelectorAll('.show-qr-btn');
     const closeBtn = document.getElementById('qr-modal-close');
-
+    const urlHint = document.getElementById('qr-url-display');
     if (!modal) return;
 
-    function openModal() {
-      drawQrCanvas('qr-code-canvas', DOWNLOAD_URLS.mobile);
+    function openModal(trigger) {
+      lastTriggerButton = trigger || document.activeElement;
+      const qrTarget = IS_LOCAL_PREVIEW
+        ? `${window.location.origin}/downloads/Veyra-Music-Android-1.0.4-mobile.apk`
+        : DOWNLOAD_URLS.mobile;
+      drawQrCanvas('qr-code-canvas', qrTarget);
+      if (urlHint) urlHint.textContent = qrTarget;
       modal.classList.remove('is-hidden');
+      if (closeBtn) closeBtn.focus();
     }
 
     function closeModal() {
       modal.classList.add('is-hidden');
+      if (lastTriggerButton && typeof lastTriggerButton.focus === 'function') {
+        lastTriggerButton.focus();
+      }
     }
 
-    openBtns.forEach(btn => btn.addEventListener('click', openModal));
+    document.querySelectorAll('.show-qr-btn').forEach(btn => {
+      btn.addEventListener('click', () => openModal(btn));
+    });
     if (closeBtn) closeBtn.addEventListener('click', closeModal);
-
     modal.addEventListener('click', (e) => {
       if (e.target === modal) closeModal();
     });
-
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !modal.classList.contains('is-hidden')) {
-        closeModal();
-      }
+      if (e.key === 'Escape' && !modal.classList.contains('is-hidden')) closeModal();
     });
   }
 
   /* -------------------------------------------------------------------------
-   * 7. Visualizador de Espectro / Onda Viva (Canvas Ligero con Pausa Automática)
+   * 6. Visualizadores Unificados Veyra (Radial Aurora / Barras Cyber + Onda + Rack)
    * ------------------------------------------------------------------------- */
-  function setupLiveVisualizer() {
-    const canvas = document.getElementById('live-wave-canvas');
-    if (!canvas) return;
+  function setupLiveVisualizers() {
+    const showcaseCanvas = document.getElementById('showcase-spectrum-canvas');
+    const scrubberCanvas = document.getElementById('showcase-wave-scrubber');
+    const rackCanvas = document.getElementById('live-wave-canvas');
+    if (!showcaseCanvas && !scrubberCanvas && !rackCanvas) return;
 
-    const ctx = canvas.getContext('2d');
-    let animationFrameId = null;
-    let phase = 0;
-    let isVisible = true;
+    const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let phase = 0.6;
+    let isTabVisible = true;
+    let rafId = null;
 
     document.addEventListener('visibilitychange', () => {
-      isVisible = !document.hidden;
-      if (isVisible && !animationFrameId) {
-        renderWave();
-      }
+      isTabVisible = !document.hidden;
     });
 
-    function resizeCanvas() {
-      const rect = canvas.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0) {
-        canvas.width = rect.width * (window.devicePixelRatio || 1);
-        canvas.height = rect.height * (window.devicePixelRatio || 1);
-      }
+    function computeBandEnergy(index, total, t) {
+      const n = index / total;
+      const bass = Math.exp(-n * 4.2) * (0.55 + 0.45 * Math.sin(t * 1.9));
+      const mid = 0.42 * (0.5 + 0.5 * Math.sin(t * 2.3 + index * 0.45));
+      const high = 0.25 * (0.5 + 0.5 * Math.cos(t * 3.1 - index * 0.72));
+      return Math.min(1, Math.max(0.12, bass * 0.6 + mid * 0.45 + high * 0.35));
     }
 
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
+    function drawShowcaseSpectrum(t) {
+      if (!showcaseCanvas) return;
+      const ctx = showcaseCanvas.getContext('2d');
+      const w = showcaseCanvas.width;
+      const h = showcaseCanvas.height;
+      const cx = w / 2;
+      const cy = h / 2;
+      ctx.clearRect(0, 0, w, h);
 
-    function renderWave() {
-      if (!isVisible) {
-        animationFrameId = null;
+      if (currentVeyraTheme === 'cyberpunk') {
+        // Barras acid yellow alrededor inferior estilo CyberpunkArtworkSpectrum
+        const bars = 26;
+        const margin = 34;
+        const usableW = w - margin * 2;
+        const step = usableW / bars;
+        for (let i = 0; i < bars; i++) {
+          const energy = computeBandEnergy(i, bars, t);
+          const barH = 10 + energy * 42;
+          const x = margin + i * step;
+          const y = h - 30 - barH;
+          ctx.fillStyle = i % 6 === 0 ? '#22D3EE' : '#FACC15';
+          ctx.fillRect(x, y, Math.max(4, step - 3), barH);
+        }
         return;
       }
 
-      const width = canvas.width;
-      const height = canvas.height;
-      ctx.clearRect(0, 0, width, height);
+      // Espectro radial 48 rayos alrededor del disco Liquid Aurora
+      const rays = 48;
+      const baseR = 82;
+      for (let i = 0; i < rays; i++) {
+        const angle = (i / rays) * Math.PI * 2 - Math.PI / 2;
+        const energy = computeBandEnergy(i % 16, 16, t);
+        const len = 8 + energy * 34;
+        const x1 = cx + Math.cos(angle) * baseR;
+        const y1 = cy + Math.sin(angle) * baseR;
+        const x2 = cx + Math.cos(angle) * (baseR + len);
+        const y2 = cy + Math.sin(angle) * (baseR + len);
 
-      const centerY = height / 2;
-      phase += 0.035;
-
-      // Cuadrícula sutil de telemetría técnica
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.025)';
-      ctx.lineWidth = 1;
-      const step = 40 * (window.devicePixelRatio || 1);
-      for (let x = 0; x < width; x += step) {
+        ctx.strokeStyle = i % 3 === 0 ? 'rgba(56, 189, 248, 0.85)' : i % 3 === 1 ? 'rgba(139, 92, 246, 0.82)' : 'rgba(236, 72, 153, 0.72)';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
         ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, height);
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
         ctx.stroke();
       }
-
-      // Onda ambiental difusa
-      ctx.beginPath();
-      ctx.strokeStyle = 'rgba(30, 108, 235, 0.3)';
-      ctx.lineWidth = 2.5 * (window.devicePixelRatio || 1);
-      for (let x = 0; x < width; x += 4) {
-        const normX = x / width;
-        const envelope = Math.sin(normX * Math.PI);
-        const y = centerY + Math.sin(normX * 14 + phase * 0.8) * Math.cos(normX * 8 - phase * 0.5) * (height * 0.26) * envelope;
-        if (x === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      }
-      ctx.stroke();
-
-      // Onda principal
-      ctx.beginPath();
-      const gradient = ctx.createLinearGradient(0, 0, width, 0);
-      gradient.addColorStop(0, '#1E6CEB');
-      gradient.addColorStop(0.5, '#38BDF8');
-      gradient.addColorStop(1, '#1E6CEB');
-
-      ctx.strokeStyle = gradient;
-      ctx.lineWidth = 2 * (window.devicePixelRatio || 1);
-      ctx.shadowColor = '#38BDF8';
-      ctx.shadowBlur = 8;
-
-      for (let x = 0; x < width; x += 3) {
-        const normX = x / width;
-        const envelope = Math.sin(normX * Math.PI);
-        const y = centerY + Math.sin(normX * 18 + phase) * Math.cos(normX * 6 + phase * 0.4) * (height * 0.32) * envelope;
-        if (x === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      }
-      ctx.stroke();
-      ctx.shadowBlur = 0;
-
-      animationFrameId = requestAnimationFrame(renderWave);
     }
 
-    renderWave();
+    function drawScrubberWave(t) {
+      if (!scrubberCanvas) return;
+      const ctx = scrubberCanvas.getContext('2d');
+      const w = scrubberCanvas.width;
+      const h = scrubberCanvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      const bars = 44;
+      const step = w / bars;
+      const activeBars = 17;
+      for (let i = 0; i < bars; i++) {
+        const energy = computeBandEnergy(i, bars, t * 0.9);
+        const barH = 6 + energy * (h - 10);
+        const x = i * step + 1.5;
+        const y = (h - barH) / 2;
+        const isPlayed = i < activeBars;
+        if (currentVeyraTheme === 'cyberpunk') {
+          ctx.fillStyle = isPlayed ? '#FACC15' : 'rgba(34, 211, 238, 0.28)';
+        } else {
+          ctx.fillStyle = isPlayed ? '#F8FAFC' : 'rgba(195, 207, 226, 0.28)';
+        }
+        ctx.beginPath();
+        ctx.roundRect(x, y, Math.max(2.5, step - 3.5), barH, 3);
+        ctx.fill();
+      }
+    }
+
+    function drawRackSpectrum(t) {
+      if (!rackCanvas) return;
+      const ctx = rackCanvas.getContext('2d');
+      const w = rackCanvas.width;
+      const h = rackCanvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      const isCyber = currentVeyraTheme === 'cyberpunk';
+      const bars = 56;
+      const barStep = w / bars;
+
+      for (let i = 0; i < bars; i++) {
+        const e = computeBandEnergy(i, bars, t);
+        const bh = 8 + e * (h * 0.56);
+        const x = i * barStep + 2;
+        const y = h - bh - 4;
+        ctx.fillStyle = isCyber
+          ? (i % 7 === 0 ? 'rgba(250, 204, 21, 0.55)' : 'rgba(34, 211, 238, 0.28)')
+          : 'rgba(139, 92, 246, 0.22)';
+        ctx.fillRect(x, y, Math.max(3, barStep - 5), bh);
+      }
+
+      ctx.beginPath();
+      ctx.lineWidth = 2.4;
+      ctx.strokeStyle = isCyber ? '#FACC15' : '#38BDF8';
+      for (let x = 0; x <= w; x += 6) {
+        const norm = x / w;
+        const env = Math.sin(norm * Math.PI);
+        const y = h * 0.44 + Math.sin(norm * 14 + t * 2) * 18 * env + Math.cos(norm * 28 - t * 1.4) * 7 * env;
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+
+    function renderFrame() {
+      drawShowcaseSpectrum(phase);
+      drawScrubberWave(phase);
+      drawRackSpectrum(phase);
+
+      if (!reducedMotion && !isVisualizerPaused && isTabVisible) {
+        phase += 0.032;
+      }
+      rafId = window.requestAnimationFrame(renderFrame);
+    }
+
+    if (reducedMotion) {
+      drawShowcaseSpectrum(phase);
+      drawScrubberWave(phase);
+      drawRackSpectrum(phase);
+      return;
+    }
+
+    rafId = window.requestAnimationFrame(renderFrame);
+    window.addEventListener('beforeunload', () => {
+      if (rafId) window.cancelAnimationFrame(rafId);
+    });
   }
 
   /* -------------------------------------------------------------------------
-   * 8. Sincronización de Enlaces Directos y Feedback de Descarga
+   * 7. Control de descargas y botones deshabilitados (aria-disabled)
    * ------------------------------------------------------------------------- */
-  function updateDownloadLinks() {
-    if (IS_WEB_HOSTED) {
-      const mobileBtn = document.querySelector('#card-mobile .download-trigger');
-      const tvBtn = document.querySelector('#card-tv .download-trigger');
-      const linuxBtn = document.querySelector('#card-linux .download-trigger');
-      const windowsBtn = document.querySelector('#card-windows .download-trigger');
+  function updateDownloadLinks(mobileAsset) {
+    const mobileBtn = document.getElementById('mobile-download-btn');
+    const mobileLabel = document.getElementById('mobile-btn-label');
+    const mobileVersion = document.getElementById('mobile-version-text');
+    const headerVer = document.getElementById('header-version-text');
+    const heroPill = document.getElementById('hero-pill-version');
 
-      if (mobileBtn) {
-        mobileBtn.href = '/download/android';
-        mobileBtn.setAttribute('target', 'download_target_frame');
-      }
-      if (tvBtn) {
-        tvBtn.href = '/download/tv';
-        tvBtn.setAttribute('target', 'download_target_frame');
-      }
-      if (linuxBtn) {
-        linuxBtn.href = '/download/linux';
-        linuxBtn.setAttribute('target', 'download_target_frame');
-      }
-      if (windowsBtn) {
-        windowsBtn.href = '/download/windows';
-        windowsBtn.setAttribute('target', 'download_target_frame');
-      }
+    const latestVersion = mobileAsset ? mobileAsset.version : FALLBACK_VERSION;
+    if (mobileAsset && mobileAsset.url && !IS_LOCAL_PREVIEW) {
+      DOWNLOAD_URLS.mobile = mobileAsset.url;
     }
+
+    if (mobileBtn) mobileBtn.href = DOWNLOAD_URLS.mobile;
+    if (mobileLabel) mobileLabel.textContent = `Descargar Nueva Versión Móvil (${latestVersion})`;
+    if (mobileVersion) mobileVersion.textContent = `${latestVersion} • Android 10+ (ARM64 / Universal)`;
+    if (headerVer) headerVer.textContent = `${latestVersion} Móvil`;
+    if (heroPill) {
+      heroPill.innerHTML = `<span class="pulse-dot" aria-hidden="true"></span><span>Nueva Versión Móvil ${latestVersion} • Liquid Aurora + Cyberpunk</span>`;
+    }
+
+    const tvBtn = document.getElementById('tv-download-btn');
+    const tvLabel = document.getElementById('tv-btn-label');
+    const tvVersion = document.getElementById('tv-version-text');
+    if (tvBtn) tvBtn.href = DOWNLOAD_URLS.tv;
+    if (tvLabel) tvLabel.textContent = `Descargar TV Experimental (${TV_EXPERIMENTAL_VERSION})`;
+    if (tvVersion) tvVersion.textContent = `${TV_EXPERIMENTAL_VERSION} • Beta Experimental (10-Foot UI)`;
+
+    ['linux', 'windows'].forEach(id => {
+      const btn = document.getElementById(`${id}-download-btn`);
+      if (btn) {
+        btn.setAttribute('aria-disabled', 'true');
+        if (PLATFORM_STATES[id] === 'disabled') {
+          btn.dataset.state = 'disabled';
+        }
+      }
+    });
   }
 
   function setupDownloadFeedback() {
     document.addEventListener('click', (e) => {
-      const btn = e.target.closest('.download-trigger, #detected-download-btn, .history-asset-chip');
-      if (!btn) return;
-      btn.setAttribute('target', 'download_target_frame');
-      const filename = btn.getAttribute('download') || btn.dataset.filename || 'el paquete oficial';
-      showToast(`Descargando ${filename} directamente...`);
+      const disabledBtn = e.target.closest('[aria-disabled="true"]');
+      if (disabledBtn) {
+        e.preventDefault();
+        const plat = disabledBtn.dataset.disabledPlatform || 'Esta plataforma';
+        showToast(`${plat} está deshabilitado temporalmente. Disponible hoy: Android Móvil ${FALLBACK_VERSION}.`);
+        return;
+      }
+
+      const dlBtn = e.target.closest('a[download], #tv-download-btn');
+      if (!dlBtn) return;
+
+      const label = dlBtn.id === 'tv-download-btn'
+        ? 'Descargando Smart TV Experimental (.apk)...'
+        : `Preparando ${dlBtn.getAttribute('download') || 'Veyra Móvil v1.0.4'}...`;
+      showToast(label);
     });
   }
 
   /* -------------------------------------------------------------------------
-   * 9. Modal de Historial de Versiones
+   * 8. Historial de Releases (con caché + fallback local)
    * ------------------------------------------------------------------------- */
+  function renderLocalVersionHistory(container) {
+    container.innerHTML = `
+      <div class="history-list">
+        <div class="history-entry">
+          <div class="history-entry-header">
+            <span class="history-tag">${FALLBACK_VERSION} • Android Móvil (Nueva Versión)</span>
+            <span class="history-date">Estado: Disponible</span>
+          </div>
+          <div class="history-notes">• Estreno de doble interfaz: Liquid Aurora y Cyberpunk UI.
+• Espectro PCM de 12 bandas en tiempo real + Aura Sync RGB rítmico.
+• Motor EQ de 10 bandas, Crossfade WSOLA, Crossfeed y limitador.</div>
+        </div>
+        <div class="history-entry">
+          <div class="history-entry-header">
+            <span class="history-tag">${TV_EXPERIMENTAL_VERSION} • Smart TV (Etapa Experimental)</span>
+            <span class="history-date">Estado: Experimental</span>
+          </div>
+          <div class="history-notes">• Compilación beta 10-Foot UI optimizada para Android TV / Google TV y control D-Pad.</div>
+        </div>
+        <div class="history-entry">
+          <div class="history-entry-header">
+            <span class="history-tag">Linux x64 &amp; Windows x64</span>
+            <span class="history-date">Estado: Deshabilitado temporalmente</span>
+          </div>
+          <div class="history-notes">• Distribución de escritorio pausada mientras enfocamos este lanzamiento en móvil y Smart TV experimental.</div>
+        </div>
+      </div>
+    `;
+  }
+
+  async function fetchReleasesWithCache() {
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Date.now() - parsed.timestamp < CACHE_TTL_MS && Array.isArray(parsed.data)) {
+          return parsed.data;
+        }
+      }
+      const res = await fetch(OFFICIAL_RELEASES_API, { headers: { Accept: 'application/vnd.github.v3+json' } });
+      if (!res.ok) throw new Error('API Error');
+      const data = await res.json();
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ timestamp: Date.now(), data }));
+      return data;
+    } catch {
+      return [];
+    }
+  }
+
   function setupVersionHistoryModal() {
     const modal = document.getElementById('version-history-modal');
     const openBtn = document.getElementById('version-history-btn');
     const closeBtn = document.getElementById('history-modal-close');
-
-    if (!modal || !openBtn) return;
-
-    function openModal() {
-      modal.classList.remove('is-hidden');
-    }
+    const container = document.getElementById('history-list-container');
+    if (!modal || !openBtn || !container) return;
 
     function closeModal() {
       modal.classList.add('is-hidden');
+      openBtn.focus();
     }
 
-    openBtn.addEventListener('click', openModal);
-    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    openBtn.addEventListener('click', async () => {
+      modal.classList.remove('is-hidden');
+      if (closeBtn) closeBtn.focus();
+      renderLocalVersionHistory(container);
 
+      const releases = await fetchReleasesWithCache();
+      if (Array.isArray(releases) && releases.length > 0 && !IS_LOCAL_PREVIEW) {
+        const first = releases[0];
+        if (first && first.tag_name) {
+          const item = document.createElement('div');
+          item.className = 'history-entry';
+          item.innerHTML = `<div class="history-entry-header"><span class="history-tag">Último tag remoto: ${first.tag_name}</span><a href="${RELEASES_PAGE_URL}" target="_blank" rel="noopener noreferrer" class="history-date">Ver en GitHub</a></div>`;
+          container.querySelector('.history-list')?.appendChild(item);
+        }
+      }
+    });
+
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
     modal.addEventListener('click', (e) => {
       if (e.target === modal) closeModal();
     });
-
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !modal.classList.contains('is-hidden')) {
-        closeModal();
-      }
+      if (e.key === 'Escape' && !modal.classList.contains('is-hidden')) closeModal();
     });
-  }
-
-  /* -------------------------------------------------------------------------
-   * 10. Carga Dinámica de Releases y Sincronización Automática
-   * ------------------------------------------------------------------------- */
-  function formatBytes(bytes) {
-    if (!bytes || isNaN(bytes)) return '';
-    const mb = Math.round(bytes / (1024 * 1024));
-    return `${mb} MB`;
-  }
-
-  function escapeHtml(str) {
-    if (!str) return '';
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  }
-
-  function getAssetSha256(asset) {
-    if (asset.digest && asset.digest.startsWith('sha256:')) {
-      return asset.digest.replace('sha256:', '');
-    }
-    for (const [hash, info] of Object.entries(OFFICIAL_HASHES)) {
-      if (info.file === asset.name) return hash;
-    }
-    return '';
-  }
-
-  // Encuentra el paquete más reciente para la plataforma indicada
-  function findLatestPlatformAsset(releases, platformKey) {
-    for (const rel of releases) {
-      if (!rel.assets || !rel.assets.length) continue;
-      const asset = rel.assets.find(a => {
-        const name = (a.name || '').toLowerCase();
-        if (platformKey === 'mobile' || platformKey === 'tv') {
-          return name.endsWith('.apk');
-        }
-        if (platformKey === 'linux') {
-          return name.includes('linux') && (name.endsWith('.tar.gz') || name.endsWith('.zip') || name.endsWith('.appimage') || name.endsWith('.deb'));
-        }
-        if (platformKey === 'windows') {
-          return name.includes('windows') && (name.endsWith('.zip') || name.endsWith('.exe'));
-        }
-        return false;
-      });
-      if (asset) {
-        return { release: rel, asset };
-      }
-    }
-    return null;
-  }
-
-  async function fetchReleasesWithCache() {
-    const CACHE_KEY = 'veyra_releases_cache_v2';
-    const CACHE_TTL = 10 * 60 * 1000; // 10 minutos
-
-    try {
-      const cached = sessionStorage.getItem(CACHE_KEY);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (parsed.timestamp && Date.now() - parsed.timestamp < CACHE_TTL && Array.isArray(parsed.data)) {
-          return parsed.data;
-        }
-      }
-    } catch {
-      // Ignora errores de cuota o parseo
-    }
-
-    let releases = null;
-
-    // 1. Consulta GitHub Releases API
-    try {
-      const res = await fetch('https://api.github.com/repos/SCARLXRD-1/VEYRA-MUSIC/releases', {
-        headers: { Accept: 'application/vnd.github.v3+json' }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
-          releases = data;
-        }
-      }
-    } catch {
-      // Offline / error de red
-    }
-
-    // 2. Fallback a releases.json local estático
-    if (!releases) {
-      try {
-        const res = await fetch('./releases.json');
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
-            releases = data;
-          }
-        }
-      } catch {
-        // Fallback local no disponible
-      }
-    }
-
-    if (releases) {
-      try {
-        sessionStorage.setItem(CACHE_KEY, JSON.stringify({
-          timestamp: Date.now(),
-          data: releases
-        }));
-      } catch {
-        // Ignora almacenamiento lleno
-      }
-    }
-
-    return releases;
-  }
-
-  function renderVersionHistory(releases) {
-    const container = document.getElementById('history-list-container');
-    if (!container || !Array.isArray(releases) || !releases.length) return;
-
-    const published = releases.filter(r => !r.draft);
-    if (!published.length) {
-      container.innerHTML = '<div class="history-loading">No se encontraron versiones oficiales.</div>';
-      return;
-    }
-
-    const html = published.map((rel, index) => {
-      const isLatest = index === 0;
-      const dateStr = rel.published_at || rel.created_at;
-      let formattedDate = '';
-      if (dateStr) {
-        try {
-          formattedDate = new Date(dateStr).toLocaleDateString('es-MX', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-          });
-        } catch {
-          formattedDate = dateStr.slice(0, 10);
-        }
-      }
-
-      // Filtra y crea chips de descarga para binarios oficiales
-      const binaryAssets = (rel.assets || []).filter(a => {
-        const n = (a.name || '').toLowerCase();
-        return n.endsWith('.apk') || n.endsWith('.tar.gz') || n.endsWith('.zip') || n.endsWith('.exe') || n.endsWith('.appimage') || n.endsWith('.deb');
-      });
-
-      const chipsHtml = binaryAssets.map(asset => {
-        const name = asset.name || '';
-        let label = name;
-        let iconSvg = ICONS.desktop;
-
-        if (name.endsWith('.apk')) {
-          label = 'Android APK';
-          iconSvg = ICONS.mobile;
-        } else if (name.includes('linux')) {
-          label = 'Linux x64';
-          iconSvg = ICONS.linux;
-        } else if (name.includes('windows')) {
-          label = 'Windows x64';
-          iconSvg = ICONS.windows;
-        }
-
-        const sizeStr = formatBytes(asset.size);
-        const displayLabel = sizeStr ? `${label} (${sizeStr})` : label;
-
-        return `
-          <a href="${asset.browser_download_url}" class="history-asset-chip download-trigger" download="${escapeHtml(name)}" data-filename="${escapeHtml(name)}" target="download_target_frame">
-            ${iconSvg}
-            <span>${escapeHtml(displayLabel)}</span>
-          </a>
-        `;
-      }).join('');
-
-      let cleanBody = (rel.body || '').trim();
-      const firstLines = cleanBody.split('\n').filter(l => l.trim() && !l.startsWith('#') && !l.startsWith('---')).slice(0, 3).join('\n');
-      if (firstLines) {
-        cleanBody = firstLines;
-      }
-
-      return `
-        <div class="history-item ${isLatest ? 'history-item--latest' : ''}">
-          <div class="history-item-top">
-            <span class="history-version-tag">${escapeHtml(rel.tag_name)}</span>
-            <div class="history-badges-wrap">
-              ${isLatest 
-                ? '<span class="history-badge history-badge--latest"><span class="pulse-dot"></span> Más actual</span>' 
-                : '<span class="history-badge">Archivada</span>'
-              }
-              ${formattedDate ? `<span class="history-date">${escapeHtml(formattedDate)}</span>` : ''}
-            </div>
-          </div>
-          <div class="history-item-name">${escapeHtml(rel.name || rel.tag_name)}</div>
-          ${cleanBody ? `<div class="history-item-body">${escapeHtml(cleanBody)}</div>` : ''}
-          ${chipsHtml ? `<div class="history-assets-row">${chipsHtml}</div>` : ''}
-        </div>
-      `;
-    }).join('');
-
-    container.innerHTML = html;
-  }
-
-  function updateDynamicPlatformCards(releases) {
-    if (!Array.isArray(releases) || !releases.length) return;
-    const published = releases.filter(r => !r.draft);
-    if (!published.length) return;
-
-    const latestRelease = published[0];
-
-    // 1. Actualiza Header y Hero con la versión más reciente global
-    const headerVersionText = document.getElementById('header-version-text');
-    if (headerVersionText && latestRelease.tag_name) {
-      headerVersionText.textContent = `${latestRelease.tag_name} Oficial`;
-    }
-
-    const heroPill = document.getElementById('hero-pill-version');
-    if (heroPill && latestRelease.tag_name) {
-      const cleanVer = latestRelease.tag_name.replace(/^v/, '');
-      heroPill.innerHTML = `Versión ${cleanVer} Estable &bull; Distribución Oficial`;
-    }
-
-    // 2. Registra hashes de todos los assets en OFFICIAL_HASHES
-    published.forEach(rel => {
-      (rel.assets || []).forEach(asset => {
-        const hash = getAssetSha256(asset);
-        if (hash && !OFFICIAL_HASHES[hash]) {
-          OFFICIAL_HASHES[hash] = {
-            platform: `${rel.tag_name} (${asset.name})`,
-            file: asset.name,
-            size: formatBytes(asset.size)
-          };
-        }
-      });
-    });
-
-    // 3. Plataformas: Actualiza cada tarjeta con SU versión más actual
-    const platforms = [
-      { id: 'mobile', key: 'mobile', btnName: 'Descargar APK' },
-      { id: 'tv', key: 'tv', btnName: 'Descargar APK TV' },
-      { id: 'linux', key: 'linux', btnName: 'Descargar Tar.gz' },
-      { id: 'windows', key: 'windows', btnName: 'Descargar Zip' }
-    ];
-
-    platforms.forEach(p => {
-      const match = findLatestPlatformAsset(published, p.key);
-      if (!match) return;
-
-      const { release, asset } = match;
-      const sizeStr = formatBytes(asset.size);
-      const sha256 = getAssetSha256(asset);
-
-      // Actualiza DOWNLOAD_URLS
-      DOWNLOAD_URLS[p.id] = IS_WEB_HOSTED ? `/download/${p.id === 'mobile' ? 'android' : p.id}` : asset.browser_download_url;
-
-      // Actualiza texto de versión en la tarjeta
-      const verEl = document.getElementById(`${p.id}-version-text`);
-      if (verEl) {
-        verEl.innerHTML = `${escapeHtml(release.tag_name)} Oficial &bull; ${escapeHtml(sizeStr)}`;
-      }
-
-      // Actualiza botón de descarga
-      const btnEl = document.getElementById(`${p.id}-download-btn`);
-      if (btnEl) {
-        btnEl.href = DOWNLOAD_URLS[p.id];
-        btnEl.setAttribute('download', asset.name);
-        btnEl.setAttribute('data-filename', asset.name);
-      }
-
-      // Actualiza texto del botón
-      const btnLabelEl = document.getElementById(`${p.id}-btn-label`);
-      if (btnLabelEl) {
-        btnLabelEl.textContent = `${p.btnName} (${sizeStr})`;
-      }
-
-      // Actualiza hash SHA-256 y botón copiar
-      if (sha256) {
-        const copyBtn = document.getElementById(`${p.id}-copy-btn`);
-        if (copyBtn) {
-          copyBtn.dataset.checksum = sha256;
-        }
-
-        const previewEl = document.getElementById(`${p.id}-checksum-preview`);
-        if (previewEl) {
-          previewEl.textContent = `${sha256.slice(0, 12)}...${sha256.slice(-10)}`;
-        }
-      }
-    });
-
-    // 4. Refresca la tarjeta de detección automática en Hero
-    setupAutoDetection();
-
-    // 5. Actualiza texto del código QR móvil
-    const qrDisplay = document.getElementById('qr-url-display');
-    if (qrDisplay && DOWNLOAD_URLS.mobile) {
-      qrDisplay.textContent = DOWNLOAD_URLS.mobile;
-    }
-  }
-
-  async function loadReleaseData() {
-    const releases = await fetchReleasesWithCache();
-    if (releases && releases.length) {
-      updateDynamicPlatformCards(releases);
-      renderVersionHistory(releases);
-    }
   }
 
   /* -------------------------------------------------------------------------
    * Inicialización
    * ------------------------------------------------------------------------- */
   document.addEventListener('DOMContentLoaded', () => {
+    setupThemeAndAuraControls();
     setupAutoDetection();
     setupPlatformTabs();
     setupCopyButtons();
     setupInstructionToggles();
     setupHashVerifier();
     setupQrModal();
-    setupVersionHistoryModal();
-    setupLiveVisualizer();
-    updateDownloadLinks();
+    setupLiveVisualizers();
+    updateDownloadLinks(null);
     setupDownloadFeedback();
-    loadReleaseData();
+    setupVersionHistoryModal();
   });
 })();

@@ -37,16 +37,14 @@ import (
 	"strings"
 )
 
-const packageBaseURL = "https://packages.sfg545.dev/"
-const packageBaseURLEnvironment = "ORCHARD_PACKAGE_BASE_URL"
-const githubReleaseBaseURL = "https://github.com/sfg5453/orchard/releases/download/"
-const githubReleasesAPIURL = "https://api.github.com/repos/sfg5453/orchard/releases?per_page=20"
+const packageBaseURL = "https://github.com/SCARLXRD-1/VEYRA-MUSIC/releases/download/v1.0.3/"
+const packageBaseURLEnvironment = "VEYRA_PACKAGE_BASE_URL"
+const legacyPackageBaseURLEnvironment = "ORCHARD_PACKAGE_BASE_URL"
+const githubReleaseBaseURL = "https://github.com/SCARLXRD-1/VEYRA-MUSIC/releases/download/"
+const githubReleasesAPIURL = "https://api.github.com/repos/SCARLXRD-1/VEYRA-MUSIC/releases?per_page=20"
 
 func releaseBaseURL(candidate release) string {
-	if candidate.Channel == "beta" {
-		return githubReleaseBaseURL + "v" + candidate.Version + "/"
-	}
-	return packageBaseURL
+	return githubReleaseBaseURL + "v" + candidate.Version + "/"
 }
 
 func normalizePackageBaseURL(value string) (string, error) {
@@ -222,11 +220,11 @@ func installPaths(target, version, electronVersion string) (string, string, stri
 		if localData == "" {
 			localData = filepath.Join(home, "AppData", "Local")
 		}
-		root := filepath.Join(configRoot, "orchard")
-		return filepath.Join(root, "versions", major), filepath.Join(root, "runtimes", "electron", electronVersion, target), filepath.Join(localData, "Orchard Packages", "Cache"), nil
+		root := filepath.Join(configRoot, "veyra")
+		return filepath.Join(root, "versions", major), filepath.Join(root, "runtimes", "electron", electronVersion, target), filepath.Join(localData, "Veyra Packages", "Cache"), nil
 	case "darwin":
-		root := filepath.Join(home, "Library", "Application Support", "orchard")
-		return filepath.Join(root, "versions", major), filepath.Join(root, "runtimes", "electron", electronVersion, target), filepath.Join(home, "Library", "Caches", "Orchard Packages"), nil
+		root := filepath.Join(home, "Library", "Application Support", "veyra")
+		return filepath.Join(root, "versions", major), filepath.Join(root, "runtimes", "electron", electronVersion, target), filepath.Join(home, "Library", "Caches", "Veyra Packages"), nil
 	default:
 		configRoot := os.Getenv("XDG_CONFIG_HOME")
 		if configRoot == "" {
@@ -236,8 +234,8 @@ func installPaths(target, version, electronVersion string) (string, string, stri
 		if cacheRoot == "" {
 			cacheRoot = filepath.Join(home, ".cache")
 		}
-		root := filepath.Join(configRoot, "orchard")
-		return filepath.Join(root, "versions", major), filepath.Join(root, "runtimes", "electron", electronVersion, target), filepath.Join(cacheRoot, "orchard-packages"), nil
+		root := filepath.Join(configRoot, "veyra")
+		return filepath.Join(root, "versions", major), filepath.Join(root, "runtimes", "electron", electronVersion, target), filepath.Join(cacheRoot, "veyra-packages"), nil
 	}
 }
 

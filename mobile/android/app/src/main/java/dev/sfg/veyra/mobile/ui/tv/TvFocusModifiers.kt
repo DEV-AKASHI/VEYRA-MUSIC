@@ -20,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
@@ -47,6 +48,17 @@ fun Modifier.tvFocusable(
     enabled: Boolean = true,
     onClick: (() -> Unit)? = null,
 ): Modifier = composed {
+    val isTv = LocalIsTv.current
+    if (!isTv) {
+        if (onClick == null) return@composed this
+        return@composed this
+            .clip(shape)
+            .clickable(
+                enabled = enabled,
+                onClick = onClick,
+            )
+    }
+
     var isFocused by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
 

@@ -20,6 +20,22 @@
 
 ## Registro de trabajo
 
+### Dirección móvil: Aurora y Cyberpunk
+
+- Se estableció `PRODUCT.md` como fuente de verdad funcional para Veyra Music Mobile y `DESIGN.md` como contrato del rediseño.
+- Glassmorphism + Aurora UI reemplaza visualmente a Grove Neumorfismo como tema principal seleccionable; Neo-Brutalism + Cyberpunk UI reemplaza a Obsidian Slate como segundo tema global seleccionable.
+- Ambos temas conservan rutas, ubicación de controles y flujos existentes. La documentación define matriz de superficies, tokens semánticos, primitivas, accesibilidad y presupuesto de rendimiento para las siguientes fases.
+
+### Estabilidad de Chromecast
+
+- Se habilitaron el servicio de reconexión y la reanudación de sesiones guardadas de Google Cast.
+- La app mantiene la reproducción en el receptor durante 15 segundos ante una indisponibilidad temporal de sesión antes de restaurarla al teléfono; así evita que microcortes de Wi‑Fi finalicen la reproducción remota.
+
+### Skills de diseño prioritarias
+
+- Se instalaron localmente `impeccable` y `design-taste-frontend` en `.agents/skills/`.
+- Para toda tarea de interfaz, `impeccable` es el flujo prioritario. En páginas web de presentación o marketing se complementa obligatoriamente con `design-taste-frontend`, respetando el sistema visual existente de Veyra Music.
+
 ### Internacionalización — textos faltantes
 
 - Se migraron textos visibles que aún estaban escritos directamente en inglés a claves de traducción, incluyendo soporte, reproductor, biblioteca, búsqueda, ajustes, diálogos, cola, navegación, cuenta, acciones de reproducción y mensajes de diagnóstico/análisis.
@@ -75,8 +91,41 @@
 - **Dock de Navegación Flotante:** Barra con radio de `26px`, glassmorphism y micro-indicadores `StatusPillBadge`.
 - **Persistencia & Cloud Sync:** Sincronización continua de DSP y metadatos de análisis de audio con Supabase Cloud y SQLite local.
 
-### 3. Estructura de Releases (`releases/`)
+### 3. Rebranding Integral del Instalador de Escritorio (Desktop EXE / veyra-packages) [COMPLETADO]
+- **Diagnóstico y solución:**
+  - El instalador ejecutable de Windows (`veyramusic.exe`) y los paquetes de escritorio consultaban el repositorio upstream `sfg5453/orchard`.
+  - Se completó la migración integral y limpieza 100% exclusiva hacia `SCARLXRD-1/VEYRA-MUSIC` y la identidad de **Veyra Music • AKASHI DEV**:
+    - `veyra-packages/neutralino.config.json`: ID de app `dev.akashi.veyra.packages`, nombre "Veyra Packages", título de ventana "Veyra Music", icono oficial, autor "AKASHI DEV", binaryName `veyra-packages`, extension ID `dev.akashi.veyra.packages.backend`.
+    - `veyra-packages/src/frontend/index.html` y `app.ts`: Título "Veyra Music", cintillo "AKASHI DEV · PACKAGE SERVICE", marca gráfica `veyra-packages.png`, textos y botones de instalación "Veyra Music".
+    - `veyra-packages/src/backend/manifest.ts` y `paths.ts`: Descargas apuntadas a releases de Veyra Music y carpetas de configuración limpias en `%APPDATA%\veyra` y `~/.local/share/veyra`.
+    - `veyra-packages/backend/types.go`: Constantes de API y descargas redirigidas a `https://github.com/SCARLXRD-1/VEYRA-MUSIC/releases/download/` y `https://api.github.com/repos/SCARLXRD-1/VEYRA-MUSIC/releases`.
+    - `veyra-packages/backend/installer.go` y `runtime.go`: Descubrimiento de `manifest.json` en releases de Veyra Music, User-Agent `Veyra-Music-Packages`, staging `.veyra.staging-`, escritura exclusiva de lanzadores `veyra.cmd` (Windows) y `veyra` (Linux/macOS).
+    - `veyra-packages/backend/opener.go`, `uninstaller.go` y `backend_test.go`: Sincronizados con las rutas y ejecutables de Veyra Music.
+    - `veyra-packages/scripts/build-backend.ts` y `build-release.ts`: Compilación exclusiva del binario `veyra-packages-backend` y generación de bundles oficiales `veyra-packages-...`.
+    - `packaging/windows/veyra.nsi` y `build-windows-installer.ps1`: BrandingText `Veyra Music • AKASHI DEV`, instaladores `Veyra-Setup-$version.exe`, instalación limpia únicamente de `veyra.cmd`.
+    - `packaging/linux/common/veyra-packages.sh.in` y `build-linux-packages.sh`: Ubicación de librerías en `/usr/lib/veyra-packages/`, enlaces `/usr/bin/veyra` y `/usr/bin/veyra-packages`, paquetes deb/rpm `veyra-packages`.
+    - `.github/workflows/release.yml`: Publicación exclusiva de paquetes `veyra-packages-*` (.zip, .tar.zst), instaladores de Windows `Veyra-Setup-*.exe` y sincronización con Cloudflare R2 sin duplicados legacy.
+    - Única compatibilidad heredada conservada: lectura pasiva de claves `orchard:*` en `localStorage` del cliente para no borrar datos locales o favoritos previos.
+
+### 4. Sistema Keep-Alive de Supabase (Señales cada 4 días) [COMPLETADO]
+- **Objetivo:** Prevenir que la instancia oficial de Supabase (`furkfhzvvgxlyxukqomm.supabase.co`) se suspenda por inactividad (el plan gratuito se pausa a los 7 días sin peticiones).
+- **Implementación multinivel:**
+  1. **Frontend / Desktop Client (`src/services/supabaseClient.js` y `src/app/core/lifecycle.js`):**
+     - Método `supabaseClient.keepAlive(force = false)` que consulta `localStorage.getItem('veyra_supabase_last_ping')`.
+     - Si han pasado más de 4 días (o en force), ejecuta una consulta ultraligera `GET /rest/v1/track_analysis?select=video_id&limit=1` con headers de autenticación apikey y actualiza la marca de tiempo.
+     - `startKeepAliveScheduler()` se invoca en `onMounted` del ciclo de vida de la app y programa un chequeo diario (cada 24 horas).
+  2. **Cliente Android (`mobile/.../SupabaseSyncService.kt` y `VeyraViewModel.kt`):**
+     - Método `keepAlivePing(force = false)` con umbral de 4 días respaldado en `SharedPreferences`.
+     - Disparado en corrutina asíncrona en `init` de `VeyraViewModel`.
+  3. **GitHub Actions Standing Cron (`.github/workflows/supabase-keepalive.yml`):**
+     - Flujo programado con cron `0 12 */4 * *` (cada 4 días a las 12:00 UTC) que realiza un ping HTTP a Supabase. Garantiza actividad constante incluso si no se abre la aplicación durante semanas o meses.
+  4. **Suite de Pruebas (`test/supabaseKeepAlive.test.js`):**
+     - Pruebas unitarias completas que validan el salto cuando está dentro de los 4 días, ejecución tras superar el umbral, forzado manual y manejo tolerante a fallos de red.
+
+### 5. Estructura de Releases (`releases/`)
 - `releases/mobile/`: Especificaciones del APK de producción v1.0.0 (`app-release.apk`), min SDK 31+, arquitecturas `arm64-v8a`/`x86_64` y checksum SHA-256.
-- `releases/desktop/`: Binarios para Linux (AppImage/deb), Windows (exe/zip) y macOS (dmg/app).
+- `releases/desktop/`: Binarios para Linux (`veyra-v1.0.3-linux-x64.tar.gz`), Windows (`Veyra-Setup-1.0.3.exe`, `veyramusic.exe`, `veyra-v1.0.3-windows-x64.zip`) y macOS.
 - `releases/tv/`: Binarios y manifiestos para Android TV / Leanback (D-Pad navigation).
 
+> [!NOTE]
+> **Estado de la sesión:** Todo el trabajo permanece 100% en local para revisión y pruebas del usuario con el instalador EXE (`Veyra-Setup-1.0.3.exe`). Pendiente cuando el usuario lo indique: revisión/depuración de releases antiguos y sincronización con el repositorio remoto.

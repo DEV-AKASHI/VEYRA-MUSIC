@@ -24,6 +24,7 @@
 package dev.sfg.veyra.mobile.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -44,8 +45,6 @@ import androidx.compose.material.icons.rounded.Sync
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -62,8 +61,10 @@ import dev.sfg.veyra.connect.R
 import dev.sfg.veyra.mobile.discord.DiscordAuthState
 import dev.sfg.veyra.mobile.discord.GatewayConnectionState
 import dev.sfg.veyra.mobile.model.OrchardSettings
+import dev.sfg.veyra.mobile.ui.components.LocalCyberpunkTheme
 import dev.sfg.veyra.mobile.ui.theme.CanopyColors
 import dev.sfg.veyra.mobile.ui.theme.LocalAccent
+import dev.sfg.veyra.mobile.ui.theme.VeyraCyber
 
 private val DiscordBlurple = Color(0xFF5865F2)
 
@@ -233,10 +234,20 @@ private fun DiscordToggleRow(
         Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        val isCyberpunk = LocalCyberpunkTheme.current
+        val iconShape = if (isCyberpunk) VeyraCyber.shape else RoundedCornerShape(10.dp)
         Box(
             modifier = Modifier
                 .size(36.dp)
-                .background(CanopyColors.Canvas, RoundedCornerShape(10.dp)),
+                .background(
+                    if (isCyberpunk) VeyraCyber.canvas else Color.White.copy(alpha = 0.08f),
+                    iconShape,
+                )
+                .border(
+                    1.dp,
+                    if (isCyberpunk) VeyraCyber.cyan.copy(alpha = 0.45f) else Color.White.copy(alpha = 0.14f),
+                    iconShape,
+                ),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
@@ -259,16 +270,10 @@ private fun DiscordToggleRow(
                 color = CanopyColors.Muted,
             )
         }
-        Switch(
+        dev.sfg.veyra.mobile.ui.components.NeumorphicSwitch(
             checked = checked && enabled,
             enabled = enabled,
             onCheckedChange = onChecked,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = Color.White,
-                checkedTrackColor = LocalAccent.current,
-                uncheckedThumbColor = CanopyColors.Muted,
-                uncheckedTrackColor = CanopyColors.Canvas,
-            ),
         )
     }
 }

@@ -56,7 +56,7 @@ func (i *installer) remoteFileSize(ctx context.Context, archiveURL string) (int6
 	if err != nil {
 		return 0, err
 	}
-	request.Header.Set("User-Agent", "Orchard-Packages")
+	request.Header.Set("User-Agent", "Veyra-Music-Packages")
 	response, err := i.client.Do(request)
 	if err != nil {
 		return 0, fmt.Errorf("could not read the Electron download size: %w", err)
@@ -230,19 +230,25 @@ func extractZip(ctx context.Context, archivePath, destination string) error {
 }
 
 func writeLauncher(directory, target, electronVersion string) error {
-	var name, contents string
+	var names []string
+	var contents string
 	switch {
 	case strings.HasPrefix(target, "win32-"):
-		name = "orchard.cmd"
+		names = []string{"veyra.cmd"}
 		// %~dp0 always ends in a backslash. Appending a dot keeps that backslash
 		// away from the closing quote while still resolving to this directory.
 		contents = fmt.Sprintf("@echo off\r\n\"%%~dp0..\\..\\runtimes\\electron\\%s\\%s\\electron.exe\" \"%%~dp0.\" %%*\r\n", electronVersion, target)
 	case strings.HasPrefix(target, "darwin-"):
-		name = "orchard"
+		names = []string{"veyra"}
 		contents = fmt.Sprintf("#!/bin/sh\napp_root=$(CDPATH= cd -- \"$(dirname -- \"$0\")\" && pwd)\nexec \"$app_root/../../runtimes/electron/%s/%s/Electron.app/Contents/MacOS/Electron\" \"$app_root\" \"$@\"\n", electronVersion, target)
 	default:
-		name = "orchard"
+		names = []string{"veyra"}
 		contents = fmt.Sprintf("#!/bin/sh\napp_root=$(CDPATH= cd -- \"$(dirname -- \"$0\")\" && pwd)\nexec \"$app_root/../../runtimes/electron/%s/%s/electron\" --disable-setuid-sandbox \"$app_root\" \"$@\"\n", electronVersion, target)
 	}
-	return os.WriteFile(filepath.Join(directory, name), []byte(contents), 0o755)
+	for _, name := range names {
+		if err := os.WriteFile(filepath.Join(directory, name), []byte(contents), 0o755); err != nil {
+			return err
+		}
+	}
+	return nil
 }

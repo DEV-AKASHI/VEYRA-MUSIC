@@ -77,18 +77,18 @@ fun SettingsHomeLayout(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = CanopyColors.Chrome,
+                    containerColor = Color.Transparent,
                     titleContentColor = CanopyColors.Text,
                     navigationIconContentColor = CanopyColors.Text
                 )
             )
         },
-        containerColor = CanopyColors.Chrome
+        containerColor = Color.Transparent
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
             PrimaryTabRow(
                 selectedTabIndex = selectedTabIndex,
-                containerColor = CanopyColors.Chrome,
+                containerColor = Color.Transparent,
                 contentColor = CanopyColors.Text,
                 indicator = {
                     TabRowDefaults.SecondaryIndicator(

@@ -43,7 +43,11 @@ manager_dir=$(CDPATH= cd -- "$script_dir/.." && pwd)
 repository_dir=$(CDPATH= cd -- "$manager_dir/.." && pwd)
 version=$(cd "$manager_dir" && node -p "require('./package.json').version")
 major_version="${version%%.*}.0.0"
-bundle="$manager_dir/dist/releases/orchard-packages-$version-$target"
+if [ -d "$manager_dir/dist/releases/veyra-packages-$version-$target" ]; then
+  bundle="$manager_dir/dist/releases/veyra-packages-$version-$target"
+else
+  bundle="$manager_dir/dist/releases/orchard-packages-$version-$target"
+fi
 output_dir="$repository_dir/artifacts/linux/$target"
 if [ -f "$manager_dir/resources/icons/veyra-packages.png" ]; then
   icon="$manager_dir/resources/icons/veyra-packages.png"
@@ -74,12 +78,12 @@ for required in \
   "$desktop_file" \
   "$repository_dir/LICENSE"; do
   if [ ! -f "$required" ]; then
-    echo "Required Orchard Packages input is missing: $required" >&2
+    echo "Required Veyra Packages input is missing: $required" >&2
     exit 1
   fi
 done
 
-work_dir=$(mktemp -d "${TMPDIR:-/tmp}/orchard-packages-linux.XXXXXX")
+work_dir=$(mktemp -d "${TMPDIR:-/tmp}/veyra-packages-linux.XXXXXX")
 cleanup() {
   rm -rf -- "$work_dir"
 }
@@ -88,41 +92,29 @@ trap cleanup EXIT HUP INT TERM
 payload="$work_dir/payload"
 mkdir -p \
   "$payload/usr/bin" \
-  "$payload/usr/lib/orchard-packages/extensions" \
+  "$payload/usr/lib/veyra-packages/extensions" \
   "$payload/usr/share/applications" \
   "$payload/usr/share/icons/hicolor/1024x1024/apps" \
-  "$payload/usr/share/licenses/orchard-packages" \
-  "$payload/usr/share/doc/orchard-packages"
+  "$payload/usr/share/licenses/veyra-packages" \
+  "$payload/usr/share/doc/veyra-packages"
 
-if [ -f "$bundle/veyra-packages" ]; then
-  install -m 755 "$bundle/veyra-packages" "$payload/usr/lib/orchard-packages/orchard-packages"
-elif [ -f "$bundle/orchard-packages" ]; then
-  install -m 755 "$bundle/orchard-packages" "$payload/usr/lib/orchard-packages/orchard-packages"
-fi
+install -m 755 "$bundle/veyra-packages" "$payload/usr/lib/veyra-packages/veyra-packages"
 install -m 644 "$bundle/resources.neu" \
-  "$payload/usr/lib/orchard-packages/resources.neu"
-if [ -f "$bundle/extensions/veyra-packages-backend" ]; then
-  install -m 755 "$bundle/extensions/veyra-packages-backend" \
-    "$payload/usr/lib/orchard-packages/extensions/orchard-packages-backend"
-elif [ -f "$bundle/extensions/orchard-packages-backend" ]; then
-  install -m 755 "$bundle/extensions/orchard-packages-backend" \
-    "$payload/usr/lib/orchard-packages/extensions/orchard-packages-backend"
-fi
-sed -e "s/@ORCHARD_MAJOR_VERSION@/$major_version/g" -e "s/@VEYRA_MAJOR_VERSION@/$major_version/g" "$wrapper_template" > "$payload/usr/bin/veyra"
+  "$payload/usr/lib/veyra-packages/resources.neu"
+install -m 755 "$bundle/extensions/veyra-packages-backend" \
+  "$payload/usr/lib/veyra-packages/extensions/veyra-packages-backend"
+
+sed -e "s/@VEYRA_MAJOR_VERSION@/$major_version/g" "$wrapper_template" > "$payload/usr/bin/veyra"
 chmod 755 "$payload/usr/bin/veyra"
-ln -sf veyra "$payload/usr/bin/orchard"
-ln -sf ../lib/orchard-packages/orchard-packages "$payload/usr/bin/orchard-packages"
-ln -sf ../lib/orchard-packages/orchard-packages "$payload/usr/bin/veyra-packages"
+ln -sf ../lib/veyra-packages/veyra-packages "$payload/usr/bin/veyra-packages"
 install -m 644 "$desktop_file" \
   "$payload/usr/share/applications/dev.akashi.veyra.desktop"
-ln -sf dev.akashi.veyra.desktop "$payload/usr/share/applications/dev.sfg.orchard.desktop"
 install -m 644 "$icon" \
   "$payload/usr/share/icons/hicolor/1024x1024/apps/dev.akashi.veyra.png"
-ln -sf dev.akashi.veyra.png "$payload/usr/share/icons/hicolor/1024x1024/apps/dev.sfg.orchard.png"
 install -m 644 "$repository_dir/LICENSE" \
-  "$payload/usr/share/licenses/orchard-packages/LICENSE"
+  "$payload/usr/share/licenses/veyra-packages/LICENSE"
 install -m 644 "$repository_dir/LICENSE" \
-  "$payload/usr/share/doc/orchard-packages/copyright"
+  "$payload/usr/share/doc/veyra-packages/copyright"
 
 rm -rf -- "$output_dir"
 mkdir -p "$output_dir"
@@ -132,25 +124,23 @@ cp -a "$payload/." "$deb_root/"
 mkdir -p "$deb_root/DEBIAN"
 installed_size=$(du -sk "$payload" | awk '{ print $1 }')
 cat > "$deb_root/DEBIAN/control" <<EOF
-Package: orchard-packages
+Package: veyra-packages
 Version: $version
 Section: sound
 Priority: optional
 Architecture: $deb_arch
-Maintainer: SFG545 <sfg@sfg545.dev>
+Maintainer: AKASHI DEV <contact@akashidev.org>
 Installed-Size: $installed_size
 Depends: libgtk-3-0 | libgtk-3-0t64, libwebkit2gtk-4.1-0 | libwebkit2gtk-4.1-0t64
-Provides: orchard
-Conflicts: orchard
-Replaces: orchard
-Homepage: https://github.com/sfg5453/orchard
-Description: Orchard package installer and version manager
- Orchard is a YouTube Music desktop client backed by InnerTube.
- This package installs Orchard Packages, which downloads and updates the
- platform-specific Orchard application without bundling a second copy of it.
+Provides: veyra
+Homepage: https://github.com/SCARLXRD-1/VEYRA-MUSIC
+Description: Veyra Music package installer and version manager
+ Veyra Music is a high-fidelity desktop music player and streaming client.
+ This package installs Veyra Packages, which downloads and updates Veyra Music
+ without bundling a second copy of the core runtime.
 EOF
 dpkg-deb --build --root-owner-group "$deb_root" \
-  "$output_dir/orchard-packages_${version}_${deb_arch}.deb"
+  "$output_dir/veyra-packages_${version}_${deb_arch}.deb"
 
 rpm_version="$version"
 rpm_release=1
@@ -176,28 +166,27 @@ tar \
   --owner=0 \
   --group=0 \
   --numeric-owner \
-  -czf "$rpm_top/SOURCES/orchard-packages-payload.tar.gz" \
+  -czf "$rpm_top/SOURCES/veyra-packages-payload.tar.gz" \
   -C "$payload" .
 
-rpm_spec="$rpm_top/SPECS/orchard-packages.spec"
+rpm_spec="$rpm_top/SPECS/veyra-packages.spec"
 cat > "$rpm_spec" <<EOF
-Name: orchard-packages
+Name: veyra-packages
 Version: $rpm_version
 Release: $rpm_release
-Summary: Orchard package installer and version manager
+Summary: Veyra Music package installer and version manager
 License: AGPL-3.0-or-later
-URL: https://github.com/sfg5453/orchard
+URL: https://github.com/SCARLXRD-1/VEYRA-MUSIC
 BuildArch: $rpm_arch
 Requires: gtk3
 Requires: webkit2gtk4.1
-Provides: orchard
-Obsoletes: orchard
-Source0: orchard-packages-payload.tar.gz
+Provides: veyra
+Source0: veyra-packages-payload.tar.gz
 
 %description
-Orchard is a YouTube Music desktop client backed by InnerTube. This package
-installs Orchard Packages, which downloads and updates the platform-specific
-Orchard application without bundling a second copy of it.
+Veyra Music is a high-fidelity desktop music player and streaming client. This package
+installs Veyra Packages, which downloads and updates Veyra Music without bundling
+a second copy of the core runtime.
 
 %prep
 %setup -q -c -T
@@ -209,16 +198,16 @@ tar -xzf %{SOURCE0} -C %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-%license %{_prefix}/share/licenses/orchard-packages/LICENSE
+%license %{_prefix}/share/licenses/veyra-packages/LICENSE
 %{_bindir}/*
-%dir %{_prefix}/lib/orchard-packages
-%dir %{_prefix}/lib/orchard-packages/extensions
-%{_prefix}/lib/orchard-packages/orchard-packages
-%{_prefix}/lib/orchard-packages/resources.neu
-%{_prefix}/lib/orchard-packages/extensions/*
+%dir %{_prefix}/lib/veyra-packages
+%dir %{_prefix}/lib/veyra-packages/extensions
+%{_prefix}/lib/veyra-packages/veyra-packages
+%{_prefix}/lib/veyra-packages/resources.neu
+%{_prefix}/lib/veyra-packages/extensions/*
 %{_datadir}/applications/*
 %{_datadir}/icons/hicolor/1024x1024/apps/*
-%{_prefix}/share/doc/orchard-packages/copyright
+%{_prefix}/share/doc/veyra-packages/copyright
 EOF
 
 rpmbuild \
@@ -232,11 +221,11 @@ rpmbuild \
   --target "$rpm_arch" \
   -bb "$rpm_spec"
 
-rpm_file=$(find "$rpm_top/RPMS" -type f -name 'orchard-packages-*.rpm' ! -name '*-debuginfo-*.rpm' ! -name '*-debugsource-*.rpm' -print -quit)
+rpm_file=$(find "$rpm_top/RPMS" -type f -name 'veyra-packages-*.rpm' ! -name '*-debuginfo-*.rpm' ! -name '*-debugsource-*.rpm' -print -quit)
 if [ -z "$rpm_file" ] || [ ! -f "$rpm_file" ]; then
   echo "RPM build did not produce a package." >&2
   exit 1
 fi
-cp "$rpm_file" "$output_dir/orchard-packages-${rpm_version}-${rpm_release}.${rpm_arch}.rpm"
+cp "$rpm_file" "$output_dir/veyra-packages-${rpm_version}-${rpm_release}.${rpm_arch}.rpm"
 
 find "$output_dir" -maxdepth 1 -type f -print | sort

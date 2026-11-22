@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import dev.sfg.veyra.connect.R
 import androidx.compose.ui.unit.dp
@@ -78,87 +79,110 @@ private val InterFontFamily = FontFamily(
     Font(R.font.inter_bold, FontWeight.Bold)
 )
 
-/** Expressive typography scale inspired by SimpMusic. */
+private val PlayfairDisplayFontFamily = FontFamily(
+    Font(
+        resId = R.font.playfair_display,
+        weight = FontWeight.Normal,
+        variationSettings = FontVariation.Settings(FontVariation.weight(400)),
+    ),
+    Font(
+        resId = R.font.playfair_display,
+        weight = FontWeight.Medium,
+        variationSettings = FontVariation.Settings(FontVariation.weight(500)),
+    ),
+    Font(
+        resId = R.font.playfair_display,
+        weight = FontWeight.SemiBold,
+        variationSettings = FontVariation.Settings(FontVariation.weight(600)),
+    ),
+    Font(
+        resId = R.font.playfair_display,
+        weight = FontWeight.Bold,
+        variationSettings = FontVariation.Settings(FontVariation.weight(700)),
+    ),
+)
+
+/** Expressive typography scale pairing Playfair Display headings with Inter body/controls. */
 private val OrchardTypography = Typography(
     displayLarge = TextStyle(
-        fontFamily = InterFontFamily,
+        fontFamily = PlayfairDisplayFontFamily,
         fontWeight = FontWeight.Bold,
         fontSize = 32.sp,
         lineHeight = 38.sp,
-        letterSpacing = (-0.8).sp,
-        color = CanopyColors.Text,
-    ),
-    headlineLarge = TextStyle(
-        fontFamily = InterFontFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 24.sp,
-        lineHeight = 30.sp,
         letterSpacing = (-0.5).sp,
         color = CanopyColors.Text,
     ),
+    headlineLarge = TextStyle(
+        fontFamily = PlayfairDisplayFontFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 24.sp,
+        lineHeight = 30.sp,
+        letterSpacing = (-0.3).sp,
+        color = CanopyColors.Text,
+    ),
     headlineMedium = TextStyle(
-        fontFamily = InterFontFamily,
+        fontFamily = PlayfairDisplayFontFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 20.sp,
         lineHeight = 26.sp,
         color = CanopyColors.Text,
     ),
     titleLarge = TextStyle(
-        fontFamily = InterFontFamily,
+        fontFamily = PlayfairDisplayFontFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 18.sp,
         lineHeight = 24.sp,
         color = CanopyColors.Text,
     ),
     titleMedium = TextStyle(
-        fontFamily = InterFontFamily,
+        fontFamily = PlayfairDisplayFontFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 15.sp,
         lineHeight = 20.sp,
         color = CanopyColors.Text,
     ),
     titleSmall = TextStyle(
-        fontFamily = InterFontFamily,
+        fontFamily = PlayfairDisplayFontFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 13.sp,
         lineHeight = 18.sp,
         color = CanopyColors.Text,
     ),
     bodyLarge = TextStyle(
-        fontFamily = InterFontFamily,
+        fontFamily = PlayfairDisplayFontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 15.sp,
         lineHeight = 22.sp,
         color = CanopyColors.Text,
     ),
     bodyMedium = TextStyle(
-        fontFamily = InterFontFamily,
+        fontFamily = PlayfairDisplayFontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 13.sp,
         lineHeight = 18.sp,
         color = CanopyColors.Muted,
     ),
     bodySmall = TextStyle(
-        fontFamily = InterFontFamily,
+        fontFamily = PlayfairDisplayFontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 11.sp,
         lineHeight = 15.sp,
         color = CanopyColors.Muted,
     ),
     labelLarge = TextStyle(
-        fontFamily = InterFontFamily,
+        fontFamily = PlayfairDisplayFontFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 14.sp,
         letterSpacing = 0.1.sp,
     ),
     labelMedium = TextStyle(
-        fontFamily = InterFontFamily,
+        fontFamily = PlayfairDisplayFontFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 12.sp,
         letterSpacing = 0.2.sp,
     ),
     labelSmall = TextStyle(
-        fontFamily = InterFontFamily,
+        fontFamily = PlayfairDisplayFontFamily,
         fontWeight = FontWeight.Bold,
         fontSize = 11.sp,
         letterSpacing = 0.6.sp,
@@ -173,7 +197,11 @@ private val OrchardTypography = Typography(
 val LocalAccent = staticCompositionLocalOf { CanopyColors.Accent }
 
 @Composable
-fun VeyraTheme(useSystemColors: Boolean = false, content: @Composable () -> Unit) {
+fun VeyraTheme(
+    useSystemColors: Boolean = false,
+    reducedMotion: Boolean? = null,
+    content: @Composable () -> Unit,
+) {
     val context = LocalContext.current
     val accent = remember(useSystemColors) {
         if (useSystemColors) {
@@ -182,8 +210,13 @@ fun VeyraTheme(useSystemColors: Boolean = false, content: @Composable () -> Unit
             CanopyColors.Accent
         }
     }
+    val systemReducedMotion = rememberReducedMotion()
+    val effectiveReducedMotion = reducedMotion ?: systemReducedMotion
 
-    CompositionLocalProvider(LocalAccent provides accent) {
+    CompositionLocalProvider(
+        LocalAccent provides accent,
+        LocalReducedMotion provides effectiveReducedMotion,
+    ) {
         MaterialTheme(
             colorScheme = OrchardColorScheme.copy(primary = accent, secondary = accent),
             typography = OrchardTypography,

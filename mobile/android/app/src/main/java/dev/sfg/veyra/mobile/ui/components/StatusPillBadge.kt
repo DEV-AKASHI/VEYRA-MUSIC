@@ -45,10 +45,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.sfg.veyra.mobile.ui.theme.CanopyColors
+import dev.sfg.veyra.mobile.ui.theme.LocalReducedMotion
+import dev.sfg.veyra.mobile.ui.theme.VeyraCyber
 
 enum class StatusPillTone {
     ACTIVE,
@@ -80,30 +85,32 @@ fun StatusPillBadge(
     pulse: Boolean = false,
     size: StatusPillSize = StatusPillSize.MD,
 ) {
+    val isCyberpunk = LocalCyberpunkTheme.current
+    val pillShape = if (isCyberpunk) CyberCutCompactShape else RoundedCornerShape(999.dp)
     val bg = when (status) {
-        StatusPillTone.ACTIVE, StatusPillTone.STREAMING -> Color(0x1F10B981)
+        StatusPillTone.ACTIVE, StatusPillTone.STREAMING -> if (isCyberpunk) VeyraCyber.magenta.copy(alpha = 0.16f) else Color(0x1F10B981)
         StatusPillTone.SYNC, StatusPillTone.ACCENT -> Color(0x1F38BDF8)
-        StatusPillTone.PRIMARY -> Color(0x241E6CEB)
+        StatusPillTone.PRIMARY -> if (isCyberpunk) Color(0x28FACC15) else Color(0x2E8B5CF6)
         StatusPillTone.WARNING -> Color(0x1FF59E0B)
         StatusPillTone.COUNT -> Color(0x0DFFFFFF)
-        StatusPillTone.INFO -> CanopyColors.Surface
+        StatusPillTone.INFO -> if (isCyberpunk) VeyraCyber.surface else Color.White.copy(alpha = 0.08f)
         StatusPillTone.MUTED -> Color(0x10FFFFFF)
     }
 
     val border = when (status) {
-        StatusPillTone.ACTIVE, StatusPillTone.STREAMING -> Color(0x4210B981)
-        StatusPillTone.SYNC, StatusPillTone.ACCENT -> Color(0x4738BDF8)
-        StatusPillTone.PRIMARY -> Color(0x521E6CEB)
+        StatusPillTone.ACTIVE, StatusPillTone.STREAMING -> if (isCyberpunk) VeyraCyber.magenta.copy(alpha = 0.72f) else Color(0x4210B981)
+        StatusPillTone.SYNC, StatusPillTone.ACCENT -> if (isCyberpunk) VeyraCyber.cyan else Color(0x4738BDF8)
+        StatusPillTone.PRIMARY -> if (isCyberpunk) VeyraCyber.acidYellow else Color(0x668B5CF6)
         StatusPillTone.WARNING -> Color(0x47F59E0B)
         StatusPillTone.COUNT -> Color(0x14FFFFFF)
-        StatusPillTone.INFO -> CanopyColors.Rule
+        StatusPillTone.INFO -> if (isCyberpunk) VeyraCyber.cyan.copy(alpha = 0.75f) else Color.White.copy(alpha = 0.20f)
         StatusPillTone.MUTED -> CanopyColors.Rule
     }
 
     val textColor = when (status) {
-        StatusPillTone.ACTIVE, StatusPillTone.STREAMING -> Color(0xFF34D399)
-        StatusPillTone.SYNC, StatusPillTone.ACCENT -> Color(0xFF38BDF8)
-        StatusPillTone.PRIMARY -> Color(0xFF60A5FA)
+        StatusPillTone.ACTIVE, StatusPillTone.STREAMING -> if (isCyberpunk) VeyraCyber.magenta else Color(0xFF34D399)
+        StatusPillTone.SYNC, StatusPillTone.ACCENT -> if (isCyberpunk) VeyraCyber.cyan else Color(0xFF38BDF8)
+        StatusPillTone.PRIMARY -> if (isCyberpunk) VeyraCyber.acidYellow else Color(0xFFC4B5FD)
         StatusPillTone.WARNING -> Color(0xFFFBBF24)
         StatusPillTone.COUNT -> CanopyColors.Muted
         StatusPillTone.INFO -> CanopyColors.Text
@@ -111,16 +118,17 @@ fun StatusPillBadge(
     }
 
     val dotColor = when (status) {
-        StatusPillTone.ACTIVE, StatusPillTone.STREAMING -> Color(0xFF10B981)
-        StatusPillTone.SYNC, StatusPillTone.ACCENT -> Color(0xFF38BDF8)
-        StatusPillTone.PRIMARY -> Color(0xFF1E6CEB)
+        StatusPillTone.ACTIVE, StatusPillTone.STREAMING -> if (isCyberpunk) VeyraCyber.magenta else Color(0xFF10B981)
+        StatusPillTone.SYNC, StatusPillTone.ACCENT -> if (isCyberpunk) VeyraCyber.cyan else Color(0xFF38BDF8)
+        StatusPillTone.PRIMARY -> if (isCyberpunk) VeyraCyber.acidYellow else Color(0xFF8B5CF6)
         StatusPillTone.WARNING -> Color(0xFFF59E0B)
         StatusPillTone.COUNT -> CanopyColors.Muted
-        StatusPillTone.INFO -> CanopyColors.SecondaryAccent
+        StatusPillTone.INFO -> if (isCyberpunk) VeyraCyber.cyan else CanopyColors.SecondaryAccent
         StatusPillTone.MUTED -> CanopyColors.Muted
     }
 
-    val dotAnim = if (pulse) {
+    val reducedMotion = LocalReducedMotion.current
+    val dotAnim = if (pulse && !reducedMotion) {
         val infinite = rememberInfiniteTransition(label = "StatusDotPulse")
         val scale by infinite.animateFloat(
             initialValue = 1f,
@@ -141,8 +149,9 @@ fun StatusPillBadge(
 
     Row(
         modifier = modifier
-            .background(bg, RoundedCornerShape(999.dp))
-            .border(1.dp, border, RoundedCornerShape(999.dp))
+            .semantics(mergeDescendants = true) {}
+            .background(bg, pillShape)
+            .border(1.dp, border, pillShape)
             .padding(horizontal = padH, vertical = padV),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -151,17 +160,29 @@ fun StatusPillBadge(
                 modifier = Modifier
                     .size(dotSize)
                     .scale(dotAnim)
-                    .background(dotColor, CircleShape),
+                    .background(dotColor, if (isCyberpunk) CyberCutCompactShape else CircleShape),
             )
             Spacer(Modifier.width(if (size == StatusPillSize.SM) 4.5.dp else 6.dp))
         }
-        Text(
-            text = label,
-            color = textColor,
+        val labelStyle = TextStyle(
+            fontFamily = if (isCyberpunk) FontFamily.Monospace else FontFamily.Default,
             fontSize = fontSize,
             fontWeight = FontWeight.SemiBold,
             lineHeight = fontSize,
-            letterSpacing = 0.2.sp,
+            letterSpacing = if (isCyberpunk) 0.5.sp else 0.2.sp,
         )
+        if (isCyberpunk) {
+            CyberScrambleText(
+                text = label,
+                style = labelStyle,
+                color = textColor,
+            )
+        } else {
+            Text(
+                text = label,
+                color = textColor,
+                style = labelStyle,
+            )
+        }
     }
 }

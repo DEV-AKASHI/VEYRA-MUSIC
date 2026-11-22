@@ -101,15 +101,9 @@ fun QobuzSettingsCard(
                 }
 
                 if (isConnected) {
-                    Switch(
+                    dev.sfg.veyra.mobile.ui.components.NeumorphicSwitch(
                         checked = status.enabled,
                         onCheckedChange = onEnabledChange,
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = Color.White,
-                            checkedTrackColor = LocalAccent.current,
-                            uncheckedThumbColor = CanopyColors.Muted,
-                            uncheckedTrackColor = CanopyColors.SurfaceHover,
-                        ),
                     )
                 }
             }

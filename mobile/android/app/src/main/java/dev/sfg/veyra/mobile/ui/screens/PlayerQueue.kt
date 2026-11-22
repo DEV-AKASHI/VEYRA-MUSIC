@@ -102,6 +102,10 @@ import dev.sfg.veyra.mobile.model.PlaybackSnapshot
 import dev.sfg.veyra.mobile.model.Track
 import dev.sfg.veyra.mobile.ui.components.ArtworkTile
 import dev.sfg.veyra.mobile.ui.components.ExplicitBadge
+import dev.sfg.veyra.mobile.ui.components.LocalCyberpunkTheme
+import dev.sfg.veyra.mobile.ui.theme.VeyraCyber
+import dev.sfg.veyra.mobile.ui.theme.VeyraRadius
+import dev.sfg.veyra.mobile.ui.theme.VeyraSemantic
 import dev.sfg.veyra.mobile.ui.theme.CanopyColors
 import dev.sfg.veyra.mobile.ui.theme.LocalAccent
 import dev.sfg.veyra.mobile.ui.tv.LocalIsTv
@@ -384,15 +388,24 @@ fun QueueTopControls(
                 else -> stringResource(R.string.queue_sleep_off)
             }
 
+            val isCyberpunk = LocalCyberpunkTheme.current
+            val sleepShape = if (isCyberpunk) VeyraCyber.shape else RoundedCornerShape(16.dp)
             Surface(
-                color = Color.White.copy(alpha = if (isSleepActive) 0.14f else 0.07f),
-                shape = RoundedCornerShape(16.dp),
+                color = if (isCyberpunk) {
+                    if (isSleepActive) VeyraCyber.surfaceAlt else VeyraCyber.surface
+                } else {
+                    Color.White.copy(alpha = if (isSleepActive) 0.14f else 0.07f)
+                },
+                shape = sleepShape,
+                border = if (isCyberpunk) {
+                    BorderStroke(VeyraCyber.borderWidth, if (isSleepActive) VeyraCyber.cyan else VeyraCyber.textMuted.copy(alpha = 0.35f))
+                } else null,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(sleepShape)
                     .then(
                         if (LocalIsTv.current) {
-                            Modifier.tvFocusable(shape = RoundedCornerShape(16.dp), scale = 1.02f, onClick = onSleepTimer)
+                            Modifier.tvFocusable(shape = sleepShape, scale = 1.02f, onClick = onSleepTimer)
                         } else Modifier.clickable(onClick = onSleepTimer),
                     ),
             ) {
@@ -447,37 +460,55 @@ private fun QueueTopPill(
     focusRequester: FocusRequester? = null,
     modifier: Modifier = Modifier
 ) {
-    val activeBrush = remember {
-        Brush.linearGradient(listOf(Color(0xFF2275F8), Color(0xFF104CA8)))
+    val isCyberpunk = LocalCyberpunkTheme.current
+    val pillShape = if (isCyberpunk) VeyraCyber.shape else CircleShape
+    val activeBrush = remember(isCyberpunk) {
+        if (isCyberpunk) {
+            Brush.linearGradient(listOf(VeyraCyber.surfaceAlt, VeyraCyber.surfaceAlt))
+        } else {
+            Brush.linearGradient(listOf(Color(0xFF2275F8), Color(0xFF104CA8)))
+        }
     }
-    val inactiveBrush = remember {
-        Brush.linearGradient(listOf(Color(0xFF151F30), Color(0xFF0E1524)))
+    val inactiveBrush = remember(isCyberpunk) {
+        if (isCyberpunk) {
+            Brush.linearGradient(listOf(VeyraCyber.surface, VeyraCyber.surface))
+        } else {
+            Brush.linearGradient(listOf(Color(0xFF151F30), Color(0xFF0E1524)))
+        }
     }
-    val activeBorder = remember {
-        BorderStroke(1.dp, Color(0xFF38BDF8).copy(alpha = 0.60f))
+    val activeBorder = remember(isCyberpunk) {
+        if (isCyberpunk) {
+            BorderStroke(VeyraCyber.borderWidth, VeyraCyber.cyan)
+        } else {
+            BorderStroke(1.dp, Color(0xFF38BDF8).copy(alpha = 0.60f))
+        }
     }
-    val inactiveBorder = remember {
-        BorderStroke(1.dp, Color.White.copy(alpha = 0.08f))
+    val inactiveBorder = remember(isCyberpunk) {
+        if (isCyberpunk) {
+            BorderStroke(VeyraCyber.borderWidth, VeyraCyber.textMuted.copy(alpha = 0.35f))
+        } else {
+            BorderStroke(1.dp, Color.White.copy(alpha = 0.08f))
+        }
     }
 
     Surface(
         color = Color.Transparent,
-        shape = CircleShape,
+        shape = pillShape,
         border = if (active) activeBorder else inactiveBorder,
         modifier = modifier
-            .height(if (LocalIsTv.current) 52.dp else 38.dp)
+            .height(if (LocalIsTv.current) 52.dp else 40.dp)
             .then(if (LocalIsTv.current && focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
             .shadow(
-                elevation = if (active) 4.dp else 2.dp,
-                shape = CircleShape,
+                elevation = if (isCyberpunk) 0.dp else if (active) 4.dp else 2.dp,
+                shape = pillShape,
                 spotColor = if (active) Color(0xFF1E6CEB).copy(alpha = 0.50f) else Color.Black.copy(alpha = 0.40f),
             )
-            .clip(CircleShape)
-            .background(if (active) activeBrush else inactiveBrush, CircleShape)
+            .clip(pillShape)
+            .background(if (active) activeBrush else inactiveBrush, pillShape)
             .alpha(if (enabled) 1f else 0.42f)
             .then(
                 if (LocalIsTv.current) {
-                    Modifier.tvFocusable(shape = CircleShape, scale = 1.06f, enabled = enabled, onClick = onClick)
+                    Modifier.tvFocusable(shape = pillShape, scale = 1.06f, enabled = enabled, onClick = onClick)
                 } else Modifier.clickable(enabled = enabled, onClick = onClick),
             )
     ) {
@@ -563,12 +594,13 @@ private fun QueueTrackRow(
     onRemove: (Int) -> Unit,
     onMove: (Int, Int) -> Unit,
 ) {
-    val rowShape = RoundedCornerShape(12.dp)
+    val isCyberpunk = LocalCyberpunkTheme.current
+    val rowShape = if (isCyberpunk) VeyraCyber.shape else VeyraRadius.mdShape
     val isTv = LocalIsTv.current
     Surface(
-        color = if (isHistory) Color.Transparent else Color(0xFF131B2B).copy(alpha = 0.50f),
+        color = if (isHistory) Color.Transparent else if (isCyberpunk) VeyraCyber.surface else VeyraSemantic.surface.copy(alpha = 0.50f),
         shape = rowShape,
-        border = if (isHistory) null else BorderStroke(1.dp, Color.White.copy(alpha = 0.06f)),
+        border = if (isHistory) null else if (isCyberpunk) BorderStroke(1.dp, VeyraCyber.cyan.copy(alpha = 0.28f)) else BorderStroke(1.dp, Color.White.copy(alpha = 0.06f)),
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 6.dp, vertical = 2.dp)

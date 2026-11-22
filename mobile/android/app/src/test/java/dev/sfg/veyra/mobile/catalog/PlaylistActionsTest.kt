@@ -209,6 +209,26 @@ class PlaylistActionsTest {
     }
 
     @Test
+    fun `create empty playlist sends title and private status`() {
+        val recordedRequests = mutableListOf<Pair<String, JSONObject>>()
+        val mock = MockEngine { endpoint, payload ->
+            recordedRequests.add(endpoint to payload)
+            JSONObject().put("playlistId", "PL_EMPTY_99")
+        }
+        val actions = PlaylistActions(InnerTubeClient(mock.okHttpClient))
+
+        val id = actions.create("Workout Mix")
+        assertEquals("PL_EMPTY_99", id)
+        assertEquals(1, recordedRequests.size)
+
+        val (endpoint, payload) = recordedRequests[0]
+        assertEquals("create", endpoint)
+        assertEquals("Workout Mix", payload.optString("title"))
+        assertEquals("PRIVATE", payload.optString("privacyStatus"))
+        assertEquals(null, payload.optJSONArray("videoIds"))
+    }
+
+    @Test
     fun `remove track sends its playlist set video id`() {
         val recordedRequests = mutableListOf<Pair<String, JSONObject>>()
         val mock = MockEngine { endpoint, payload ->
