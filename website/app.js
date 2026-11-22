@@ -6,8 +6,8 @@
 (function () {
   'use strict';
 
-  const OFFICIAL_RELEASES_API = 'https://api.github.com/repos/SCARLXRD-1/VEYRA-MUSIC/releases?per_page=15';
-  const RELEASES_PAGE_URL = 'https://github.com/SCARLXRD-1/VEYRA-MUSIC/releases';
+  const OFFICIAL_RELEASES_API = 'https://api.github.com/repos/DEV-AKASHI/VEYRA-MUSIC/releases?per_page=15';
+  const RELEASES_PAGE_URL = 'https://github.com/DEV-AKASHI/VEYRA-MUSIC/releases';
   const CACHE_KEY = 'veyra_releases_cache_v3';
   const CACHE_TTL_MS = 15 * 60 * 1000;
   const IS_LOCAL_PREVIEW = ['localhost', '127.0.0.1', ''].includes(window.location.hostname);
@@ -23,17 +23,17 @@
   };
 
   let DOWNLOAD_URLS = {
-    mobile: IS_LOCAL_PREVIEW ? 'downloads/Veyra-Music-Android-1.0.4-mobile.apk' : 'https://github.com/SCARLXRD-1/VEYRA-MUSIC/releases/download/v1.0.4-mobile/veyramusic.apk',
-    tv: `https://github.com/SCARLXRD-1/VEYRA-MUSIC/releases/download/${TV_EXPERIMENTAL_VERSION}/veyramusic.apk`,
+    mobile: IS_LOCAL_PREVIEW ? 'downloads/Veyra-Music-Android-1.0.4-mobile.apk' : 'https://github.com/DEV-AKASHI/VEYRA-MUSIC/releases/download/v1.0.4-mobile/veyramusic.apk',
+    tv: `https://github.com/DEV-AKASHI/VEYRA-MUSIC/releases/download/${TV_EXPERIMENTAL_VERSION}/veyramusic.apk`,
     linux: null,
     windows: null
   };
 
   const OFFICIAL_HASHES = {
-    '65111cef4dd6fafaea05d36ef9f0980be66a7f9a649fc87fc4646dd53338793a': {
-      file: 'Veyra-Music-Android-1.0.4-mobile.apk',
+    '6022458d957d2a33e05069f674ee8d3d8eb0a2fd82cddf5c6a482ced3c75e9a6': {
+      file: 'veyramusic-1.0.4.apk',
       platform: 'Android Móvil (Nueva Versión v1.0.4)',
-      size: '~41.2 MB'
+      size: '~162.4 MB'
     },
     '034b197254d114191e95e1fe55f1d452ee216629ee6bd49556157cf67085f999': {
       file: 'Veyra-Music-TV-1.0.3-tv.apk',

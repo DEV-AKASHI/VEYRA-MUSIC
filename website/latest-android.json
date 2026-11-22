@@ -2,8 +2,8 @@
   "version": "1.0.4",
   "codename": "Liquid Aurora",
   "versionCode": 5,
-  "apkUrl": "https://github.com/SCARLXRD-1/VEYRA-MUSIC/releases/download/v1.0.4-mobile/veyramusic.apk",
-  "sha256": "",
-  "publishedAt": "2026-11-22T03:55:00Z",
+  "apkUrl": "https://github.com/DEV-AKASHI/VEYRA-MUSIC/releases/download/v1.0.4-mobile/veyramusic.apk",
+  "sha256": "6022458d957d2a33e05069f674ee8d3d8eb0a2fd82cddf5c6a482ced3c75e9a6",
+  "publishedAt": "2026-11-22T04:26:18Z",
   "releaseNotes": "Estreno de Liquid Aurora y Cyberpunk UI, espectro PCM de 12 bandas en tiempo real, Aura Sync RGB al ritmo y gestión completa de listas de reproducción conectadas a YouTube Music."
 }
